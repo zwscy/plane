@@ -162,6 +162,7 @@ export interface IIssueDisplayFilterOptions {
   sub_issue?: boolean;
 }
 export interface IIssueDisplayProperties {
+  column_order?: string[];
   custom_fields?: Record<string, boolean>;
   assignee?: boolean;
   start_date?: boolean;

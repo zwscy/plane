@@ -308,6 +308,9 @@ export const getComputedDisplayFilters = (
 export const getComputedDisplayProperties = (
   displayProperties: IIssueDisplayProperties = {}
 ): IIssueDisplayProperties => ({
+  column_order: Array.isArray(displayProperties?.column_order)
+    ? displayProperties.column_order.filter((column) => typeof column === "string")
+    : undefined,
   custom_fields: displayProperties?.custom_fields,
   assignee: displayProperties?.assignee ?? true,
   start_date: displayProperties?.start_date ?? true,

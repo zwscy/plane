@@ -10,13 +10,24 @@ import { getVisibleCustomFields } from "@/helpers/custom-field-views";
 import { observer } from "mobx-react";
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { MenuGroup, MenuLabel } from "@makeplane/propel/components/menu";
-import { Toggle, ToggleLabel } from "@makeplane/propel/elements/toggle";
+import { ToggleLabel } from "@makeplane/propel/elements/toggle";
+import { TickOutline } from "@makeplane/propel/icons";
 // plane constants
 import { ISSUE_DISPLAY_PROPERTIES } from "@plane/constants";
 // plane i18n
 import { useTranslation } from "@plane/i18n";
 // types
 import type { IIssueDisplayProperties } from "@plane/types";
+import { cn } from "@plane/utils";
+
+const propertyClassName =
+  "inline-flex h-6 max-w-full items-center gap-1 rounded-md border px-2 text-caption-md-medium outline-none transition-colors";
+
+const selectedPropertyClassName =
+  "border-accent-strong bg-accent-subtle text-accent-primary hover:bg-accent-subtle-hover data-highlighted:bg-accent-subtle-hover";
+
+const unselectedPropertyClassName =
+  "border-subtle-1 bg-layer-2 text-secondary hover:bg-layer-2-hover data-highlighted:bg-layer-2-hover";
 
 type Props = {
   displayProperties: IIssueDisplayProperties;
@@ -80,9 +91,11 @@ export const FilterDisplayProperties = observer(function FilterDisplayProperties
               checked={isSelected}
               closeOnClick={false}
               onCheckedChange={(checked) => handleUpdate({ [displayProperty.key]: checked })}
-              render={<Toggle size="sm" render={<div />} data-pressed={isSelected ? "" : undefined} />}
+              className={cn(propertyClassName, isSelected ? selectedPropertyClassName : unselectedPropertyClassName)}
+              render={<div />}
             >
-              <ToggleLabel>{t(displayProperty.titleTranslationKey)}</ToggleLabel>
+              <TickOutline className={cn("size-3.5 shrink-0", !isSelected && "invisible")} aria-hidden="true" />
+              <ToggleLabel title="">{t(displayProperty.titleTranslationKey)}</ToggleLabel>
             </BaseMenu.CheckboxItem>
           );
         })}
@@ -96,9 +109,11 @@ export const FilterDisplayProperties = observer(function FilterDisplayProperties
               onCheckedChange={(checked) =>
                 handleUpdate({ custom_fields: { ...displayProperties.custom_fields, [field.id]: checked } })
               }
-              render={<Toggle size="sm" render={<div />} data-pressed={isSelected ? "" : undefined} />}
+              className={cn(propertyClassName, isSelected ? selectedPropertyClassName : unselectedPropertyClassName)}
+              render={<div />}
             >
-              <ToggleLabel>{field.name}</ToggleLabel>
+              <TickOutline className={cn("size-3.5 shrink-0", !isSelected && "invisible")} aria-hidden="true" />
+              <ToggleLabel title="">{field.name}</ToggleLabel>
             </BaseMenu.CheckboxItem>
           );
         })}

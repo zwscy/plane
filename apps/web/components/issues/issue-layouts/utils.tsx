@@ -381,7 +381,7 @@ export const getDisplayPropertiesCount = (
 
   for (const propertyKey of propertyKeys) {
     if (ignoreFields && ignoreFields.includes(propertyKey)) continue;
-    if (propertyKey !== "custom_fields" && displayProperties[propertyKey]) count++;
+    if (propertyKey !== "custom_fields" && displayProperties[propertyKey] === true) count++;
   }
 
   return count;

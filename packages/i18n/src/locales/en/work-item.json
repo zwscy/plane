@@ -57,6 +57,18 @@
       "low": "Low"
     },
     "display": {
+      "columns": {
+        "title": "Column settings",
+        "description": "Drag shown fields or use the arrows to reorder them. Check a hidden field to show it. The work item column stays on the left.",
+        "search": "Search fields",
+        "shown": "Shown fields",
+        "hidden": "Hidden fields",
+        "empty_shown": "No fields are shown",
+        "empty_hidden": "All fields are shown",
+        "clear_search_to_reorder": "Clear the search to adjust the order",
+        "move_up": "Move {name} earlier",
+        "move_down": "Move {name} later"
+      },
       "properties": {
         "label": "Display Properties",
         "id": "ID",

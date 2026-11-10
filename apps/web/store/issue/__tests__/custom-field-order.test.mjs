@@ -11,6 +11,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import * as fieldViews from "../../../helpers/custom-field-views.ts";
+import * as spreadsheetColumns from "../../../helpers/spreadsheet-columns.ts";
 
 // Execute the actual TS stores, with only browser singletons and HTTP service constructors replaced.
 // Real MobX, lodash, response processing, list mutation and child-store methods run below.
@@ -36,6 +37,7 @@ function loadStore(file) {
   const load = (specifier) => {
     if (renderMocks.has(specifier)) return renderMocks.get(specifier);
     if (specifier === "@/helpers/custom-field-views") return fieldViews;
+    if (specifier === "@/helpers/spreadsheet-columns") return spreadsheetColumns;
     if (specifier === "@plane/blocks/toast") return { setToast: (notification) => notifications.push(notification) };
     if (specifier === "@/lib/store-context") return { store: globalRoot, rootStore: globalRoot };
     if (specifier === "@/lib/local-storage") return { storage: { get: () => null } };
@@ -381,6 +383,7 @@ test("actual create, attachment and patch write failures still reject; patch res
 
 const passthrough = (props) => props.children;
 const Null = () => null;
+const renderedColumnKeys = (row) => [...row.querySelectorAll("[data-column]")].map((cell) => cell.dataset.column);
 
 for (const layout of ["spreadsheet", "list"]) {
   test(`${layout} renders custom-ordered grandchildren after each async sibling fetch`, async () => {
@@ -419,6 +422,7 @@ for (const layout of ["spreadsheet", "list"]) {
       return childResponse.promise;
     };
     const icon = (props) => React.createElement("svg", { className: props.className });
+    const fields = [{ id: "field", name: "Priority order", field_type: "integer", is_active: true, sort_order: 1 }];
     const mocks = {
       "@plane/i18n": { useTranslation: () => ({ t: (key) => key, currentLocale: "en" }) },
       "next/navigation": { useParams: () => ({ workspaceSlug: "workspace", projectId: "project" }) },
@@ -429,7 +433,8 @@ for (const layout of ["spreadsheet", "list"]) {
         ControlLink: ({ children, onClick }) => React.createElement("div", { onClick }, children),
         Row: ({ children, className }) => React.createElement("div", { className }, children),
       },
-      "@/components/core/multiple-select": { MultipleSelectEntityAction: Null },
+      "@/components/core/multiple-select": { MultipleSelectEntityAction: Null, MultipleSelectGroupAction: Null },
+      "@/components/issues/spreadsheet-columns-toggle": { SpreadsheetColumnsToggle: Null },
       "@/components/core/render-if-visible-HOC": {
         __esModule: true,
         default: ({ as = "div", children }) => React.createElement(as, null, children),
@@ -443,6 +448,7 @@ for (const layout of ["spreadsheet", "list"]) {
         default: () => ({ handleRedirection: () => {} }),
       },
       "@/hooks/use-platform-os": { usePlatformOS: () => ({ isMobile: false }) },
+      "@/hooks/use-project-custom-fields": { useProjectCustomFields: () => ({ fields, isLoading: false }) },
       "@/hooks/use-issue-layout-store": {
         useIssuesStore: () => ({ issueMap: storeRoot.issues.issuesMap, issuesFilter: storeRoot.projectIssuesFilter }),
       },
@@ -463,8 +469,14 @@ for (const layout of ["spreadsheet", "list"]) {
             React.createElement("button", { onClick: () => setExpanded((expanded) => !expanded) }, issueId)
           ),
       },
-      "./custom-field-columns": { CustomFieldCells: Null },
-      "./issue-column": { IssueColumn: Null },
+      "./custom-field-columns": {
+        CustomFieldCell: ({ field }) => React.createElement("td", { "data-column": `custom_fields__${field.id}` }),
+        CustomFieldHeader: ({ field }) => React.createElement("th", { "data-column": `custom_fields__${field.id}` }),
+      },
+      "./issue-column": { IssueColumn: ({ property }) => React.createElement("td", { "data-column": property }) },
+      "./spreadsheet-header-column": {
+        SpreadsheetHeaderColumn: ({ property }) => React.createElement("th", { "data-column": property }),
+      },
     };
     // The hook itself must resolve the same real-store fixture as the rendered row.
     for (const [key, value] of Object.entries(mocks)) renderMocks.set(key, value);
@@ -474,6 +486,10 @@ for (const layout of ["spreadsheet", "list"]) {
       layout === "spreadsheet"
         ? loadStore("components/issues/issue-layouts/spreadsheet/issue-row.tsx").SpreadsheetIssueRow
         : loadStore("components/issues/issue-layouts/list/block-root.tsx").IssueBlockRoot;
+    const Header =
+      layout === "spreadsheet"
+        ? loadStore("components/issues/issue-layouts/spreadsheet/spreadsheet-header.tsx").SpreadsheetHeader
+        : null;
     const container = document.createElement("div");
     document.body.append(container);
     const renderer = createRoot(container);
@@ -483,7 +499,13 @@ for (const layout of ["spreadsheet", "list"]) {
       groupId: "all",
       isDragAllowed: false,
       canDropOverIssue: false,
-      displayProperties: {},
+      displayProperties: {
+        state: true,
+        due_date: true,
+        column_order: ["state", "custom_fields__field", "due_date"],
+      },
+      displayFilters: { order_by: orderBy },
+      handleDisplayFilterUpdate: () => {},
       isEstimateEnabled: false,
       quickActions: Null,
       canEditProperties: () => false,
@@ -491,8 +513,13 @@ for (const layout of ["spreadsheet", "list"]) {
       nestingLevel: 0,
       isScrolled: { current: false },
       containerRef: { current: null },
-      spreadsheetColumnsList: [],
-      selectionHelpers: { getIsEntitySelected: () => false, getIsEntityActive: () => false, isSelectionDisabled: true },
+      spreadsheetColumnsList: ["state", "due_date"],
+      selectionHelpers: {
+        getIsEntitySelected: () => false,
+        getIsEntityActive: () => false,
+        isGroupSelected: () => "empty",
+        isSelectionDisabled: true,
+      },
     };
     const renderedIds = () =>
       layout === "spreadsheet"
@@ -509,6 +536,7 @@ for (const layout of ["spreadsheet", "list"]) {
             ? React.createElement(
                 "table",
                 null,
+                React.createElement(Header, props),
                 React.createElement("tbody", null, React.createElement(Component, props))
               )
             : React.createElement(Component, props)
@@ -528,6 +556,17 @@ for (const layout of ["spreadsheet", "list"]) {
       ]);
       assert.deepEqual(renderedIds(), ["ten", "child-one", "grandchild-one", "grandchild-two", "child-two"]);
       assert.deepEqual(store.getIssueIds(), ["ten", "twenty"]);
+      if (layout === "spreadsheet") {
+        const expectedColumns = ["state", "custom_fields__field", "due_date"];
+        assert.deepEqual(renderedColumnKeys(container.querySelector("thead tr")), expectedColumns);
+        for (const row of container.querySelectorAll("tbody tr")) {
+          assert.deepEqual(
+            renderedColumnKeys(row),
+            expectedColumns,
+            "every expanded child keeps the header's mixed column order"
+          );
+        }
+      }
     } finally {
       await act(async () => renderer.unmount());
       renderMocks.clear();

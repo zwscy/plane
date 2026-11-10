@@ -57,6 +57,18 @@
       "low": "低"
     },
     "display": {
+      "columns": {
+        "title": "列设置",
+        "description": "拖动已显示字段或点击箭头调整顺序，勾选未显示字段可加入上方。工作项列固定在左侧。",
+        "search": "搜索字段",
+        "shown": "已显示字段",
+        "hidden": "未显示字段",
+        "empty_shown": "暂无已显示字段",
+        "empty_hidden": "所有字段均已显示",
+        "clear_search_to_reorder": "清空搜索后可调整顺序",
+        "move_up": "将{name}前移",
+        "move_down": "将{name}后移"
+      },
       "properties": {
         "label": "显示属性",
         "id": "ID",

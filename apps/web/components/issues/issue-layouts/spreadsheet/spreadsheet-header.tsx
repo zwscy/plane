@@ -17,7 +17,10 @@ import { MultipleSelectGroupAction } from "@/components/core/multiple-select";
 import { SpreadsheetColumnsToggle } from "@/components/issues/spreadsheet-columns-toggle";
 // hooks
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
-import { CustomFieldHeaders } from "./custom-field-columns";
+import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
+import { getVisibleCustomFields } from "@/helpers/custom-field-views";
+import { getOrderedSpreadsheetColumnKeys } from "@/helpers/spreadsheet-columns";
+import { CustomFieldHeader } from "./custom-field-columns";
 import { SpreadsheetHeaderColumn } from "./spreadsheet-header-column";
 
 interface Props {
@@ -46,7 +49,13 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
     isEpic = false,
   } = props;
   // router
-  const { projectId } = useParams();
+  const { workspaceSlug, projectId } = useParams();
+  const { fields } = useProjectCustomFields(workspaceSlug?.toString(), isEpic ? undefined : projectId?.toString());
+  const customFields = getVisibleCustomFields(fields, displayProperties.custom_fields);
+  const columnKeys = getOrderedSpreadsheetColumnKeys(
+    [...spreadsheetColumnsList, ...customFields.map((field) => `custom_fields__${field.id}`)],
+    displayProperties.column_order
+  );
   // derived values
   const isGroupSelectionEmpty = selectionHelpers.isGroupSelected(SPREADSHEET_SELECT_GROUP) === "empty";
   // auth
@@ -82,25 +91,27 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
           </div>
         </th>
 
-        {spreadsheetColumnsList.map((property) => (
-          <SpreadsheetHeaderColumn
-            key={property}
-            property={property}
-            displayProperties={displayProperties}
-            displayFilters={displayFilters}
-            handleDisplayFilterUpdate={handleDisplayFilterUpdate}
-            isEstimateEnabled={isEstimateEnabled}
-            isEpic={isEpic}
-          />
-        ))}
-
-        {!isEpic && (
-          <CustomFieldHeaders
-            displayProperties={displayProperties}
-            displayFilters={displayFilters}
-            onChange={handleDisplayFilterUpdate}
-          />
-        )}
+        {columnKeys.map((property) => {
+          const customField = customFields.find((field) => property === `custom_fields__${field.id}`);
+          return customField ? (
+            <CustomFieldHeader
+              key={property}
+              field={customField}
+              displayFilters={displayFilters}
+              onChange={handleDisplayFilterUpdate}
+            />
+          ) : (
+            <SpreadsheetHeaderColumn
+              key={property}
+              property={property as keyof IIssueDisplayProperties}
+              displayProperties={displayProperties}
+              displayFilters={displayFilters}
+              handleDisplayFilterUpdate={handleDisplayFilterUpdate}
+              isEstimateEnabled={isEstimateEnabled}
+              isEpic={isEpic}
+            />
+          );
+        })}
         {/* Config column header, pinned to the right edge */}
         <th className="right-0 z-15 h-11 w-12 min-w-12 border-b-[0.5px] border-l-[0.5px] border-subtle bg-layer-1 shadow-direction-left md:sticky">
           <div className="flex size-full items-center justify-center">

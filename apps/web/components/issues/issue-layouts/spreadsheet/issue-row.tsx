@@ -31,10 +31,13 @@ import { useProject } from "@/hooks/store/use-project";
 import useIssuePeekOverviewRedirection from "@/hooks/use-issue-peek-overview-redirection";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
+import { getVisibleCustomFields } from "@/helpers/custom-field-views";
+import { getOrderedSpreadsheetColumnKeys } from "@/helpers/spreadsheet-columns";
 // local components
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { isIssueNew } from "../utils";
-import { CustomFieldCells } from "./custom-field-columns";
+import { CustomFieldCell } from "./custom-field-columns";
 import { IssueColumn } from "./issue-column";
 import { useTranslation } from "@plane/i18n";
 
@@ -199,6 +202,12 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
   const menuActionRef = useRef<HTMLButtonElement | null>(null);
   // router
   const { workspaceSlug, projectId } = useParams();
+  const { fields } = useProjectCustomFields(workspaceSlug?.toString(), isEpic ? undefined : projectId?.toString());
+  const customFields = getVisibleCustomFields(fields, displayProperties.custom_fields);
+  const columnKeys = getOrderedSpreadsheetColumnKeys(
+    [...spreadsheetColumnsList, ...customFields.map((field) => `custom_fields__${field.id}`)],
+    displayProperties.column_order
+  );
   // hooks
   const { getProjectIdentifierById } = useProject();
   const { getIsIssuePeeked, peekIssue } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
@@ -373,25 +382,28 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
         </ControlLink>
       </td>
       {/* Rest of the columns */}
-      {spreadsheetColumnsList.map((property) => (
-        <IssueColumn
-          key={property}
-          displayProperties={displayProperties}
-          issueDetail={issueDetail}
-          disableUserActions={disableUserActions}
-          property={property}
-          updateIssue={updateIssue}
-          isEstimateEnabled={isEstimateEnabled}
-        />
-      ))}
-      {!isEpic && (
-        <CustomFieldCells
-          issue={issueDetail}
-          displayProperties={displayProperties}
-          disabled={disableUserActions}
-          updateIssue={updateIssue}
-        />
-      )}
+      {columnKeys.map((property) => {
+        const customField = customFields.find((field) => property === `custom_fields__${field.id}`);
+        return customField ? (
+          <CustomFieldCell
+            key={property}
+            field={customField}
+            issue={issueDetail}
+            disabled={disableUserActions}
+            updateIssue={updateIssue}
+          />
+        ) : (
+          <IssueColumn
+            key={property}
+            displayProperties={displayProperties}
+            issueDetail={issueDetail}
+            disableUserActions={disableUserActions}
+            property={property as keyof IIssueDisplayProperties}
+            updateIssue={updateIssue}
+            isEstimateEnabled={isEstimateEnabled}
+          />
+        );
+      })}
       {/* Config column cell, pinned to the right edge: holds the row's quick actions */}
       <td className="right-0 z-10 w-12 min-w-12 border-b-[0.5px] border-l-[0.5px] border-subtle bg-surface-1 shadow-direction-left md:sticky">
         <div className="flex items-center justify-center">
