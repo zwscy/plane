@@ -57,7 +57,7 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
         <MenuLabel>{currentUser?.email}</MenuLabel>
         <MenuItem
           icon={<Icon icon={PaletteOutline} />}
-          label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+          label={`切换为${resolvedTheme === "dark" ? "浅色" : "深色"}模式`}
           onClick={handleThemeSwitch}
         />
       </MenuGroup>
@@ -65,7 +65,7 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
       <MenuItem
         variant="danger"
         icon={<Icon icon={LogOutOutline} />}
-        label="Sign out"
+        label="退出登录"
         onClick={() => signOutFormRef.current?.requestSubmit()}
       />
     </MenuContent>
@@ -92,7 +92,7 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
           <Menu>
             <MenuTrigger
               render={
-                <IconButton variant="ghost" size="lg" type="button" aria-label="Instance admin menu">
+                <IconButton variant="ghost" size="lg" type="button" aria-label="实例管理菜单">
                   <Icon icon={UserCogOutline} />
                 </IconButton>
               }
@@ -105,14 +105,14 @@ export const AdminSidebarDropdown = observer(function AdminSidebarDropdown() {
           <div className="grid size-8 shrink-0 place-items-center rounded-md bg-layer-1" aria-hidden="true">
             <UserCogOutline className="size-5 text-primary" />
           </div>
-          <h4 className="min-w-0 flex-1 truncate text-body-md-medium text-primary">Instance admin</h4>
+          <h4 className="min-w-0 flex-1 truncate text-body-md-medium text-primary">实例管理</h4>
           {currentUser && (
             <Menu>
               <MenuTrigger
                 render={
-                  <IconButton variant="ghost" size="lg" type="button" aria-label="Account menu">
+                  <IconButton variant="ghost" size="lg" type="button" aria-label="账号菜单">
                     <Avatar
-                      alt={currentUser.display_name ?? "Admin user"}
+                      alt={currentUser.display_name ?? "管理员"}
                       fallback={currentUser.display_name?.[0]?.toUpperCase()}
                       src={getFileURL(currentUser.avatar_url)}
                       size="sm"

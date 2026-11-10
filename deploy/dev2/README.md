@@ -25,7 +25,9 @@ PostgreSQL 数据目录不是 SQLite 文件。运行中的该目录不能直接�
 
 ## 构建与首次启动
 
-在本机或独立构建环境生成 `linux/amd64` 镜像，dev2 仅加载和运行。`build.sh` 可复用经过源代码比对的前端构建产物，必须提供 `PLANE_DEV2_WEB_SOURCE_REVISION`。构建输出独立镜像标签、构建端镜像 ID、完整 inspect 元数据及附 SHA256 的 tar 包，不覆盖本地 `plane-custom` 镜像。
+在本机或独立构建环境生成 `linux/amd64` 镜像，dev2 仅加载和运行。`build.sh` 可复用经过源代码比对的前端和管理后台构建产物，必须分别提供 `PLANE_DEV2_WEB_SOURCE_REVISION`、`PLANE_DEV2_ADMIN_SOURCE_REVISION`。构建输出 Web、管理后台和 API 的独立镜像标签、构建端镜像 ID、完整 inspect 元数据及附 SHA256 的 tar 包，不覆盖本地 `plane-custom` 镜像。
+
+管理后台使用本仓库源码构建，并打包到官方 CE `v1.4.3` 的 nginx 运行环境，保留现有代理路由及旧哈希资源，便于已打开的页面在升级期间继续加载。构建时可通过 `ADMIN_RUNTIME_IMAGE` 覆盖基础镜像，以使用已加载的固定版本；运行镜像由 `PLANE_ADMIN_IMAGE` 指定。
 
 辅助服务沿用已经验证的固定版本；基础镜像按 amd64 manifest 选择并形成唯一标签。Compose 设置 `pull_policy: never`。传输后先核对归档 SHA256，再逐个核对镜像内容清单：完整有序 `RootFS.Layers`、全部有效 `Config`、OS/架构、创建信息及应用源码标签。不同 Docker 引擎的 `Id` 可能分别表示 config 摘要或 manifest 摘要，不能直接作为跨引擎判据；只有明确的缺省空值字段可规范为省略，层顺序、命令、环境变量和标签必须保持一致。
 

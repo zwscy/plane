@@ -28,7 +28,7 @@ export const HamburgerToggle = observer(function HamburgerToggle() {
       <IconButton
         variant="ghost"
         size="md"
-        aria-label="Toggle sidebar"
+        aria-label="展开或收起侧边栏"
         aria-expanded={!isSidebarCollapsed}
         aria-controls="admin-sidebar"
         icon={<Icon icon={MenuOutline} />}
@@ -101,10 +101,10 @@ export const AdminHeader = observer(function AdminHeader() {
       <div className="min-w-0 flex-1">
         <Breadcrumbs>
           <Breadcrumbs.Item
-            crumbLabel="Settings"
+            crumbLabel="设置"
             crumbHref={resolveCrumbHref("/general/")}
             component={
-              <HeaderCrumb label="Settings" href="/general/" icon={<SettingsOutline className="text-tertiary" />} />
+              <HeaderCrumb label="设置" href="/general/" icon={<SettingsOutline className="text-tertiary" />} />
             }
           />
           {breadcrumbItems.map((item, index) => {

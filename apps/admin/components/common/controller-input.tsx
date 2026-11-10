@@ -47,7 +47,7 @@ export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(
     <Controller
       control={control}
       name={name}
-      rules={{ required: required ? `${label} is required.` : false }}
+      rules={{ required: required ? `请填写${label}` : false }}
       render={({ field: { value, onChange, ref }, fieldState }) => (
         <InputField
           size="lg"
@@ -60,7 +60,7 @@ export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(
           value={value ?? ""}
           onChange={onChange}
           ref={ref}
-          error={error ? (fieldState.error?.message ?? `${label} is invalid.`) : undefined}
+          error={error ? (fieldState.error?.message ?? `${label}格式不正确`) : undefined}
           hint={description}
           placeholder={placeholder}
           endIcon={
@@ -68,7 +68,7 @@ export function ControllerInput<TFieldValues extends FieldValues = FieldValues>(
               <IconButton
                 variant="ghost"
                 size="sm"
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={showPassword ? "隐藏密码" : "显示密码"}
                 aria-pressed={showPassword}
                 icon={<Icon icon={showPassword ? HideOutline : ShowOutline} />}
                 onClick={() => setShowPassword((visible) => !visible)}

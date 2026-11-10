@@ -35,14 +35,14 @@ const InstanceEmailPage = observer(function InstanceEmailPage(_props: Route.Comp
         await disableEmail();
         setIsSMTPEnabled(false);
         setToast({
-          title: "Email feature disabled",
-          message: "Email feature has been disabled",
+          title: "邮件服务已停用",
+          message: "邮件发送功能已停用",
           type: "success",
         });
       } catch (_error) {
         setToast({
-          title: "Error disabling email",
-          message: "Failed to disable email feature. Please try again.",
+          title: "停用邮件服务失败",
+          message: "无法停用邮件服务，请重试。",
           type: "error",
         });
       } finally {
@@ -61,13 +61,13 @@ const InstanceEmailPage = observer(function InstanceEmailPage(_props: Route.Comp
   return (
     <PageWrapper
       header={{
-        title: "Secure emails from your own instance",
+        title: "邮件设置",
         description: (
           <>
-            Plane can send useful emails to you and your users from your own instance without talking to the Internet.
+            通过配置的 SMTP 服务器，向工作区成员发送邀请和通知邮件。
             <div className="text-body-xs-regular text-tertiary">
-              Set it up below and please test your settings before you save them.&nbsp;
-              <span className="text-danger-primary">Misconfigs can lead to email bounces and errors.</span>
+              请先保存配置，再发送测试邮件确认设置正确。&nbsp;
+              <span className="text-danger-primary">配置错误可能导致退信或发送失败。</span>
             </div>
           </>
         ),
@@ -77,7 +77,7 @@ const InstanceEmailPage = observer(function InstanceEmailPage(_props: Route.Comp
           </Skeleton>
         ) : (
           <Switch
-            aria-label="Enable SMTP email"
+            aria-label="启用 SMTP 邮件服务"
             checked={isSMTPEnabled}
             onCheckedChange={handleToggle}
             size="sm"
@@ -105,6 +105,6 @@ const InstanceEmailPage = observer(function InstanceEmailPage(_props: Route.Comp
   );
 });
 
-export const meta: Route.MetaFunction = () => [{ title: "Email Settings - God Mode" }];
+export const meta: Route.MetaFunction = () => [{ title: "邮件设置 - 管理后台" }];
 
 export default InstanceEmailPage;

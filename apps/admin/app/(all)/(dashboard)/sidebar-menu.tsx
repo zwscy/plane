@@ -77,7 +77,7 @@ export const AdminSidebarMenu = observer(function AdminSidebarMenu() {
 
   return (
     <ScrollArea orientation="vertical" size="sm">
-      <nav aria-label="Instance settings" className="px-3 py-4">
+      <nav aria-label="实例设置" className="px-3 py-4">
         <List>
           {sidebarMenu.map((item) => (
             <AdminSidebarMenuItem

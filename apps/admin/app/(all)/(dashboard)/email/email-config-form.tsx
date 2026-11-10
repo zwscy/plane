@@ -28,9 +28,9 @@ type EmailFormValues = Record<TInstanceEmailConfigurationKeys, string>;
 type TEmailSecurityKeys = "EMAIL_USE_TLS" | "EMAIL_USE_SSL" | "NONE";
 
 const EMAIL_SECURITY_OPTIONS: { [key in TEmailSecurityKeys]: string } = {
-  EMAIL_USE_TLS: "TLS",
+  EMAIL_USE_TLS: "TLS（STARTTLS）",
   EMAIL_USE_SSL: "SSL",
-  NONE: "No email security",
+  NONE: "不加密",
 };
 
 export function InstanceEmailForm(props: IInstanceEmailForm) {
@@ -64,26 +64,25 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     {
       key: "EMAIL_HOST",
       type: "text",
-      label: "Host",
-      placeholder: "email.google.com",
+      label: "SMTP 服务器",
+      placeholder: "smtp.qq.com",
       error: Boolean(errors.EMAIL_HOST),
       required: true,
     },
     {
       key: "EMAIL_PORT",
       type: "text",
-      label: "Port",
-      placeholder: "8080",
+      label: "端口",
+      placeholder: "465 或 587",
       error: Boolean(errors.EMAIL_PORT),
       required: true,
     },
     {
       key: "EMAIL_FROM",
       type: "text",
-      label: "Sender's email address",
-      description:
-        "This is the email address your users will see when getting emails from this instance. You will need to verify this address.",
-      placeholder: "no-reply@projectplane.so",
+      label: "发件邮箱",
+      description: "收件人看到的发件地址。请填写可用于 SMTP 发信的邮箱地址。",
+      placeholder: "例如：name@qq.com",
       error: Boolean(errors.EMAIL_FROM),
       required: true,
     },
@@ -93,16 +92,16 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
     {
       key: "EMAIL_HOST_USER",
       type: "text",
-      label: "Username",
-      placeholder: "getitdone@projectplane.so",
+      label: "SMTP 用户名",
+      placeholder: "例如：name@qq.com",
       error: Boolean(errors.EMAIL_HOST_USER),
       required: false,
     },
     {
       key: "EMAIL_HOST_PASSWORD",
       type: "password",
-      label: "Password",
-      placeholder: "Password",
+      label: "密码或授权码",
+      placeholder: "请输入密码或邮箱授权码",
       error: Boolean(errors.EMAIL_HOST_PASSWORD),
       required: false,
     },
@@ -117,8 +116,8 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
       reset(payload);
       setToast({
         type: "success",
-        title: "Success",
-        message: "Email Settings updated successfully",
+        title: "保存成功",
+        message: "邮件设置已更新",
       });
     } catch (err) {
       console.error(err);
@@ -168,7 +167,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           ))}
           <div className="flex flex-col gap-1">
             <span id={emailSecurityLabelId} className="text-body-xs-medium text-primary">
-              Email security
+              加密方式
             </span>
             <Select
               items={EMAIL_SECURITY_OPTIONS}
@@ -178,7 +177,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
               <SelectTrigger
                 variant="secondary"
                 size="lg"
-                placeholder="Select email security"
+                placeholder="请选择加密方式"
                 aria-labelledby={emailSecurityLabelId}
               />
               <SelectContent>
@@ -195,9 +194,9 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           <div className="flex w-full max-w-xl flex-col gap-y-10 px-1">
             <div className="mr-8 flex items-center gap-10 pt-4">
               <div className="grow">
-                <div className="text-body-xs-medium text-primary">Authentication</div>
+                <div className="text-body-xs-medium text-primary">身份验证</div>
                 <div className="text-caption-sm-regular text-tertiary">
-                  This is optional, but we recommend setting up a username and a password for your SMTP server.
+                  SMTP 服务器需要身份验证时，请填写发件账号和密码或邮箱授权码。
                 </div>
               </div>
             </div>
@@ -227,7 +226,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           onClick={handleSubmit(onSubmit)}
           loading={isSubmitting}
           disabled={!isValid || !isDirty}
-          label={isSubmitting ? "Saving" : "Save changes"}
+          label={isSubmitting ? "正在保存" : "保存更改"}
         />
         <Button
           variant="secondary"
@@ -236,7 +235,7 @@ export function InstanceEmailForm(props: IInstanceEmailForm) {
           onClick={() => setIsSendTestEmailModalOpen(true)}
           loading={isSubmitting}
           disabled={!isValid}
-          label="Send test email"
+          label="发送测试邮件"
         />
       </div>
     </div>

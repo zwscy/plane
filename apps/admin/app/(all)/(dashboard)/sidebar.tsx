@@ -61,7 +61,7 @@ export const AdminSidebar = observer(function AdminSidebar() {
       )}
       <aside
         id="admin-sidebar"
-        aria-label="Instance admin"
+        aria-label="实例管理"
         className={cn(
           "fixed inset-y-0 left-0 z-30 flex h-full w-72 shrink-0 flex-col border-r border-subtle bg-surface-1 transition-[width,transform] duration-300 motion-reduce:transition-none md:relative md:translate-x-0",
           {

@@ -8,10 +8,14 @@ pnpm install --frozen-lockfile
 VITE_API_BASE_URL="" VITE_WEB_BASE_URL="" VITE_ADMIN_BASE_URL="" \
   VITE_SPACE_BASE_URL="" VITE_LIVE_BASE_URL="" \
   VITE_ADMIN_BASE_PATH="/god-mode" VITE_SPACE_BASE_PATH="/spaces" VITE_LIVE_BASE_PATH="/live" \
-  pnpm turbo run build --filter=web --concurrency=2
+  pnpm turbo run build --filter=web --filter=admin --concurrency=2
 docker build --file deploy/custom/Dockerfile.web-local \
   --build-arg "SOURCE_REVISION=$source_revision" \
   --tag "${PLANE_FRONTEND_IMAGE:-plane-custom/frontend:local}" apps/web/build/client
+docker build --file deploy/custom/Dockerfile.admin-local \
+  --build-arg "ADMIN_RUNTIME_IMAGE=${ADMIN_RUNTIME_IMAGE:-makeplane/plane-admin:v1.4.3}" \
+  --build-arg "SOURCE_REVISION=$source_revision" \
+  --tag "${PLANE_ADMIN_IMAGE:-plane-custom/admin:local}" apps/admin/build/client
 docker build --file apps/api/Dockerfile.api \
   --label "org.opencontainers.image.revision=$source_revision" \
   --label org.opencontainers.image.source=https://github.com/zwscy/plane \

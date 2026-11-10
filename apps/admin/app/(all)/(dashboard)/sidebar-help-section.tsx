@@ -29,17 +29,17 @@ import { useInstance, useTheme } from "@/hooks/store";
 
 const helpOptions = [
   {
-    name: "Documentation",
+    name: "文档",
     href: "https://docs.plane.so/",
     Icon: PagesOutline,
   },
   {
-    name: "Join our Forum",
+    name: "社区论坛",
     href: "https://forum.plane.so",
     Icon: ChatOutline,
   },
   {
-    name: "Report a bug",
+    name: "反馈问题",
     href: "https://github.com/makeplane/plane/issues/new/choose",
     Icon: Github,
   },
@@ -64,14 +64,14 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
       })}
     >
       {isSidebarCollapsed ? (
-        <Tooltip label="Redirect to Plane" side="right">
+        <Tooltip label="返回工作区" side="right">
           <IconButton
             variant="secondary"
             size="md"
-            aria-label="Redirect to Plane"
+            aria-label="返回工作区"
             showTooltip={false}
             nativeButton={false}
-            render={<a href={redirectionLink} aria-label="Redirect to Plane" />}
+            render={<a href={redirectionLink} aria-label="返回工作区" />}
             icon={<Icon icon={NewTabOutline} />}
           />
         </Tooltip>
@@ -81,21 +81,21 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
           size="sm"
           stretch="auto"
           nativeButton={false}
-          render={<a href={redirectionLink} aria-label="Redirect to Plane" />}
+          render={<a href={redirectionLink} aria-label="返回工作区" />}
           icon={<Icon icon={NewTabOutline} />}
-          label="Redirect to Plane"
+          label="返回工作区"
         />
       )}
       <div className={cn("flex items-center gap-1", isSidebarCollapsed ? "flex-col" : "ml-auto")}>
         <Menu modal={false}>
-          <Tooltip label="Help" side={isSidebarCollapsed ? "right" : "top"}>
+          <Tooltip label="帮助" side={isSidebarCollapsed ? "right" : "top"}>
             <MenuTrigger
               render={
                 <IconButton
                   type="button"
                   variant="ghost"
                   size="md"
-                  aria-label="Help"
+                  aria-label="帮助"
                   showTooltip={false}
                   icon={<Icon icon={HelpOutline} />}
                 />
@@ -105,9 +105,7 @@ export const AdminSidebarHelpSection = observer(function AdminSidebarHelpSection
           <MenuContent
             side={isSidebarCollapsed ? "right" : "top"}
             align="end"
-            footer={
-              instance?.current_version ? <MenuFooter>Version: v{instance.current_version}</MenuFooter> : undefined
-            }
+            footer={instance?.current_version ? <MenuFooter>版本：v{instance.current_version}</MenuFooter> : undefined}
           >
             {helpOptions.map(({ name, Icon: HelpIcon, href }) => (
               <MenuLinkItem

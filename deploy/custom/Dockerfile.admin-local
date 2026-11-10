@@ -1,0 +1,8 @@
+# Package the verified admin build using the existing CE nginx runtime.
+ARG ADMIN_RUNTIME_IMAGE=makeplane/plane-admin:v1.4.3
+FROM ${ADMIN_RUNTIME_IMAGE}
+ARG SOURCE_REVISION=development
+LABEL org.opencontainers.image.source="https://github.com/zwscy/plane"
+LABEL org.opencontainers.image.revision="${SOURCE_REVISION}"
+# Keep old hashed assets available to pages that were already open during upgrade.
+COPY . /usr/share/nginx/html/god-mode/

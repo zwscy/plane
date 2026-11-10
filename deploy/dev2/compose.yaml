@@ -90,7 +90,7 @@ services:
 
   admin:
     <<: *runtime
-    image: ${PLANE_ADMIN_IMAGE:?Set immutable v1.4.3 PLANE_ADMIN_IMAGE in plane.env}
+    image: ${PLANE_ADMIN_IMAGE:?Set immutable custom PLANE_ADMIN_IMAGE in plane.env}
     mem_limit: 80m
     cpus: 0.25
     depends_on:
