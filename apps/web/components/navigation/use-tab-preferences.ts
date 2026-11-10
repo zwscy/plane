@@ -10,6 +10,7 @@ import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
 import { DEFAULT_TAB_KEY } from "./tab-navigation-utils";
 import type { TTabPreferences } from "./tab-navigation-utils";
+import { useTranslation } from "@plane/i18n";
 
 export type TTabPreferencesHook = {
   tabPreferences: TTabPreferences;
@@ -28,6 +29,7 @@ export type TTabPreferencesHook = {
  * @returns Tab preferences state and handlers
  */
 export const useTabPreferences = (workspaceSlug: string, projectId: string): TTabPreferencesHook => {
+  const { t } = useTranslation();
   const {
     project: { getProjectUserProperties, updateProjectUserProperties },
   } = useMember();
@@ -79,16 +81,16 @@ export const useTabPreferences = (workspaceSlug: string, projectId: string): TTa
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Default tab updated successfully.",
+          title: t("toast.success"),
+          message: t("common.ui.default_tab_updated_successfully"),
         });
         return;
       })
       .catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Failed to update default tab. Please try again later.",
+          title: t("toast.error"),
+          message: t("common.ui.failed_to_update_default_tab_please_try_again_later"),
         });
       });
   };
@@ -107,8 +109,8 @@ export const useTabPreferences = (workspaceSlug: string, projectId: string): TTa
       console.error("Error hiding tab:", error);
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Failed to hide tab. Please try again later.",
+        title: t("toast.error"),
+        message: t("common.ui.failed_to_hide_tab_please_try_again_later"),
       });
     }
   };
@@ -127,8 +129,8 @@ export const useTabPreferences = (workspaceSlug: string, projectId: string): TTa
       console.error("Error showing tab:", error);
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Something went wrong. Please try again later.",
+        title: t("toast.error"),
+        message: t("common.ui.something_went_wrong_please_try_again_later"),
       });
     }
   };

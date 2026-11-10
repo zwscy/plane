@@ -7,6 +7,7 @@
 export { CycleSelect } from "./cycle-select";
 export type { CycleOption, CycleSelectProps } from "./cycle-select";
 export { DateSelect } from "./date-select";
+export { getDatePickerLabels } from "./date-select.utils";
 export type { DateSelectProps } from "./date-select";
 export { DateRangeSelect } from "./date-range-select";
 export type { DateRangeSelectProps, DateRangeValue } from "./date-range-select";

@@ -35,6 +35,7 @@ import { Loader } from "@plane/blocks/skeleton";
 import { copyTextToClipboard } from "@plane/utils";
 // hooks
 import { useProjectPublish } from "@/hooks/store/use-project-publish";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -64,6 +65,7 @@ const VIEW_OPTIONS: TViewOption[] = [
 ];
 
 export const PublishProjectModal = observer(function PublishProjectModal(props: Props) {
+  const { t } = useTranslation();
   const { isOpen, onClose, projectId } = props;
   // states
   const [isUnPublishing, setIsUnPublishing] = useState(false);
@@ -116,8 +118,8 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
     await updatePublishSettings(workspaceSlug.toString(), projectId, payload.id, payload).then((res) => {
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Publish settings updated successfully!",
+        title: t("toast.success"),
+        message: t("common.ui.publish_settings_updated_successfully"),
       });
 
       handleClose();
@@ -134,8 +136,8 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
       .catch(() =>
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Something went wrong while unpublishing the project.",
+          title: t("toast.error"),
+          message: t("common.ui.something_went_wrong_while_unpublishing_the_project"),
         })
       )
       .finally(() => setIsUnPublishing(false));
@@ -152,8 +154,8 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
     if (!selectedLayouts || selectedLayouts.length === 0) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Please select at least one view layout to publish the project.",
+        title: t("toast.error"),
+        message: t("common.ui.please_select_at_least_one_view_layout_to_publish_the_project"),
       });
       return;
     }
@@ -190,7 +192,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
       setToast({
         type: "success",
         title: "",
-        message: "Published page link copied successfully.",
+        message: t("common.ui.published_page_link_copied_successfully"),
       })
     );
 
@@ -207,7 +209,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
             <DialogHeader>
               <div className="flex items-center justify-between gap-2">
                 <DialogHeading>
-                  <DialogTitle>Publish project</DialogTitle>
+                  <DialogTitle>{t("publish_project")}</DialogTitle>
                 </DialogHeading>
                 {isProjectPublished && (
                   <Button
@@ -247,7 +249,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                         <div className="flex flex-shrink-0 items-center gap-1">
                           <a
                             href={publishLink}
-                            aria-label="Open in new tab"
+                            aria-label={t("common.actions.open_in_new_tab")}
                             className="grid size-8 place-items-center rounded-sm bg-layer-3 hover:bg-layer-3-hover"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -259,7 +261,7 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                             className="h-8 rounded-sm bg-layer-3 px-3 py-2 text-caption-sm-medium hover:bg-layer-3-hover"
                             onClick={() => void handleCopyLink()}
                           >
-                            Copy link
+                            {t("common.actions.copy_link")}
                           </button>
                         </div>
                       </div>
@@ -268,13 +270,14 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                           <span className="absolute inline-flex size-full animate-ping rounded-full bg-accent-primary opacity-75" />
                           <span className="relative inline-flex size-1.5 rounded-full bg-accent-primary" />
                         </span>
-                        This project is now live on web
+
+                        {t("common.ui.this_project_is_now_live_on_web")}
                       </p>
                     </>
                   )}
                   <div className="space-y-4">
                     <div className="relative flex items-center justify-between gap-2">
-                      <div className="text-body-xs-regular">Views</div>
+                      <div className="text-body-xs-regular">{t("common.views")}</div>
                       <Controller
                         control={control}
                         name="view_props"
@@ -313,32 +316,47 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
                       />
                     </div>
                     <div className="relative flex items-center justify-between gap-2">
-                      <div className="text-body-xs-regular">Allow comments</div>
+                      <div className="text-body-xs-regular">{t("common.ui.allow_comments")}</div>
                       <Controller
                         control={control}
                         name="is_comments_enabled"
                         render={({ field: { onChange, value } }) => (
-                          <Switch size="sm" checked={!!value} onCheckedChange={onChange} aria-label="Allow comments" />
+                          <Switch
+                            size="sm"
+                            checked={!!value}
+                            onCheckedChange={onChange}
+                            aria-label={t("common.ui.allow_comments")}
+                          />
                         )}
                       />
                     </div>
                     <div className="relative flex items-center justify-between gap-2">
-                      <div className="text-body-xs-regular">Allow reactions</div>
+                      <div className="text-body-xs-regular">{t("common.ui.allow_reactions")}</div>
                       <Controller
                         control={control}
                         name="is_reactions_enabled"
                         render={({ field: { onChange, value } }) => (
-                          <Switch size="sm" checked={!!value} onCheckedChange={onChange} aria-label="Allow reactions" />
+                          <Switch
+                            size="sm"
+                            checked={!!value}
+                            onCheckedChange={onChange}
+                            aria-label={t("common.ui.allow_reactions")}
+                          />
                         )}
                       />
                     </div>
                     <div className="relative flex items-center justify-between gap-2">
-                      <div className="text-body-xs-regular">Allow voting</div>
+                      <div className="text-body-xs-regular">{t("common.ui.allow_voting")}</div>
                       <Controller
                         control={control}
                         name="is_votes_enabled"
                         render={({ field: { onChange, value } }) => (
-                          <Switch size="sm" checked={!!value} onCheckedChange={onChange} aria-label="Allow voting" />
+                          <Switch
+                            size="sm"
+                            checked={!!value}
+                            onCheckedChange={onChange}
+                            aria-label={t("common.ui.allow_voting")}
+                          />
                         )}
                       />
                     </div>
@@ -354,11 +372,12 @@ export const PublishProjectModal = observer(function PublishProjectModal(props: 
               <DialogInfoIcon>
                 <GlobeOutline />
               </DialogInfoIcon>
-              Anyone with the link can access
+
+              {t("common.ui.anyone_with_the_link_can_access")}
             </DialogInfo>
             {!fetchSettingsLoader && (
               <div className="relative flex items-center gap-2">
-                <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+                <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
                 {isProjectPublished ? (
                   isDirty && (
                     <Button

@@ -27,6 +27,7 @@ import { STATIC_COVER_IMAGES, getCoverImageDisplayURL } from "@/helpers/cover-im
 import { useInstance } from "@/hooks/store/use-instance";
 // services
 import { FileService } from "@/services/file.service";
+import { useTranslation } from "@plane/i18n";
 
 type TTabOption = {
   key: string;
@@ -52,6 +53,7 @@ type Props<TFieldValues extends FieldValues = FieldValues> = {
 const fileService = new FileService();
 
 function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldValues>(props: Props<TFieldValues>) {
+  const { t } = useTranslation();
   const { label, value, control, onChange, disabled = false, tabIndex, isProfileCover = false, projectId } = props;
   // states
   const [image, setImage] = useState<File | null>(null);
@@ -76,16 +78,16 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
       },
       {
         key: "images",
-        title: "Images",
+        title: t("common.ui.images"),
         isEnabled: true,
       },
       {
         key: "upload",
-        title: "Upload",
+        title: t("common.ui.upload"),
         isEnabled: true,
       },
     ],
-    [hasUnsplashConfigured]
+    [hasUnsplashConfigured, t]
   );
 
   const enabledTabs = useMemo(() => tabOptions.filter((tab) => tab.isEnabled), [tabOptions]);
@@ -143,7 +145,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
           setToast({
             message: error?.error ?? "The image could not be uploaded",
             type: "error",
-            title: "Image not uploaded",
+            title: t("common.ui.image_not_uploaded"),
           });
         });
     } else {
@@ -164,7 +166,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
           setToast({
             message: error?.error ?? "The image could not be uploaded",
             type: "error",
-            title: "Image not uploaded",
+            title: t("common.ui.image_not_uploaded"),
           });
         });
     }
@@ -232,7 +234,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                                       value={value}
                                       onChange={(e) => setFormData({ ...formData, search: e.target.value })}
                                       ref={ref}
-                                      placeholder="Search for images"
+                                      placeholder={t("common.ui.search_for_images")}
                                     />
                                   </InputGroup>
                                 )}
@@ -242,7 +244,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                               variant="primary"
                               size="lg"
                               stretch="auto"
-                              label="Search"
+                              label={t("common.search.label")}
                               onClick={() => setSearchParams(formData.search)}
                             />
                           </div>
@@ -272,7 +274,9 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                               </div>
                             ) : (
                               <div className="flex min-h-0 flex-1 items-center justify-center">
-                                <p className="text-center text-caption-md-regular text-tertiary">No images found.</p>
+                                <p className="text-center text-caption-md-regular text-tertiary">
+                                  {t("common.ui.no_images_found")}
+                                </p>
                               </div>
                             )
                           ) : (
@@ -322,7 +326,7 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
                           }`}
                         >
                           <div className="absolute top-0 right-1 z-40">
-                            <Button type="button" variant="tertiary" size="xs" stretch="auto" label="Edit" />
+                            <Button type="button" variant="tertiary" size="xs" stretch="auto" label={t("edit")} />
                           </div>
                           {image !== null || (value && value !== "") ? (
                             <>
@@ -353,14 +357,14 @@ function ImagePickerPopoverComponent<TFieldValues extends FieldValues = FieldVal
 
                       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1">
                         <p className="min-w-0 truncate text-body-xs-regular text-secondary">
-                          File formats supported- .jpeg, .jpg, .png, .webp
+                          {t("common.ui.file_formats_supported_jpeg_jpg_png_webp")}
                         </p>
                         <div className="flex flex-shrink-0 items-center gap-2">
                           <Button
                             variant="secondary"
                             size="md"
                             stretch="auto"
-                            label="Cancel"
+                            label={t("cancel")}
                             onClick={() => {
                               setIsOpen(false);
                               setImage(null);

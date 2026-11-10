@@ -6,6 +6,7 @@
 
 import type { MutableRefObject } from "react";
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import type {
   GroupByColumnTypes,
   IGroupByColumn,
@@ -78,6 +79,7 @@ export interface IKanBan {
 }
 
 export const KanBan = observer(function KanBan(props: IKanBan) {
+  const { t } = useTranslation();
   const {
     issuesMap,
     groupedIssueIds,
@@ -116,6 +118,7 @@ export const KanBan = observer(function KanBan(props: IKanBan) {
   const { getIsWorkflowWorkItemCreationDisabled } = useWorkFlowFDragNDrop(group_by, sub_group_by);
 
   const list = getGroupByColumns({
+    t,
     groupBy: group_by as GroupByColumnTypes,
     includeNone: true,
     isWorkspaceLevel: isWorkspaceLevel(storeType),

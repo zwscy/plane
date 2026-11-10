@@ -106,6 +106,7 @@ export const isWorkspaceLevel = (type: EIssuesStoreType) =>
     : false;
 
 type TGetGroupByColumns = {
+  t: (key: string) => string;
   groupBy: GroupByColumnTypes | null;
   includeNone: boolean;
   isWorkspaceLevel: boolean;
@@ -122,13 +123,14 @@ export const getGroupByColumns = ({
   isWorkspaceLevel,
   isEpic = false,
   projectId,
+  t,
 }: TGetGroupByColumns): IGroupByColumn[] | undefined => {
   // If no groupBy is specified and includeNone is true, return "All Issues" group
   if (!groupBy && includeNone) {
     return [
       {
         id: "All Issues",
-        name: `All ${isEpic ? "Epics" : "work items"}`,
+        name: t(isEpic ? "common.ui.all_epics" : "issue.all"),
         payload: {},
         icon: undefined,
       },
@@ -156,7 +158,18 @@ export const getGroupByColumns = ({
   };
 
   // Get and return the columns for the specified group by option
-  return groupByColumnMap[groupBy]?.({ isWorkspaceLevel, projectId });
+  return groupByColumnMap[groupBy]?.({ isWorkspaceLevel, projectId })?.map((column) => ({
+    ...column,
+    name:
+      column.id === "None"
+        ? t("none")
+        : groupBy === "state_detail.group"
+          ? t(`workspace_projects.state.${column.id}`)
+          : groupBy === "priority"
+            ? t(column.id)
+            : column.name,
+    dropErrorMessage: column.dropErrorMessage ? t("common.ui.cannot_move_to_completed_cycles") : undefined,
+  }));
 };
 
 const getProjectColumns = (): IGroupByColumn[] | undefined => {
@@ -368,7 +381,7 @@ export const getDisplayPropertiesCount = (
 
   for (const propertyKey of propertyKeys) {
     if (ignoreFields && ignoreFields.includes(propertyKey)) continue;
-    if (displayProperties[propertyKey]) count++;
+    if (propertyKey !== "custom_fields" && displayProperties[propertyKey]) count++;
   }
 
   return count;
@@ -862,7 +875,7 @@ export const SpreadSheetPropertyIconMap: Record<string, FC<ISvgIcons>> = {
   LayersIcon: WorkItemsOutline,
 };
 
-export const SPREADSHEET_COLUMNS: { [key in keyof IIssueDisplayProperties]: TSpreadsheetColumn } = {
+export const SPREADSHEET_COLUMNS: Partial<Record<keyof IIssueDisplayProperties, TSpreadsheetColumn>> = {
   assignee: SpreadsheetAssigneeColumn,
   created_on: SpreadsheetCreatedOnColumn,
   due_date: SpreadsheetDueDateColumn,

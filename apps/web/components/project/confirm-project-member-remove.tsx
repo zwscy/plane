@@ -25,6 +25,7 @@ import {
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useUser } from "@/hooks/store/user";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   data: Partial<IUserLite>;
@@ -34,6 +35,7 @@ type Props = {
 };
 
 export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMemberRemove(props: Props) {
+  const { t } = useTranslation();
   const { data, onSubmit, isOpen, onClose } = props;
   // router
   const { projectId } = useParams();
@@ -77,7 +79,11 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
               </div>
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                 <DialogHeading>
-                  <DialogTitle>{isCurrentUser ? "Leave project?" : `Remove ${data?.display_name}?`}</DialogTitle>
+                  <DialogTitle>
+                    {isCurrentUser
+                      ? t("common.ui.leave_project_question")
+                      : t("common.ui.remove_member_named", { name: String(data?.display_name) })}
+                  </DialogTitle>
                 </DialogHeading>
               </div>
             </div>
@@ -86,26 +92,32 @@ export const ConfirmProjectMemberRemove = observer(function ConfirmProjectMember
             <p className="text-body-xs-regular text-secondary">
               {isCurrentUser ? (
                 <>
-                  Are you sure you want to leave the <span className="font-bold">{currentProjectDetails?.name}</span>{" "}
-                  project? You will be able to join the project if invited again or if it{"'"}s public.
+                  {t("common.ui.leave_project_prefix")} <span className="font-bold">{currentProjectDetails?.name}</span>{" "}
+                  {t("common.ui.leave_project_suffix")}
                 </>
               ) : (
                 <>
-                  Are you sure you want to remove member- <span className="font-bold">{data?.display_name}</span>? They
-                  will no longer have access to this project. This action cannot be undone.
+                  {t("common.ui.remove_project_member_prefix")} <span className="font-bold">{data?.display_name}</span>
+                  {t("common.ui.remove_project_member_suffix")}
                 </>
               )}
             </p>
           </DialogBody>
         </DialogMain>
         <DialogActions>
-          <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+          <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
           <Button
             variant="danger"
             size="md"
             stretch="auto"
             label={
-              isCurrentUser ? (isDeleteLoading ? "Leaving..." : "Leave") : isDeleteLoading ? "Removing..." : "Remove"
+              isCurrentUser
+                ? isDeleteLoading
+                  ? t("leaving")
+                  : t("leave")
+                : isDeleteLoading
+                  ? t("removing")
+                  : t("remove")
             }
             onClick={handleDeletion}
             loading={isDeleteLoading}

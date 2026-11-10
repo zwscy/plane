@@ -21,6 +21,7 @@ import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useUser } from "@/hooks/store/user";
 // local imports
 import { TourSidebar } from "./sidebar";
+import { useTranslation } from "@plane/i18n";
 
 export type TOnboardingTourProps = {
   onComplete: () => void;
@@ -80,6 +81,7 @@ const TOUR_STEPS: {
 ];
 
 export const TourRoot = observer(function TourRoot(props: TOnboardingTourProps) {
+  const { t } = useTranslation();
   const { onComplete } = props;
   // states
   const [step, setStep] = useState<TTourSteps>("welcome");
@@ -159,7 +161,7 @@ export const TourRoot = observer(function TourRoot(props: TOnboardingTourProps) 
                       variant="secondary"
                       size="sm"
                       stretch="auto"
-                      label="Back"
+                      label={t("common.back")}
                       onClick={() => setStep(currentStep.prevStep ?? "welcome")}
                     />
                   )}
@@ -168,7 +170,7 @@ export const TourRoot = observer(function TourRoot(props: TOnboardingTourProps) 
                       variant="primary"
                       size="sm"
                       stretch="auto"
-                      label="Next"
+                      label={t("common.next")}
                       onClick={() => setStep(currentStep.nextStep ?? "work-items")}
                     />
                   )}

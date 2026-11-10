@@ -153,7 +153,9 @@ class IssueListEndpoint(BaseAPIView):
 
         order_by_param = request.GET.get("order_by", "-created_at")
         # Issue queryset
-        issue_queryset, _ = order_issue_queryset(issue_queryset=issue_queryset, order_by_param=order_by_param)
+        issue_queryset, _ = order_issue_queryset(
+            issue_queryset=issue_queryset, order_by_param=order_by_param, project_id=project_id
+        )
 
         # Group by
         group_by = request.GET.get("group_by", False)
@@ -176,6 +178,7 @@ class IssueListEndpoint(BaseAPIView):
             issues = issue_queryset.values(
                 "id",
                 "name",
+                "custom_fields",
                 "state_id",
                 "sort_order",
                 "completed_at",
@@ -291,7 +294,7 @@ class IssueViewSet(BaseViewSet):
 
         # Issue queryset
         issue_queryset, order_by_param = order_issue_queryset(
-            issue_queryset=issue_queryset, order_by_param=order_by_param
+            issue_queryset=issue_queryset, order_by_param=order_by_param, project_id=project_id
         )
 
         # Group by
@@ -441,6 +444,7 @@ class IssueViewSet(BaseViewSet):
                 .values(
                     "id",
                     "name",
+                    "custom_fields",
                     "state_id",
                     "sort_order",
                     "completed_at",
@@ -873,6 +877,7 @@ class IssuePaginatedViewSet(BaseViewSet):
         required_fields = [
             "id",
             "name",
+            "custom_fields",
             "state_id",
             "state__group",
             "sort_order",
@@ -1093,7 +1098,9 @@ class IssueDetailEndpoint(BaseAPIView):
         order_by_param = request.GET.get("order_by", "-created_at")
 
         # Issue queryset
-        issue, order_by_param = order_issue_queryset(issue_queryset=issue, order_by_param=order_by_param)
+        issue, order_by_param = order_issue_queryset(
+            issue_queryset=issue, order_by_param=order_by_param, project_id=project_id
+        )
         return self.paginate(
             request=request,
             order_by=order_by_param,

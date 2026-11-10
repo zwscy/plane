@@ -20,6 +20,7 @@ import { useUserSettings } from "@/hooks/store/user";
 import { WorkspaceService } from "@/services/workspace.service";
 // local components
 import { CommonOnboardingHeader } from "../common";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   invitations: IWorkspaceMemberInvitation[];
@@ -29,6 +30,7 @@ type Props = {
 const workspaceService = new WorkspaceService();
 
 export function WorkspaceJoinInvitesStep(props: Props) {
+  const { t } = useTranslation();
   const { invitations, handleNextStep, handleCurrentViewChange } = props;
   // states
   const [isJoiningWorkspaces, setIsJoiningWorkspaces] = useState(false);
@@ -67,7 +69,10 @@ export function WorkspaceJoinInvitesStep(props: Props) {
 
   return invitations && invitations.length > 0 ? (
     <div className="flex flex-col gap-10">
-      <CommonOnboardingHeader title="Join invites or create a workspace" description="All your work — unified." />
+      <CommonOnboardingHeader
+        title={t("common.ui.join_invites_or_create_a_workspace")}
+        description={t("common.ui.all_your_work_unified")}
+      />
       <div className="flex flex-col gap-3">
         {invitations &&
           invitations.length > 0 &&
@@ -121,19 +126,19 @@ export function WorkspaceJoinInvitesStep(props: Props) {
           onClick={submitInvitations}
           disabled={isJoiningWorkspaces || !invitationsRespond.length}
           loading={isJoiningWorkspaces}
-          label="Continue"
+          label={t("common.continue")}
         />
         <Button
           variant="ghost"
           size="lg"
           stretch="full"
-          label="Create new workspace"
+          label={t("common.ui.create_new_workspace")}
           onClick={handleCurrentViewChange}
           disabled={isJoiningWorkspaces}
         />
       </div>
     </div>
   ) : (
-    <div>No Invitations found</div>
+    <div>{t("common.ui.no_invitations_found")}</div>
   );
 }

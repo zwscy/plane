@@ -25,7 +25,10 @@ export type TIssueGroupByOptions =
   | "team_project"
   | null;
 
+export type TCustomFieldOrderBy = `custom_fields__${string}` | `-custom_fields__${string}`;
+
 export type TIssueOrderByOptions =
+  | TCustomFieldOrderBy
   | "-created_at"
   | "created_at"
   | "updated_at"
@@ -159,6 +162,7 @@ export interface IIssueDisplayFilterOptions {
   sub_issue?: boolean;
 }
 export interface IIssueDisplayProperties {
+  custom_fields?: Record<string, boolean>;
   assignee?: boolean;
   start_date?: boolean;
   due_date?: boolean;

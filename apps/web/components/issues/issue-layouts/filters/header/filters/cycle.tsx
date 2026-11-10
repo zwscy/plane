@@ -12,6 +12,7 @@ import type { TCycleGroups } from "@plane/types";
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
 // hooks
 import { useCycle } from "@/hooks/store/use-cycle";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -22,6 +23,7 @@ const getCycleStatus = (status: TCycleGroups | undefined) =>
   (status ? status.toLocaleLowerCase() : "draft") as TCycleGroups;
 
 export const FilterCycle = observer(function FilterCycle(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate } = props;
   // router
   const { projectId } = useParams();
@@ -46,6 +48,12 @@ export const FilterCycle = observer(function FilterCycle(props: Props) {
   });
 
   return (
-    <FilterSubmenu label="Cycle" options={options} appliedFilters={appliedFilters} onToggle={handleUpdate} searchable />
+    <FilterSubmenu
+      label={t("common.cycle")}
+      options={options}
+      appliedFilters={appliedFilters}
+      onToggle={handleUpdate}
+      searchable
+    />
   );
 });

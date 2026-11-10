@@ -16,8 +16,10 @@ import { useProject } from "@/hooks/store/use-project";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { useAppRouter } from "@/hooks/use-app-router";
 import type { Route } from "./+types/page";
+import { useTranslation } from "@plane/i18n";
 
 function ProjectViewIssuesPage({ params }: Route.ComponentProps) {
+  const { t } = useTranslation();
   // router
   const router = useAppRouter();
   const { workspaceSlug, projectId, viewId } = params;
@@ -37,11 +39,11 @@ function ProjectViewIssuesPage({ params }: Route.ComponentProps) {
         align="center"
         assetKey="view"
         assetClassName="size-40"
-        title="View does not exist"
-        description="The view you are looking for does not exist or you don't have permission to view it."
+        title={t("common.ui.view_does_not_exist")}
+        description={t("common.ui.the_view_you_are_looking_for_does_not_exist_or_you_don_t_have_permission_to_view_it")}
         actions={[
           {
-            label: "View other views",
+            label: t("common.ui.view_other_views"),
             variant: "primary",
             onClick: () => router.push(`/${workspaceSlug}/projects/${projectId}/views`),
           },

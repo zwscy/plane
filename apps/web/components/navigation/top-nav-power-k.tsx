@@ -239,7 +239,7 @@ export const TopNavPowerK = observer(() => {
             onMouseDown={handleMouseDown}
             onFocus={handleFocus}
             onKeyDown={handleKeyDown}
-            placeholder="Search commands..."
+            placeholder={t("common.ui.search_commands")}
             className="placeholder-text-placeholder min-w-0 flex-1 bg-transparent text-body-xs-regular text-primary outline-none"
           />
           {searchTerm && (

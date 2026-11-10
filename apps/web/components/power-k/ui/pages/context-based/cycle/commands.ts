@@ -44,10 +44,10 @@ export const usePowerKCycleContextBasedActions = (): TPowerKCommandConfig[] => {
     } catch {
       setToast({
         type: "error",
-        title: "Some error occurred",
+        title: t("common.ui.some_error_occurred"),
       });
     }
-  }, [addCycleToFavorites, removeCycleFromFavorites, workspaceSlug, cycleDetails, isFavorite]);
+  }, [addCycleToFavorites, removeCycleFromFavorites, workspaceSlug, cycleDetails, isFavorite, t]);
 
   const copyCycleUrlToClipboard = useCallback(() => {
     const url = new URL(window.location.href);
@@ -65,7 +65,7 @@ export const usePowerKCycleContextBasedActions = (): TPowerKCommandConfig[] => {
         });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t]);
 
   return [
     {

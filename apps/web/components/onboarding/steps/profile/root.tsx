@@ -29,6 +29,7 @@ import { AuthService } from "@/services/auth.service";
 import { CommonOnboardingHeader } from "../common";
 import { MarketingConsent } from "./consent";
 import { SetPasswordRoot } from "./set-password";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   handleStepChange: (step: EOnboardingSteps, skipInvites?: boolean) => void;
@@ -57,6 +58,7 @@ const defaultValues: Partial<TProfileSetupFormValues> = {
 };
 
 export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepChange }: Props) {
+  const { t } = useTranslation();
   // states
   const [isImageUploadModalOpen, setIsImageUploadModalOpen] = useState(false);
   // store hooks
@@ -102,7 +104,7 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
     } catch {
       setToast({
         type: "error",
-        title: "Error",
+        title: t("error"),
         message: "User details update failed. Please try again!",
       });
     }
@@ -150,7 +152,10 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10">
       {/* Header */}
-      <CommonOnboardingHeader title="Create your profile." description="This is how you will appear in Plane." />
+      <CommonOnboardingHeader
+        title={t("common.ui.create_your_profile")}
+        description={t("common.ui.this_is_how_you_will_appear_in_plane")}
+      />
 
       {/* Profile Picture Section */}
       <Controller
@@ -217,12 +222,12 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
                 size="xl"
                 orientation="vertical"
                 type="text"
-                label="Name"
+                label={t("name")}
                 required
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 autoFocus
-                placeholder="Enter your full name"
+                placeholder={t("common.ui.enter_your_full_name")}
                 autoComplete="on"
                 error={errors.first_name?.message}
               />
@@ -238,7 +243,14 @@ export const ProfileSetupStep = observer(function ProfileSetupStep({ handleStepC
           )}
         </div>
         {/* Continue Button */}
-        <Button variant="primary" type="submit" stretch="full" size="lg" disabled={isButtonDisabled} label="Continue" />
+        <Button
+          variant="primary"
+          type="submit"
+          stretch="full"
+          size="lg"
+          disabled={isButtonDisabled}
+          label={t("common.continue")}
+        />
       </div>
 
       {/* Marketing Consent */}

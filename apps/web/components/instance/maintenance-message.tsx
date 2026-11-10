@@ -1,14 +1,15 @@
-/**
+import { useTranslation } from "@plane/i18n"; /**
  * Copyright (c) 2023-present Plane Software, Inc. and contributors
  * SPDX-License-Identifier: AGPL-3.0-only
  * See the LICENSE file for details.
  */
 
 export function MaintenanceMessage() {
+  const { t } = useTranslation();
   const linkMap = [
     {
       key: "mail_to",
-      label: "Contact Support",
+      label: t("common.ui.contact_support"),
       value: "mailto:support@plane.so",
     },
   ];

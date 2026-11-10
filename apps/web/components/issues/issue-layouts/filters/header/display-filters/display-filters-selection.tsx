@@ -75,6 +75,7 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
       {showDisplayProperties && (
         <FilterDisplayProperties
           displayProperties={displayProperties}
+          allowCustomFields={displayFilters?.layout !== "gantt_chart"}
           displayPropertiesToRender={layoutDisplayFiltersOptions.display_properties}
           handleUpdate={handleDisplayPropertiesUpdate}
           cycleViewDisabled={cycleViewDisabled}
@@ -117,6 +118,8 @@ export const DisplayFiltersSelection = observer(function DisplayFiltersSelection
       {showOrderBy && (
         <FilterOrderBy
           selectedOrderBy={displayFilters?.order_by}
+          isEpic={isEpic}
+          allowCustomFields={displayFilters?.layout === "list" || displayFilters?.layout === "spreadsheet"}
           handleUpdate={(val) =>
             handleDisplayFiltersUpdate({
               order_by: val,

@@ -117,14 +117,14 @@ export const PageActions = observer(function PageActions(props: Props) {
         {
           key: "open-in-new-tab",
           action: pageOperations.openInNewTab,
-          title: "Open in new tab",
+          title: t("common.actions.open_in_new_tab"),
           icon: NewTabOutline,
           shouldRender: true,
         },
         {
           key: "copy-link",
           action: pageOperations.copyLink,
-          title: "Copy link",
+          title: t("common.actions.copy_link"),
           icon: LinkOutline,
           shouldRender: true,
         },
@@ -133,7 +133,7 @@ export const PageActions = observer(function PageActions(props: Props) {
           action: () => {
             pageOperations.duplicate();
           },
-          title: "Make a copy",
+          title: t("common.actions.make_a_copy"),
           icon: CopyOutline,
           shouldRender: canCurrentUserDuplicatePage,
         },
@@ -151,14 +151,14 @@ export const PageActions = observer(function PageActions(props: Props) {
           action: () => {
             setDeletePageModal(true);
           },
-          title: "Delete",
+          title: t("delete"),
           icon: DeleteOutline,
           shouldRender: canCurrentUserDeletePage && !!archived_at,
         },
         {
           key: "move",
           action: () => setMovePageModal(true),
-          title: "Move",
+          title: t("page_actions.move_page.submit_button.default"),
           icon: ExportOutline,
           shouldRender: canCurrentUserMovePage && isMovePageEnabled,
         },
@@ -181,6 +181,8 @@ export const PageActions = observer(function PageActions(props: Props) {
       canCurrentUserMovePage,
       isMovePageEnabled,
       pageOperations,
+      ,
+      t,
     ]
   );
   // arrange options

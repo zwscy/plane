@@ -98,8 +98,8 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
     } else {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Editor is still processing changes. Please wait before proceeding.",
+        title: t("toast.error"),
+        message: t("common.ui.editor_is_still_processing_changes_please_wait_before_proceeding"),
       });
       event.preventDefault(); // Prevent default action if editor is not ready to discard
     }
@@ -128,9 +128,10 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
         if (res.response === "")
           setToast({
             type: "error",
-            title: "Error!",
-            message:
-              "Work item title isn't informative enough to generate the description. Please try with a different title.",
+            title: t("toast.error"),
+            message: t(
+              "common.ui.work_item_title_isn_t_informative_enough_to_generate_the_description_please_try_with_a_different_title"
+            ),
           });
         else handleAiAssistance(res.response_html);
       })
@@ -140,13 +141,13 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
         if (err.status === 429)
           setToast({
             type: "error",
-            title: "Error!",
+            title: t("toast.error"),
             message: error || "You have reached the maximum number of requests of 50 requests per month per user.",
           });
         else
           setToast({
             type: "error",
-            title: "Error!",
+            title: t("toast.error"),
             message: error || "Some error occurred. Please try again.",
           });
       })
@@ -258,7 +259,8 @@ export const IssueDescriptionEditor = observer(function IssueDescriptionEditor(p
                   "Generating response"
                 ) : (
                   <>
-                    <AiStar1Outline className="h-3.5 w-3.5" />I{"'"}m feeling lucky
+                    <AiStar1Outline className="h-3.5 w-3.5" />
+                    {t("common.ui.im_feeling_lucky")}
                   </>
                 )}
               </button>

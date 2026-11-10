@@ -10,6 +10,7 @@ import { StateGroupIcon } from "@plane/blocks/icons";
 import type { IState } from "@plane/types";
 // components
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export const FilterState = observer(function FilterState(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate, states } = props;
   // derived values
   const options = (states ?? []).map((state) => ({
@@ -27,6 +29,12 @@ export const FilterState = observer(function FilterState(props: Props) {
   }));
 
   return (
-    <FilterSubmenu label="State" options={options} appliedFilters={appliedFilters} onToggle={handleUpdate} searchable />
+    <FilterSubmenu
+      label={t("common.state")}
+      options={options}
+      appliedFilters={appliedFilters}
+      onToggle={handleUpdate}
+      searchable
+    />
   );
 });

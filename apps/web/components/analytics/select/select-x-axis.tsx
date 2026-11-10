@@ -8,6 +8,7 @@ import { useMemo } from "react";
 // plane package imports
 import { Select } from "@plane/blocks/select";
 import type { ChartXAxisProperty } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 
 /** `null` is a real selectable value here (`allowNoValue`), so it needs an id the Select can key on. */
 const NO_VALUE_ID = "__no_value__";
@@ -29,6 +30,7 @@ type Props = {
 };
 
 export function SelectXAxis(props: Props) {
+  const { t } = useTranslation();
   const { value, onChange, options, hiddenOptions, allowNoValue, label } = props;
   // derived values
   const selectOptions = useMemo<XAxisOption[]>(() => {
@@ -36,8 +38,8 @@ export function SelectXAxis(props: Props) {
     const visible = options
       .filter((item) => !hidden.has(item.value))
       .map((item) => ({ id: item.value, label: item.label, value: item.value }));
-    return allowNoValue ? [{ id: NO_VALUE_ID, label: "No value", value: null }, ...visible] : visible;
-  }, [options, hiddenOptions, allowNoValue]);
+    return allowNoValue ? [{ id: NO_VALUE_ID, label: t("common.ui.no_value"), value: null }, ...visible] : visible;
+  }, [options, hiddenOptions, allowNoValue, t]);
   const selected = useMemo(
     () => selectOptions.find((option) => option.value === value) ?? null,
     [selectOptions, value]

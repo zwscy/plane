@@ -155,6 +155,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
                 .values(
                     "id",
                     "name",
+                    "custom_fields",
                     "state_id",
                     "sort_order",
                     "completed_at",
@@ -276,6 +277,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
             data=request.data,
             context={
                 "project_id": draft_issue.project_id,
+                "custom_fields_source": draft_issue,
                 "workspace_id": draft_issue.project.workspace_id,
                 "default_assignee_id": draft_issue.project.default_assignee_id,
             },

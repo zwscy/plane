@@ -22,6 +22,7 @@ import { useCycle } from "@/hooks/store/use-cycle";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { CustomFieldOrderGuard } from "../custom-field-order-guard";
 import { IssuePeekOverview } from "../../peek-overview";
 import { CycleCalendarLayout } from "../calendar/roots/cycle-root";
 import { BaseGanttRoot } from "../gantt";
@@ -113,7 +114,9 @@ export const CycleLayoutRoot = observer(function CycleLayoutRoot() {
               )}
               {cycleWorkItemsFilter && <WorkItemFiltersRow filter={cycleWorkItemsFilter} />}
               <div className="h-full w-full overflow-auto">
-                <CycleIssueLayout activeLayout={activeLayout} cycleId={cycleId} isCompletedCycle={isCompletedCycle} />
+                <CustomFieldOrderGuard>
+                  <CycleIssueLayout activeLayout={activeLayout} cycleId={cycleId} isCompletedCycle={isCompletedCycle} />
+                </CustomFieldOrderGuard>
               </div>
               {/* peek overview */}
               <IssuePeekOverview />

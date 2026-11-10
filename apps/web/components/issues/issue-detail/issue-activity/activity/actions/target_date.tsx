@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import { CalendarOutline } from "@makeplane/propel/icons";
 // hooks
 import { renderFormattedDate } from "@plane/utils";
@@ -16,6 +17,7 @@ import { IssueActivityBlockComponent, IssueLink } from "./";
 type TIssueTargetDateActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
 export const IssueTargetDateActivity = observer(function IssueTargetDateActivity(props: TIssueTargetDateActivity) {
+  const { t, currentLocale } = useTranslation();
   const { activityId, showIssue = true, ends } = props;
   // hooks
   const {
@@ -32,13 +34,18 @@ export const IssueTargetDateActivity = observer(function IssueTargetDateActivity
       ends={ends}
     >
       <>
-        {activity.new_value ? `set the due date to ` : `removed the due date `}
+        {activity.new_value
+          ? t("common.ui.activity_set_the_due_date_to") + " "
+          : t("common.ui.activity_removed_the_due_date") + " "}
         {activity.new_value && (
           <>
-            <span className="font-medium text-primary">{renderFormattedDate(activity.new_value)}</span>
+            <span className="font-medium text-primary">
+              {renderFormattedDate(activity.new_value, undefined, currentLocale)}
+            </span>
           </>
         )}
-        {showIssue && (activity.new_value ? ` for ` : ` from `)}
+        {showIssue &&
+          (activity.new_value ? " " + t("common.ui.activity_for") + " " : " " + t("common.ui.activity_from") + " ")}
         {showIssue && <IssueLink activityId={activityId} />}.
       </>
     </IssueActivityBlockComponent>

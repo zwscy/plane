@@ -5,11 +5,12 @@
  */
 
 import { useState } from "react";
-import { format } from "date-fns";
+import { useTranslation } from "@plane/i18n";
+import { formatDateForDisplay, getDateFnsLocale } from "@plane/utils";
 import { Calendar } from "@makeplane/propel/components/calendar";
 import type { DateSelectCommonProps } from "./date-select-shell";
 import { DateSelectShell } from "./date-select-shell";
-import { buildDisabledMatchers, DEFAULT_DATE_FORMAT_TOKEN } from "./date-select.utils";
+import { buildDisabledMatchers, DEFAULT_DATE_FORMAT_TOKEN, getDatePickerLabels } from "./date-select.utils";
 
 export type DateSelectProps = DateSelectCommonProps & {
   /** The picked day, or `null` when nothing is set. */
@@ -24,6 +25,7 @@ export type DateSelectProps = DateSelectCommonProps & {
  * `formatToken` — this block owns only the picker.
  */
 export function DateSelect(props: DateSelectProps) {
+  const { currentLocale, t } = useTranslation();
   const {
     value,
     onChange,
@@ -39,7 +41,7 @@ export function DateSelect(props: DateSelectProps) {
   // states
   const [isOpen, setIsOpen] = useState(props.defaultOpen ?? false);
   // derived values
-  const formatted = value ? format(value, formatToken) : "";
+  const formatted = value ? formatDateForDisplay(value, formatToken, currentLocale) : "";
   const disabledMatchers = buildDisabledMatchers(minDate, maxDate);
 
   const handleOpenChange = (open: boolean) => {
@@ -62,6 +64,8 @@ export function DateSelect(props: DateSelectProps) {
       }}
     >
       <Calendar
+        locale={getDateFnsLocale(currentLocale)}
+        labels={getDatePickerLabels(currentLocale, t)}
         mode="single"
         selected={value ?? undefined}
         defaultMonth={value ?? defaultMonth}

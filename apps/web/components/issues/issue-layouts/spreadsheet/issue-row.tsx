@@ -24,6 +24,7 @@ import { MultipleSelectEntityAction } from "@/components/core/multiple-select";
 import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 // hooks
+import { useOrderedSubIssues } from "@/hooks/use-ordered-sub-issues";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
@@ -33,7 +34,9 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // local components
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { isIssueNew } from "../utils";
+import { CustomFieldCells } from "./custom-field-columns";
 import { IssueColumn } from "./issue-column";
+import { useTranslation } from "@plane/i18n";
 
 interface Props {
   displayProperties: IIssueDisplayProperties;
@@ -53,7 +56,8 @@ interface Props {
   isEpic?: boolean;
 }
 
-export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: Props) {
+// Keep recursion bound to the observed export rather than the unwrapped render function.
+export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRowRenderer(props: Props) {
   const {
     displayProperties,
     issueId,
@@ -76,6 +80,7 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRow(props: 
   // store hooks
   const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
   const { issueMap } = useIssues();
+  useOrderedSubIssues(issueId, isExpanded, isEpic);
 
   // derived values
   const issue = issueMap[issueId];
@@ -169,6 +174,7 @@ interface IssueRowDetailsProps {
 }
 
 const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetailsProps) {
+  const { t } = useTranslation();
   const {
     displayProperties,
     issueId,
@@ -203,7 +209,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
   const handleIssuePeekOverview = (issue: TIssue) =>
     handleRedirection(workspaceSlug?.toString(), issue, isMobile, nestingLevel);
 
-  const { subIssues: subIssuesStore, issue } = useIssueDetail();
+  const { issue } = useIssueDetail();
 
   const issueDetail = issue.getIssueById(issueId);
 
@@ -234,11 +240,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
     if (nestingLevel >= 3) {
       handleIssuePeekOverview(issueDetail);
     } else {
-      setExpanded((prevState) => {
-        if (!prevState && workspaceSlug && issueDetail && issueDetail.project_id)
-          subIssuesStore.fetchSubIssues(workspaceSlug.toString(), issueDetail.project_id, issueDetail.id);
-        return !prevState;
-      });
+      setExpanded((prevState) => !prevState);
     }
   };
 
@@ -311,7 +313,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
               {/* select checkbox */}
               {projectId && canSelectIssues && (
                 <Tooltip
-                  label="Only work items within the current project can be selected."
+                  label={t("common.ui.only_work_items_within_the_current_project_can_be_selected")}
                   layout="stacked"
                   disabled={issueDetail.project_id === projectId}
                 >
@@ -382,6 +384,14 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
           isEstimateEnabled={isEstimateEnabled}
         />
       ))}
+      {!isEpic && (
+        <CustomFieldCells
+          issue={issueDetail}
+          displayProperties={displayProperties}
+          disabled={disableUserActions}
+          updateIssue={updateIssue}
+        />
+      )}
       {/* Config column cell, pinned to the right edge: holds the row's quick actions */}
       <td className="right-0 z-10 w-12 min-w-12 border-b-[0.5px] border-l-[0.5px] border-subtle bg-surface-1 shadow-direction-left md:sticky">
         <div className="flex items-center justify-center">

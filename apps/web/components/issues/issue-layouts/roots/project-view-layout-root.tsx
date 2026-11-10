@@ -18,12 +18,14 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { CustomFieldOrderGuard } from "../custom-field-order-guard";
 import { IssuePeekOverview } from "../../peek-overview";
 import { ProjectViewCalendarLayout } from "../calendar/roots/project-view-root";
 import { BaseGanttRoot } from "../gantt";
 import { ProjectViewKanBanLayout } from "../kanban/roots/project-view-root";
 import { ProjectViewListLayout } from "../list/roots/project-view-root";
 import { ProjectViewSpreadsheetLayout } from "../spreadsheet/roots/project-view-root";
+import { useTranslation } from "@plane/i18n";
 
 function ProjectViewIssueLayout(props: { activeLayout: EIssueLayoutTypes | undefined; viewId: string }) {
   switch (props.activeLayout) {
@@ -43,6 +45,7 @@ function ProjectViewIssueLayout(props: { activeLayout: EIssueLayoutTypes | undef
 }
 
 export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
+  const { t } = useTranslation();
   // router
   const { workspaceSlug: routerWorkspaceSlug, projectId: routerProjectId, viewId: routerViewId } = useParams();
   const workspaceSlug = routerWorkspaceSlug ? routerWorkspaceSlug?.toString() : undefined;
@@ -88,7 +91,7 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
       <ProjectLevelWorkItemFiltersHOC
         enableSaveView
         saveViewOptions={{
-          label: "Save as",
+          label: t("rich_filters.view_controls.save_as"),
         }}
         enableUpdateView
         entityId={viewId}
@@ -103,7 +106,9 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
           <div className="relative flex h-full w-full flex-col overflow-hidden">
             {projectViewWorkItemsFilter && <WorkItemFiltersRow filter={projectViewWorkItemsFilter} />}
             <div className="relative h-full w-full overflow-auto">
-              <ProjectViewIssueLayout activeLayout={activeLayout} viewId={viewId.toString()} />
+              <CustomFieldOrderGuard>
+                <ProjectViewIssueLayout activeLayout={activeLayout} viewId={viewId.toString()} />
+              </CustomFieldOrderGuard>
             </div>
             {/* peek overview */}
             <IssuePeekOverview />

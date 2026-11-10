@@ -5,4 +5,5 @@
  */
 
 export * from "./view.service";
+export * from "./custom-fields.service";
 export * from "./sites-publish.service";

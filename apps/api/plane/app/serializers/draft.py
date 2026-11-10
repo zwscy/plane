@@ -8,6 +8,8 @@ from django.utils import timezone
 # Third Party imports
 from rest_framework import serializers
 
+from plane.utils.custom_fields import CustomFieldsWriteMixin
+
 # Module imports
 from .base import BaseSerializer
 from plane.db.models import (
@@ -32,7 +34,7 @@ from plane.utils.content_validator import (
 from plane.app.permissions import ROLE
 
 
-class DraftIssueCreateSerializer(BaseSerializer):
+class DraftIssueCreateSerializer(CustomFieldsWriteMixin, BaseSerializer):
     # ids
     state_id = serializers.PrimaryKeyRelatedField(
         source="state", queryset=State.objects.all(), required=False, allow_null=True
@@ -339,6 +341,7 @@ class DraftIssueSerializer(BaseSerializer):
         fields = [
             "id",
             "name",
+            "custom_fields",
             "state_id",
             "sort_order",
             "completed_at",

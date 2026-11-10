@@ -14,12 +14,14 @@ import { getFileURL } from "@plane/utils";
 import { useUser } from "@/hooks/store/user";
 // components
 import { SwitchAccountModal } from "./switch-account-modal";
+import { useTranslation } from "@plane/i18n";
 
 type TSwitchAccountDropdownProps = {
   fullName?: string;
 };
 
 export const SwitchAccountDropdown = observer(function SwitchAccountDropdown(props: TSwitchAccountDropdownProps) {
+  const { t } = useTranslation();
   const { fullName } = props;
   // states
   const [showSwitchAccountModal, setShowSwitchAccountModal] = useState(false);
@@ -55,7 +57,11 @@ export const SwitchAccountDropdown = observer(function SwitchAccountDropdown(pro
           <span className="text-body-sm-regular text-secondary">{displayName}</span>
         </MenuTrigger>
         <MenuContent side="bottom" align="end">
-          <MenuItem variant="danger" label="Wrong e-mail address?" onClick={() => setShowSwitchAccountModal(true)} />
+          <MenuItem
+            variant="danger"
+            label={t("common.ui.wrong_e_mail_address")}
+            onClick={() => setShowSwitchAccountModal(true)}
+          />
         </MenuContent>
       </Menu>
     </>

@@ -282,7 +282,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
             required: t("name_is_required"),
             maxLength: {
               value: 255,
-              message: "Project name should be less than 255 characters",
+              message: t("common.ui.project_name_should_be_less_than_255_characters"),
             },
           }}
           render={({ field: { value, onChange, ref } }) => (
@@ -346,7 +346,7 @@ export function ProjectDetailsForm(props: IProjectDetailsForm) {
                   id="identifier"
                   name="identifier"
                   type="text"
-                  label="Project ID"
+                  label={t("common.project_id")}
                   value={value}
                   onChange={handleIdentifierChange}
                   ref={ref}

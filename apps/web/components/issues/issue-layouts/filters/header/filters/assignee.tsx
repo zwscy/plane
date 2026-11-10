@@ -7,6 +7,7 @@
 import { observer } from "mobx-react";
 // components
 import { MemberFilterSubmenu } from "@/components/common/filters/member-filter-submenu";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -15,11 +16,12 @@ type Props = {
 };
 
 export const FilterAssignees = observer(function FilterAssignees(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate, memberIds } = props;
 
   return (
     <MemberFilterSubmenu
-      label="Assignee"
+      label={t("common.assignee")}
       memberIds={memberIds}
       appliedFilters={appliedFilters}
       onToggle={handleUpdate}

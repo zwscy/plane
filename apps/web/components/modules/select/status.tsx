@@ -62,7 +62,7 @@ export function ModuleStatusSelect({ control, error, tabIndex }: Props) {
               {selectedValue ? (
                 t(selectedValue.i18n_label)
               ) : (
-                <span className={error ? "text-danger-primary" : "text-secondary"}>Status</span>
+                <span className={error ? "text-danger-primary" : "text-secondary"}>{t("common.status")}</span>
               )}
             </Select.Trigger>
           </Select>

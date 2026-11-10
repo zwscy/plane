@@ -106,7 +106,7 @@
     "trend_on_charts": "图表趋势",
     "active_projects": "活跃项目",
     "customized_insights": "自定义洞察",
-    "created_vs_resolved": "已创建 vs 已解决",
+    "created_vs_resolved": "已创建与已解决",
     "empty_state": {
       "project_insights": {
         "title": "暂无数据",
@@ -145,7 +145,7 @@
       }
     },
     "upgrade_to_plan": "升级到 {plan} 以解锁 {tab}",
-    "workitem_resolved_vs_pending": "已解决 vs 待处理的工作项",
+    "workitem_resolved_vs_pending": "已解决与待处理的工作项",
     "projects_by_status": "按状态分类的项目",
     "active_users": "活跃用户",
     "intake_trends": "入学趋势"

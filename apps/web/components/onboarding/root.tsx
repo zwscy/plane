@@ -17,12 +17,14 @@ import { useUser, useUserProfile } from "@/hooks/store/user";
 // local components
 import { OnboardingHeader } from "./header";
 import { OnboardingStepRoot } from "./steps";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   invitations?: IWorkspaceMemberInvitation[];
 };
 
 export const OnboardingRoot = observer(function OnboardingRoot({ invitations = [] }: Props) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<TOnboardingStep>(EOnboardingSteps.PROFILE_SETUP);
   // store hooks
   const { data: user } = useUser();
@@ -44,11 +46,11 @@ export const OnboardingRoot = observer(function OnboardingRoot({ invitations = [
     } catch (_error) {
       setToast({
         type: "error",
-        title: "Failed",
-        message: "Failed to finish onboarding, Please try again later.",
+        title: t("workspace.members_import.summary.stats.failed"),
+        message: t("common.ui.finish_onboarding_failed"),
       });
     }
-  }, [user, finishUserOnboarding]);
+  }, [user, finishUserOnboarding, t]);
 
   // handle step change
   const stepChange = useCallback(

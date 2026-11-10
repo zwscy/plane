@@ -37,7 +37,7 @@ export const FilterPriority = observer(function FilterPriority() {
   return (
     <FilterSubmenu
       label={t("common.priority")}
-      options={PRIORITY_OPTIONS}
+      options={PRIORITY_OPTIONS.map((option) => ({ ...option, label: t(option.value) }))}
       appliedFilters={filterValue}
       onToggle={handleToggle}
     />

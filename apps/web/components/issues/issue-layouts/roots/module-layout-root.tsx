@@ -18,6 +18,7 @@ import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { CustomFieldOrderGuard } from "../custom-field-order-guard";
 import { IssuePeekOverview } from "../../peek-overview";
 import { ModuleCalendarLayout } from "../calendar/roots/module-root";
 import { BaseGanttRoot } from "../gantt";
@@ -83,7 +84,9 @@ export const ModuleLayoutRoot = observer(function ModuleLayoutRoot() {
           <div className="relative flex h-full w-full flex-col overflow-hidden">
             {moduleWorkItemsFilter && <WorkItemFiltersRow filter={moduleWorkItemsFilter} />}
             <Row variant={ERowVariant.HUGGING} className="h-full w-full overflow-auto">
-              <ModuleIssueLayout activeLayout={activeLayout} moduleId={moduleId} />
+              <CustomFieldOrderGuard>
+                <ModuleIssueLayout activeLayout={activeLayout} moduleId={moduleId} />
+              </CustomFieldOrderGuard>
             </Row>
             {/* peek overview */}
             <IssuePeekOverview />

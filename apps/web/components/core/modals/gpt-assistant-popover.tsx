@@ -22,6 +22,7 @@ import { cn } from "@plane/utils";
 import { RichTextEditor } from "@/components/editor/rich-text";
 // services
 import { AIService } from "@/services/ai.service";
+import { useTranslation } from "@plane/i18n";
 const aiService = new AIService();
 
 type Props = {
@@ -44,6 +45,7 @@ type FormData = {
 };
 
 export function GptAssistantPopover(props: Props) {
+  const { t } = useTranslation();
   const {
     isOpen,
     handleClose,
@@ -95,7 +97,7 @@ export function GptAssistantPopover(props: Props) {
 
     setToast({
       type: "error",
-      title: "Error!",
+      title: t("toast.error"),
       message: errorMessage,
     });
 
@@ -121,8 +123,8 @@ export function GptAssistantPopover(props: Props) {
   const handleInvalidTask = () => {
     setToast({
       type: "error",
-      title: "Error!",
-      message: "Please enter some task to get AI assistance.",
+      title: t("toast.error"),
+      message: t("common.ui.please_enter_some_task_to_get_ai_assistance"),
     });
   };
 
@@ -174,7 +176,7 @@ export function GptAssistantPopover(props: Props) {
       variant="primary"
       size="sm"
       stretch="auto"
-      label="Use this response"
+      label={t("common.ui.use_this_response")}
       onClick={() => {
         onResponse(response);
         onClose();
@@ -217,7 +219,7 @@ export function GptAssistantPopover(props: Props) {
               <div className="vertical-scroll-enable max-h-72 space-y-4 overflow-y-auto">
                 {prompt && (
                   <div className="text-body-xs-regular">
-                    Content:
+                    {t("common.ui.content")}
                     <RichTextEditor
                       editable={false}
                       id="ai-assistant-content"
@@ -232,7 +234,7 @@ export function GptAssistantPopover(props: Props) {
                 )}
                 {response !== "" && (
                   <div className="page-block-section max-h-[8rem] text-body-xs-regular">
-                    Response:
+                    {t("common.ui.response")}
                     <RichTextEditor
                       editable={false}
                       id="ai-assistant-response"
@@ -246,8 +248,9 @@ export function GptAssistantPopover(props: Props) {
                 )}
                 {invalidResponse && (
                   <div className="text-body-xs-regular text-danger-primary">
-                    No response could be generated. This may be due to insufficient content or task information. Please
-                    try again.
+                    {t(
+                      "common.ui.no_response_could_be_generated_this_may_be_due_to_insufficient_content_or_task_information_please_try_again"
+                    )}
                   </div>
                 )}
               </div>
@@ -282,12 +285,16 @@ export function GptAssistantPopover(props: Props) {
                 <>
                   <div className="flex items-center justify-center gap-2 text-body-xs-regular text-tertiary">
                     <WarningCircleOutline className="h-4 w-4" />
-                    <p>By using this feature, you consent to sharing the message with a 3rd party service. </p>
+                    <p>
+                      {t(
+                        "common.ui.by_using_this_feature_you_consent_to_sharing_the_message_with_a_3rd_party_service"
+                      )}{" "}
+                    </p>
                   </div>
                 </>
               )}
               <div className="flex items-center gap-2">
-                <Button variant="secondary" size="sm" stretch="auto" label="Close" onClick={onClose} />
+                <Button variant="secondary" size="sm" stretch="auto" label={t("close")} onClick={onClose} />
                 <Button
                   variant="primary"
                   size="sm"

@@ -12,7 +12,7 @@
       "required": "工作项标题为必填项"
     },
     "add": {
-      "press_enter": "按'Enter'添加另一个工作项",
+      "press_enter": "按回车键添加另一个工作项",
       "label": "添加工作项",
       "cycle": {
         "failed": "无法将工作项添加到周期。请重试。",
@@ -248,7 +248,7 @@
     },
     "pages": {
       "link_pages": "连接页面",
-      "show_wiki_pages": "显示 Wiki 页面",
+      "show_wiki_pages": "显示知识库页面",
       "link_pages_to": "连接页面到",
       "linked_pages": "连接的页面",
       "no_description": "此页面为空。在此输入一些内容，并在此处查看此占位符",
@@ -439,7 +439,7 @@
     },
     "add": {
       "label": "添加史诗",
-      "press_enter": "按'Enter'添加另一个史诗"
+      "press_enter": "按回车键添加另一个史诗"
     },
     "title": {
       "label": "史诗标题",

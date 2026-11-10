@@ -49,8 +49,8 @@ export const CycleDeleteModal = observer(function CycleDeleteModal(props: ICycle
           if (cycleId || peekCycle) router.push(`/${workspaceSlug}/projects/${projectId}/cycles`);
           setToast({
             type: "success",
-            title: "Success!",
-            message: "Cycle deleted successfully.",
+            title: t("toast.success"),
+            message: t("common.ui.cycle_deleted_successfully"),
           });
         })
         .catch((errors) => {
@@ -68,8 +68,8 @@ export const CycleDeleteModal = observer(function CycleDeleteModal(props: ICycle
     } catch {
       setToast({
         type: "error",
-        title: "Warning!",
-        message: "Something went wrong please try again later.",
+        title: t("common.warning"),
+        message: t("common.ui.something_went_wrong_please_try_again_later"),
       });
     }
 
@@ -82,12 +82,14 @@ export const CycleDeleteModal = observer(function CycleDeleteModal(props: ICycle
       handleSubmit={formSubmit}
       isSubmitting={loader}
       isOpen={isOpen}
-      title="Delete cycle"
+      title={t("common.ui.delete_cycle")}
       content={
         <>
-          Are you sure you want to delete cycle{' "'}
+          {t("common.ui.are_you_sure_you_want_to_delete_cycle")}
+          {' "'}
           <span className="font-medium break-words text-primary">{cycle?.name}</span>
-          {'"'}? All of the data related to the cycle will be permanently removed. This action cannot be undone.
+          {'"'}
+          {t("common.ui.all_of_the_data_related_to_the_cycle_will_be_permanently_removed_this_action_cannot_be_undone")}
         </>
       }
     />

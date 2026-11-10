@@ -130,7 +130,7 @@ class CycleIssueViewSet(BaseViewSet):
         order_by_param = request.GET.get("order_by", "-created_at")
         # Issue queryset
         issue_queryset, order_by_param = order_issue_queryset(
-            issue_queryset=issue_queryset, order_by_param=order_by_param
+            issue_queryset=issue_queryset, order_by_param=order_by_param, project_id=project_id
         )
 
         # Group by

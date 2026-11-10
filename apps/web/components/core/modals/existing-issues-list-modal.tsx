@@ -186,7 +186,7 @@ export function ExistingIssuesListModal(props: Props) {
             {workspaceLevelToggle && (
               <>
                 <span className="h-5 border-s border-subtle" aria-hidden />
-                <Tooltip label="Toggle workspace level search" disabled={isMobile}>
+                <Tooltip label={t("common.ui.toggle_workspace_level_search")} disabled={isMobile}>
                   <div className="flex flex-shrink-0 items-center gap-2 text-body-xs-regular text-secondary">
                     <Switch
                       size="md"
@@ -239,13 +239,13 @@ export function ExistingIssuesListModal(props: Props) {
             {/* TODO: Translate here */}
             {searchTerm !== "" && (
               <h5 className="px-3 py-1 text-body-xs-regular text-secondary">
-                Search results for{" "}
+                {t("common.ui.search_results_for")}{" "}
                 <span className="text-primary">
                   {'"'}
                   {searchTerm}
                   {'"'}
                 </span>{" "}
-                in project:
+                {t("common.ui.in_project")}
               </h5>
             )}
 

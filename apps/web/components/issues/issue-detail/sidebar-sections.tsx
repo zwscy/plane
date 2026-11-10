@@ -33,6 +33,7 @@ import { IssueCycleSelect } from "./cycle-select";
 import { IssueLabel } from "./label";
 import { IssueModuleSelect } from "./module-select";
 import type { TIssueOperations } from "./root";
+import { IssueCustomFields } from "@/components/issues/custom-fields";
 import { IssueDetailSidebarGroup } from "./sidebar-group";
 
 type Props = {
@@ -143,6 +144,14 @@ export const IssueDetailSidebarSections = observer(function IssueDetailSidebarSe
             </SidebarPropertyListItem>
           )}
         </IssueDetailSidebarGroup>
+
+        <IssueCustomFields
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          values={issue.custom_fields}
+          disabled={disabled}
+          onChange={(custom_fields) => issueOperations.update(workspaceSlug, projectId, issueId, { custom_fields })}
+        />
 
         {hasProjectStructureProperties && (
           <>

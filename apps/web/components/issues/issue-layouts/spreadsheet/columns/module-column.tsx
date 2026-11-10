@@ -14,6 +14,7 @@ import type { TIssue } from "@plane/types";
 import { ModuleSelect } from "@/components/dropdowns/module/module-select";
 // hooks
 import { useIssuesStore } from "@/hooks/use-issue-layout-store";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   issue: TIssue;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export const SpreadsheetModuleColumn = observer(function SpreadsheetModuleColumn(props: Props) {
+  const { t } = useTranslation();
   const { issue, disabled, onClose } = props;
   // router
   const { workspaceSlug } = useParams();
@@ -54,7 +56,7 @@ export const SpreadsheetModuleColumn = observer(function SpreadsheetModuleColumn
         value={issue?.module_ids ?? []}
         onChange={handleModule}
         disabled={disabled}
-        placeholder="Select modules"
+        placeholder={t("common.ui.select_modules")}
         // `.clickable` is what the table's keyboard navigation clicks on Enter / Space in a focused cell.
         className="clickable"
         variant="table-cell"

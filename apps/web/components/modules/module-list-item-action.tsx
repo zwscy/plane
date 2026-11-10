@@ -73,11 +73,11 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
     setPromiseToast(addToFavoritePromise, {
       loading: "Adding module to favorites...",
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => "Module added to favorites.",
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => "Couldn't add the module to favorites. Please try again.",
       },
     });
@@ -97,11 +97,11 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
     setPromiseToast(removeFromFavoritePromise, {
       loading: "Removing module from favorites...",
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => "Module removed from favorites.",
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => "Couldn't remove the module from favorites. Please try again.",
       },
     });
@@ -114,14 +114,14 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Module updated successfully.",
+          title: t("toast.success"),
+          message: t("common.ui.module_updated_successfully"),
         });
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err?.detail ?? "Module could not be updated. Please try again.",
         });
       });
@@ -164,7 +164,7 @@ export const ModuleListItemAction = observer(function ModuleListItemAction(props
         {moduleLeadDetails ? (
           <ButtonAvatars showTooltip={false} userIds={moduleLeadDetails?.id} />
         ) : (
-          <Tooltip label="No lead">
+          <Tooltip label={t("workspace_projects.card.no_lead")}>
             <LeadOutline className="size-4 shrink-0 text-tertiary" />
           </Tooltip>
         )}

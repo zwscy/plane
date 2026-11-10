@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 // plane imports
 import {
   MenuCheckboxItem,
@@ -39,6 +40,7 @@ export const isCustomDateFilterValue = (value: string) => isInDateFormat(value.s
  * that opens the custom-range modal through the surrounding `DateFilterModalHost`.
  */
 export const DateFilterSubmenu = observer(function DateFilterSubmenu(props: Props) {
+  const { t } = useTranslation();
   const { label, options, appliedFilters, onToggleOption, onSelectCustomRange, onClearCustomRange } = props;
   // context hooks
   const dateFilterModal = useDateFilterModal();
@@ -60,7 +62,7 @@ export const DateFilterSubmenu = observer(function DateFilterSubmenu(props: Prop
         ))}
         {dateFilterModal && (
           <MenuCheckboxItem
-            label="Custom"
+            label={t("common.ui.custom_option")}
             checked={isCustomRangeApplied}
             // picking a range opens a modal, so the menu steps aside; clearing one keeps it open
             closeOnClick={!isCustomRangeApplied}

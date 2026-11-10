@@ -18,6 +18,7 @@ import {
   DialogMain,
   DialogTitle,
 } from "@makeplane/propel/components/dialog";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -27,6 +28,7 @@ type Props = {
 };
 
 export function ConfirmIssueDiscard(props: Props) {
+  const { t } = useTranslation();
   const { isOpen, handleClose, onDiscard, onConfirm } = props;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -56,18 +58,18 @@ export function ConfirmIssueDiscard(props: Props) {
         <DialogMain>
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>Save this draft?</DialogTitle>
+              <DialogTitle>{t("common.ui.save_this_draft")}</DialogTitle>
               <DialogDescription>
-                You can save this work item to Drafts so you can come back to it later.
+                {t("common.ui.you_can_save_this_work_item_to_drafts_so_you_can_come_back_to_it_later")}
               </DialogDescription>
             </DialogHeading>
           </DialogHeader>
         </DialogMain>
         <DialogActions>
           <DialogInfo>
-            <Button variant="secondary" size="sm" stretch="auto" onClick={onDiscard} label="Discard" />
+            <Button variant="secondary" size="sm" stretch="auto" onClick={onDiscard} label={t("common.discard")} />
           </DialogInfo>
-          <Button variant="secondary" size="sm" stretch="auto" onClick={onClose} label="Cancel" />
+          <Button variant="secondary" size="sm" stretch="auto" onClick={onClose} label={t("cancel")} />
           <Button
             variant="primary"
             size="sm"

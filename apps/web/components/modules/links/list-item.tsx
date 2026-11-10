@@ -46,8 +46,8 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
     copyTextToClipboard(text).then(() =>
       setToast({
         type: "success",
-        title: "Copied to clipboard",
-        message: "The URL has been successfully copied to your clipboard",
+        title: t("copied_to_clipboard"),
+        message: t("copied_to_clipboard_description"),
       })
     );
   };
@@ -71,9 +71,12 @@ export const ModulesLinksListItem = observer(function ModulesLinksListItem(props
           </a>
         </Tooltip>
         <p className="truncate text-caption-md-regular text-placeholder">
-          Added {calculateTimeAgo(link.created_at)}{" "}
+          {t("project.members_import.summary.stats.added")} {calculateTimeAgo(link.created_at)}{" "}
           {createdByDetails && (
-            <>by {createdByDetails?.is_bot ? createdByDetails?.first_name + " Bot" : createdByDetails?.display_name}</>
+            <>
+              {t("common.ui.by")}{" "}
+              {createdByDetails?.is_bot ? createdByDetails?.first_name + " Bot" : createdByDetails?.display_name}
+            </>
           )}
         </p>
       </div>

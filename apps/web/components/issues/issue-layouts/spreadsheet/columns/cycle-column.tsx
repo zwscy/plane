@@ -13,6 +13,7 @@ import type { TIssue } from "@plane/types";
 import { CycleSelect } from "@/components/dropdowns/cycle/cycle-select";
 // hooks
 import { useIssuesStore } from "@/hooks/use-issue-layout-store";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   issue: TIssue;
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export const SpreadsheetCycleColumn = observer(function SpreadsheetCycleColumn(props: Props) {
+  const { t } = useTranslation();
   const { issue, disabled, onClose } = props;
   // router
   const { workspaceSlug } = useParams();
@@ -45,7 +47,7 @@ export const SpreadsheetCycleColumn = observer(function SpreadsheetCycleColumn(p
         value={issue.cycle_id}
         onChange={handleCycle}
         disabled={disabled}
-        placeholder="Select cycle"
+        placeholder={t("common.ui.select_cycle")}
         // `.clickable` is what the table's keyboard navigation clicks on Enter / Space in a focused cell.
         className="clickable"
         variant="table-cell"

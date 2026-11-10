@@ -8,6 +8,7 @@ import type { Control } from "react-hook-form";
 import { Controller } from "react-hook-form";
 import { CheckboxField } from "@makeplane/propel/components/checkbox-field";
 import type { IWebhook } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 
 export const INDIVIDUAL_WEBHOOK_OPTIONS: {
   key: keyof IWebhook;
@@ -16,28 +17,28 @@ export const INDIVIDUAL_WEBHOOK_OPTIONS: {
 }[] = [
   {
     key: "project",
-    label: "Projects",
-    description: "Project created, updated, or deleted",
+    label: "projects",
+    description: "common.ui.webhook_project_events",
   },
   {
     key: "cycle",
-    label: "Cycles",
-    description: "Cycle created, updated, or deleted",
+    label: "cycles",
+    description: "common.ui.webhook_cycle_events",
   },
   {
     key: "issue",
-    label: "Work items",
-    description: "Work item created, updated, deleted, added to a cycle or module",
+    label: "work_items",
+    description: "common.ui.webhook_issue_events",
   },
   {
     key: "module",
-    label: "Modules",
-    description: "Module created, updated, or deleted",
+    label: "modules",
+    description: "common.ui.webhook_module_events",
   },
   {
     key: "issue_comment",
-    label: "Work item comments",
-    description: "Comment posted, updated, or deleted",
+    label: "common.ui.work_item_comments",
+    description: "common.ui.webhook_comment_events",
   },
 ];
 
@@ -46,6 +47,7 @@ type Props = {
 };
 
 export function WebhookIndividualEventOptions({ control }: Props) {
+  const { t } = useTranslation();
   return (
     <div className="grid grid-cols-1 gap-x-4 gap-y-8 px-6 lg:grid-cols-2">
       {INDIVIDUAL_WEBHOOK_OPTIONS.map((option) => (
@@ -56,9 +58,9 @@ export function WebhookIndividualEventOptions({ control }: Props) {
           render={({ field: { onChange, value } }) => (
             <CheckboxField
               name={option.key}
-              label={option.label}
+              label={t(option.label)}
               size="lg"
-              description={option.description}
+              description={t(option.description)}
               stretch="full"
               checked={value === true}
               onCheckedChange={onChange}

@@ -13,6 +13,7 @@ import { Switch } from "@makeplane/propel/components/switch";
 import { SettingsBoxedControlItem } from "@/components/settings/boxed-control-item";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   description?: React.ReactNode;
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export const ProjectSettingsFeatureControlItem = observer(function ProjectSettingsFeatureControlItem(props: Props) {
+  const { t } = useTranslation();
   const { description, disabled, featureProperty, projectId, title, value, workspaceSlug } = props;
   // store hooks
   const { getProjectById, updateProject } = useProject();
@@ -41,14 +43,14 @@ export const ProjectSettingsFeatureControlItem = observer(function ProjectSettin
     const updateProjectPromise = updateProject(workspaceSlug, projectId, settingsPayload);
 
     setPromiseToast(updateProjectPromise, {
-      loading: "Updating project feature...",
+      loading: t("project_settings.features.toasts.loading"),
       success: {
-        title: "Success!",
-        message: () => "Project feature updated successfully.",
+        title: t("toast.success"),
+        message: () => t("project_settings.features.toasts.success"),
       },
       error: {
-        title: "Error!",
-        message: () => "Something went wrong while updating project feature. Please try again.",
+        title: t("toast.error"),
+        message: () => t("project_settings.features.toasts.error"),
       },
     });
     void updateProjectPromise.then(() => {

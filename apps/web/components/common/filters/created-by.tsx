@@ -7,6 +7,7 @@
 import { observer } from "mobx-react";
 // local imports
 import { MemberFilterSubmenu } from "./member-filter-submenu";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -15,11 +16,12 @@ type Props = {
 };
 
 export const FilterCreatedBy = observer(function FilterCreatedBy(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate, memberIds } = props;
 
   return (
     <MemberFilterSubmenu
-      label="Created by"
+      label={t("common.created_by")}
       memberIds={memberIds}
       appliedFilters={appliedFilters}
       onToggle={handleUpdate}

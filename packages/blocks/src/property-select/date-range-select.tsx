@@ -5,11 +5,12 @@
  */
 
 import { useState } from "react";
-import { format } from "date-fns";
+import { useTranslation } from "@plane/i18n";
+import { formatDateForDisplay, formatDateRange, getDateFnsLocale, isChineseDateLocale } from "@plane/utils";
 import { Calendar } from "@makeplane/propel/components/calendar";
 import type { DateSelectCommonProps } from "./date-select-shell";
 import { DateSelectShell } from "./date-select-shell";
-import { buildDisabledMatchers, DEFAULT_DATE_FORMAT_TOKEN } from "./date-select.utils";
+import { buildDisabledMatchers, DEFAULT_DATE_FORMAT_TOKEN, getDatePickerLabels } from "./date-select.utils";
 
 /** Both ends of the picked range. Either end may be unset. */
 export type DateRangeValue = {
@@ -73,14 +74,17 @@ const MERGE_TOKENS: Record<string, { sameYear: MergeTokenPair; sameMonth: MergeT
  * "Jun 10 - 24, 2025"; two months in one year give "Jan 24 - Feb 02, 2025"; anything wider — or any
  * `formatToken` outside {@link MERGE_TOKENS} — stays whole.
  */
-function mergeRangeLabel(range: DateRangeValue, from: string, to: string, formatToken: string): string {
+function mergeRangeLabel(range: DateRangeValue, from: string, to: string, formatToken: string, locale: string): string {
+  if (isChineseDateLocale(locale) && formatToken === DEFAULT_DATE_FORMAT_TOKEN) {
+    return formatDateRange(range.from, range.to, locale);
+  }
   const joined = from && to ? `${from} - ${to}` : from || to;
   if (!range.from || !range.to || !from || !to) return joined;
   if (range.from.getFullYear() !== range.to.getFullYear()) return joined;
   const tokens = MERGE_TOKENS[formatToken];
   if (!tokens) return joined;
   const pair = range.from.getMonth() === range.to.getMonth() ? tokens.sameMonth : tokens.sameYear;
-  return `${format(range.from, pair.from)} - ${format(range.to, pair.to)}`;
+  return `${formatDateForDisplay(range.from, pair.from, locale)} - ${formatDateForDisplay(range.to, pair.to, locale)}`;
 }
 
 /**
@@ -90,6 +94,7 @@ function mergeRangeLabel(range: DateRangeValue, from: string, to: string, format
  * it — the two-month side-by-side layout needs the upstream prop before it can come back.
  */
 export function DateRangeSelect(props: DateRangeSelectProps) {
+  const { currentLocale, t } = useTranslation();
   const {
     value,
     onChange,
@@ -110,13 +115,13 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
   // sees a range it did not ask for.
   const [draft, setDraft] = useState<DateRangeValue | null>(null);
   // derived values
-  const from = value.from ? format(value.from, formatToken) : "";
-  const to = value.to ? format(value.to, formatToken) : "";
+  const from = value.from ? formatDateForDisplay(value.from, formatToken, currentLocale) : "";
+  const to = value.to ? formatDateForDisplay(value.to, formatToken, currentLocale) : "";
   const joined = from && to ? `${from} - ${to}` : from || to;
   const formatted = props.formatLabel
     ? props.formatLabel(value, { from, to })
     : props.mergeDates
-      ? mergeRangeLabel(value, from, to, formatToken)
+      ? mergeRangeLabel(value, from, to, formatToken, currentLocale)
       : joined;
   const isEmpty = !value.from && !value.to;
   const disabledMatchers = buildDisabledMatchers(minDate, maxDate);
@@ -144,6 +149,8 @@ export function DateRangeSelect(props: DateRangeSelectProps) {
       }}
     >
       <Calendar
+        locale={getDateFnsLocale(currentLocale)}
+        labels={getDatePickerLabels(currentLocale, t)}
         mode="range"
         selected={shown.from ? { from: shown.from, to: shown.to ?? undefined } : undefined}
         defaultMonth={value.from ?? defaultMonth}

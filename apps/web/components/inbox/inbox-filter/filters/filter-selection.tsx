@@ -14,8 +14,10 @@ import { FilterLabels } from "./labels";
 import { FilterMember } from "./members";
 import { FilterPriority } from "./priority";
 import { FilterStatus } from "./status";
+import { useTranslation } from "@plane/i18n";
 
 export const InboxIssueFilterSelection = observer(function InboxIssueFilterSelection() {
+  const { t } = useTranslation();
   // hooks
   const {
     project: { projectMemberIds },
@@ -29,15 +31,15 @@ export const InboxIssueFilterSelection = observer(function InboxIssueFilterSelec
       {/* Priority */}
       <FilterPriority />
       {/* assignees */}
-      <FilterMember filterKey="assignees" label="Assignees" memberIds={projectMemberIds ?? []} />
+      <FilterMember filterKey="assignees" label={t("common.assignees")} memberIds={projectMemberIds ?? []} />
       {/* Created By */}
-      <FilterMember filterKey="created_by" label="Created By" memberIds={projectMemberIds ?? []} />
+      <FilterMember filterKey="created_by" label={t("common.created_by")} memberIds={projectMemberIds ?? []} />
       {/* Labels */}
       <FilterLabels labels={projectLabels ?? []} />
       {/* Created at */}
-      <FilterDate filterKey="created_at" label="Created date" />
+      <FilterDate filterKey="created_at" label={t("workspace_projects.sort.created_at")} />
       {/* Updated at */}
-      <FilterDate filterKey="updated_at" label="Last updated date" />
+      <FilterDate filterKey="updated_at" label={t("common.ui.last_updated_date")} />
     </>
   );
 });

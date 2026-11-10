@@ -4,6 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { useParams } from "next/navigation";
+import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
+import { getSortableCustomFields } from "@/helpers/custom-field-views";
 import { observer } from "mobx-react";
 import {
   MenuRadioGroup,
@@ -23,6 +26,8 @@ type Props = {
   selectedOrderBy: TIssueOrderByOptions | undefined;
   handleUpdate: (val: TIssueOrderByOptions) => void;
   orderByOptions: TIssueOrderByOptions[];
+  isEpic?: boolean;
+  allowCustomFields?: boolean;
 };
 
 /** Manual ordering is a position, not a sortable field, so it has no direction. */
@@ -33,16 +38,30 @@ const getOrderByField = (orderBy: TIssueOrderByOptions) => (orderBy.startsWith("
 const isDescendingOrderBy = (orderBy: TIssueOrderByOptions) => orderBy.startsWith("-");
 
 export const FilterOrderBy = observer(function FilterOrderBy(props: Props) {
-  const { selectedOrderBy, handleUpdate, orderByOptions } = props;
+  const { selectedOrderBy, handleUpdate, orderByOptions, isEpic = false, allowCustomFields = true } = props;
   // hooks
   const { t } = useTranslation();
+  const { workspaceSlug, projectId } = useParams();
+  const { fields } = useProjectCustomFields(
+    workspaceSlug?.toString(),
+    isEpic || !allowCustomFields ? undefined : projectId?.toString()
+  );
 
   const activeOrderBy = selectedOrderBy ?? "-created_at";
   const activeField = getOrderByField(activeOrderBy);
   const isDescending = isDescendingOrderBy(activeOrderBy);
   const isManual = activeOrderBy === MANUAL_ORDER_BY;
 
-  const options = ISSUE_ORDER_BY_OPTIONS.filter((option) => orderByOptions.includes(option.key));
+  const options = [
+    ...ISSUE_ORDER_BY_OPTIONS.filter((option) => orderByOptions.includes(option.key)).map((option) => ({
+      key: option.key as TIssueOrderByOptions,
+      label: t(option.titleTranslationKey),
+    })),
+    ...getSortableCustomFields(fields).map((field) => ({
+      key: `custom_fields__${field.id}` as TIssueOrderByOptions,
+      label: field.name,
+    })),
+  ];
   const selectedOption = options.find((option) => getOrderByField(option.key) === activeField);
 
   const handleFieldChange = (field: string) => {
@@ -64,20 +83,12 @@ export const FilterOrderBy = observer(function FilterOrderBy(props: Props) {
     <MenuSubmenu>
       <MenuSubmenuTrigger
         label={t("common.order_by.label")}
-        trailing={
-          selectedOption && (
-            <DisplayFilterCurrentValue>{t(selectedOption.titleTranslationKey)}</DisplayFilterCurrentValue>
-          )
-        }
+        trailing={selectedOption && <DisplayFilterCurrentValue>{selectedOption.label}</DisplayFilterCurrentValue>}
       />
       <MenuSubmenuContent>
         <MenuRadioGroup value={activeField} onValueChange={(value: string) => handleFieldChange(value)}>
           {options.map((orderBy) => (
-            <MenuRadioItem
-              key={orderBy.key}
-              value={getOrderByField(orderBy.key)}
-              label={t(orderBy.titleTranslationKey)}
-            />
+            <MenuRadioItem key={orderBy.key} value={getOrderByField(orderBy.key)} label={orderBy.label} />
           ))}
         </MenuRadioGroup>
         {!isManual && (

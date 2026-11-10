@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { isCustomFieldOrderBy } from "@/helpers/custom-field-views";
 import { action, makeObservable, runInAction } from "mobx";
 // types
 import type {
@@ -108,7 +109,14 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
       // set loader and clear store
       runInAction(() => {
         this.setLoader(loadType);
-        this.clear(!isExistingPaginationOptions); // clear while fetching from server.
+        // Keep mounted tree rows during custom-order mutation refreshes; the response replaces
+        // IDs and counts together in onfetchIssues after the request completes.
+        if (!(isExistingPaginationOptions && loadType === "mutation" && isCustomFieldOrderBy(this.orderBy)))
+          this.clear(!isExistingPaginationOptions);
+        else {
+          this.controller.abort();
+          this.controller = new AbortController();
+        }
       });
 
       // get params from pagination options

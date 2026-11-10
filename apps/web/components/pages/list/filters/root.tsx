@@ -10,6 +10,7 @@ import type { TPageFilterProps, TPageFilters } from "@plane/types";
 // components
 import { FilterCreatedDate } from "@/components/common/filters/created-at";
 import { FilterCreatedBy } from "@/components/common/filters/created-by";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   filters: TPageFilters;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export const PageFiltersSelection = observer(function PageFiltersSelection(props: Props) {
+  const { t } = useTranslation();
   const { filters, handleFiltersUpdate, memberIds } = props;
 
   const handleFilters = (key: keyof TPageFilterProps, value: boolean | string | string[]) => {
@@ -46,7 +48,7 @@ export const PageFiltersSelection = observer(function PageFiltersSelection(props
   return (
     <>
       <MenuCheckboxItem
-        label="Favorites"
+        label={t("favorites")}
         checked={!!filters.filters?.favorites}
         onCheckedChange={(checked) =>
           handleFiltersUpdate("filters", {

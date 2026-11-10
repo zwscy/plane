@@ -112,7 +112,7 @@ export const SetPasswordForm = observer(function SetPasswordForm() {
 
   return (
     <FormContainer>
-      <AuthFormHeader title="Set password" description="Create a new password." />
+      <AuthFormHeader title={t("auth.common.password.submit")} description={t("common.ui.create_a_new_password")} />
       <form className="space-y-4" onSubmit={(e) => handleSubmit(e)}>
         <InputField
           size="xl"

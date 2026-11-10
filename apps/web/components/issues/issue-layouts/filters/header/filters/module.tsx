@@ -11,6 +11,7 @@ import { ModuleOutline } from "@makeplane/propel/icons";
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
 // hooks
 import { useModule } from "@/hooks/store/use-module";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export const FilterModule = observer(function FilterModule(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate } = props;
   // router
   const { projectId } = useParams();
@@ -39,7 +41,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
 
   return (
     <FilterSubmenu
-      label="Module"
+      label={t("common.module")}
       options={options}
       appliedFilters={appliedFilters}
       onToggle={handleUpdate}

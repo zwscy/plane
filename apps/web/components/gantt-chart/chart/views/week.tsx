@@ -6,7 +6,8 @@
 
 import { observer } from "mobx-react";
 // plane utils
-import { cn } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
+import { cn, formatDateForDisplay, isChineseDateLocale } from "@plane/utils";
 // hooks
 import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 //
@@ -14,6 +15,8 @@ import { HEADER_HEIGHT, SIDEBAR_WIDTH } from "../../constants";
 import type { IWeekBlock } from "../../views";
 
 export const WeekChartView = observer(function WeekChartView(_props: any) {
+  const { t, currentLocale } = useTranslation();
+  const isChinese = isChineseDateLocale(currentLocale);
   const { currentViewData, renderView } = useTimeLineChartStore();
   const weekBlocks: IWeekBlock[] = renderView;
 
@@ -40,10 +43,16 @@ export const WeekChartView = observer(function WeekChartView(_props: any) {
                     left: `${SIDEBAR_WIDTH}px`,
                   }}
                 >
-                  {block?.title}
+                  {isChinese
+                    ? `${formatDateForDisplay(block.startDate, "MMM yyyy", currentLocale)}${
+                        block.startMonth === block.endMonth && block.startYear === block.endYear
+                          ? ""
+                          : ` - ${formatDateForDisplay(block.endDate, "MMM yyyy", currentLocale)}`
+                      }`
+                    : block?.title}
                 </div>
                 <div className="sticky px-3 py-2 text-caption-sm-regular whitespace-nowrap text-placeholder capitalize">
-                  {block?.weekData?.title}
+                  {isChinese ? t("date_picker.week_number", { week: block.weekNumber }) : block?.weekData?.title}
                 </div>
               </div>
               {/** Days Sub title */}
@@ -60,7 +69,9 @@ export const WeekChartView = observer(function WeekChartView(_props: any) {
                     style={{ width: `${currentViewData?.data.dayWidth}px` }}
                   >
                     <div className="space-x-1 text-caption-sm-medium text-placeholder">
-                      {weekDay.dayData.abbreviation}
+                      {isChinese
+                        ? formatDateForDisplay(weekDay.date, "EEEEE", currentLocale)
+                        : weekDay.dayData.abbreviation}
                     </div>
                     <div className="space-x-1 text-caption-sm-medium">
                       <span

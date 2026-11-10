@@ -21,8 +21,8 @@ export type TReadonlyDateProps = {
 export const ReadonlyDate = observer(function ReadonlyDate(props: TReadonlyDateProps) {
   const { className, hideIcon = false, value, placeholder, formatToken } = props;
 
-  const { t } = useTranslation();
-  const formattedDate = value ? renderFormattedDate(getDate(value), formatToken) : null;
+  const { t, currentLocale } = useTranslation();
+  const formattedDate = value ? renderFormattedDate(getDate(value), formatToken, currentLocale) : null;
 
   return (
     <div className={cn("flex items-center gap-1 text-body-xs-regular", className)}>

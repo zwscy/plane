@@ -35,6 +35,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // local components
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { IssueProperties } from "../properties/all-properties";
+import { useTranslation } from "@plane/i18n";
 
 interface IssueBlockProps {
   issueId: string;
@@ -144,6 +145,7 @@ const KanbanIssueDetailsBlock = observer(function KanbanIssueDetailsBlock(props:
 });
 
 export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueBlockProps) {
+  const { t } = useTranslation();
   const {
     issueId,
     groupId,
@@ -253,7 +255,7 @@ export const KanbanIssueBlock = observer(function KanbanIssueBlock(props: IssueB
           else {
             setToast({
               type: "warning",
-              title: "Cannot move work item",
+              title: t("common.ui.cannot_move_work_item"),
               message: !canEditIssueProperties
                 ? "You are not allowed to move this work item"
                 : "Drag and drop is disabled for the current grouping",

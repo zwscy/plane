@@ -35,22 +35,22 @@ export const CustomThemeImportConfigButton = observer(function CustomThemeImport
 
       // Validate required fields
       if (!config.primary || !config.background) {
-        throw new Error("Missing required fields: primary and background");
+        throw new Error(t("common.ui.missing_theme_colors"));
       }
 
       // Validate hex color format
       const hexPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
       if (!hexPattern.test(config.primary)) {
-        throw new Error("Invalid brand color hex format");
+        throw new Error(t("common.ui.invalid_brand_color"));
       }
       if (!hexPattern.test(config.background)) {
-        throw new Error("Invalid neutral color hex format");
+        throw new Error(t("common.ui.invalid_neutral_color"));
       }
 
       // Validate theme mode
       const themeMode = config.darkPalette ?? false;
       if (typeof themeMode !== "boolean") {
-        throw new Error("Invalid theme mode. Must be a boolean");
+        throw new Error(t("common.ui.invalid_theme_mode"));
       }
 
       // Apply the configuration to form
@@ -73,14 +73,14 @@ export const CustomThemeImportConfigButton = observer(function CustomThemeImport
       setToast({
         type: "success",
         title: t("success"),
-        message: "Theme configuration imported successfully",
+        message: t("common.ui.theme_configuration_imported_successfully"),
       });
     } catch (error) {
       console.error("Failed to upload config:", error);
       setToast({
         type: "error",
         title: t("error"),
-        message: error instanceof Error ? error.message : "Failed to import theme configuration",
+        message: error instanceof Error ? error.message : t("common.ui.failed_to_import_theme"),
       });
     } finally {
       // Reset file input
@@ -98,7 +98,7 @@ export const CustomThemeImportConfigButton = observer(function CustomThemeImport
         size="md"
         stretch="auto"
         type="button"
-        label="Import config"
+        label={t("common.ui.import_config")}
         onClick={() => fileInputRef.current?.click()}
       />
     </>

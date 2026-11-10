@@ -78,12 +78,11 @@ export const ConfirmWorkspaceMemberRemove = observer(function ConfirmWorkspaceMe
       handleClose={handleClose}
       handleSubmit={handleDeletion}
       isSubmitting={isRemoving}
-      title={`Remove ${userDetails?.display_name}?`}
+      title={t("common.ui.remove_member_named", { name: String(userDetails?.display_name) })}
       content={
         <>
-          {/* TODO: Add translation here */}
-          Are you sure you want to remove member- <span className="font-bold">{userDetails?.display_name}</span>? They
-          will no longer have access to this workspace. This action cannot be undone.
+          {t("common.ui.remove_project_member_prefix")} <span className="font-bold">{userDetails?.display_name}</span>
+          {t("common.ui.they_will_no_longer_have_access_to_this_workspace_this_action_cannot_be_undone")}
         </>
       }
       primaryButtonText={{ loading: t("removing"), default: t("remove") }}

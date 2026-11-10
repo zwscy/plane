@@ -9,20 +9,22 @@ import { Controller } from "react-hook-form";
 // constants
 import type { IWebhook } from "@plane/types";
 import { Switch } from "@makeplane/propel/components/switch";
+import { useTranslation } from "@plane/i18n";
 
 interface IWebHookToggle {
   control: Control<IWebhook, any>;
 }
 
 export function WebhookToggle({ control }: IWebHookToggle) {
+  const { t } = useTranslation();
   return (
     <div className="flex gap-6">
-      <div className="text-body-xs-medium">Enable webhook</div>
+      <div className="text-body-xs-medium">{t("common.ui.enable_webhook")}</div>
       <Controller
         control={control}
         name="is_active"
         render={({ field: { onChange, value } }) => (
-          <Switch size="sm" checked={value} onCheckedChange={onChange} aria-label="Enable webhook" />
+          <Switch size="sm" checked={value} onCheckedChange={onChange} aria-label={t("common.ui.enable_webhook")} />
         )}
       />
     </div>

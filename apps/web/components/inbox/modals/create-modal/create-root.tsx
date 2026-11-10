@@ -101,8 +101,8 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
     } else {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Editor is still processing changes. Please wait before proceeding.",
+        title: t("toast.error"),
+        message: t("common.ui.editor_is_still_processing_changes_please_wait_before_proceeding"),
       });
       event.preventDefault(); // Prevent default action if editor is not ready to discard
     }
@@ -133,8 +133,8 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
     if (!descriptionEditorRef.current?.isEditorReadyToDiscard()) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Editor is still processing changes. Please wait before proceeding.",
+        title: t("toast.error"),
+        message: t("common.ui.editor_is_still_processing_changes_please_wait_before_proceeding"),
       });
       return;
     }
@@ -169,7 +169,7 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
         setToast({
           type: "success",
           title: `Success!`,
-          message: "Work item created successfully.",
+          message: t("issue_created_successfully"),
         });
       })
       .catch((error) => {
@@ -177,7 +177,7 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
         setToast({
           type: "error",
           title: `Error!`,
-          message: "Some error occurred. Please try again.",
+          message: t("common.error.message"),
         });
       });
     setFormSubmitting(false);
@@ -250,8 +250,8 @@ export const InboxIssueCreateRoot = observer(function InboxIssueCreateRoot(props
                 } else {
                   setToast({
                     type: "error",
-                    title: "Error!",
-                    message: "Editor is still processing changes. Please wait before proceeding.",
+                    title: t("toast.error"),
+                    message: t("common.ui.editor_is_still_processing_changes_please_wait_before_proceeding"),
                   });
                 }
               }}

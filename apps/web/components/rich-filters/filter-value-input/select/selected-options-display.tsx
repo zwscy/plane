@@ -9,6 +9,7 @@ import React from "react";
 import type { SingleOrArray, IFilterOption, TFilterValue } from "@plane/types";
 import { cn, toFilterArray } from "@plane/utils";
 import { EMPTY_FILTER_PLACEHOLDER_TEXT } from "../../shared";
+import { useTranslation } from "@plane/i18n";
 
 type TSelectedOptionsDisplayProps<V extends TFilterValue> = {
   selectedValue: SingleOrArray<V>;
@@ -19,6 +20,7 @@ type TSelectedOptionsDisplayProps<V extends TFilterValue> = {
 };
 
 export function SelectedOptionsDisplay<V extends TFilterValue>(props: TSelectedOptionsDisplayProps<V>) {
+  const { t } = useTranslation();
   const { selectedValue, options, displayCount = 2, emptyValue = EMPTY_FILTER_PLACEHOLDER_TEXT, fallbackText } = props;
   // derived values
   const selectedArray = toFilterArray(selectedValue);
@@ -55,7 +57,7 @@ export function SelectedOptionsDisplay<V extends TFilterValue>(props: TSelectedO
       {remainingCount > 0 && (
         // Was a Headless UI `Transition show appear` doing nothing but a fade-in on mount (Ruling 36).
         <span className="ml-1 shrink-0 animate-fade-in whitespace-nowrap text-tertiary motion-reduce:animate-none">
-          +{remainingCount} more
+          +{remainingCount} {t("sidebar.more")}
         </span>
       )}
     </div>

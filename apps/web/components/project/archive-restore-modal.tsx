@@ -21,6 +21,7 @@ import {
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -32,6 +33,7 @@ type Props = {
 };
 
 export function ArchiveRestoreProjectModal(props: Props) {
+  const { t } = useTranslation();
   const { workspaceSlug, projectId, isOpen, onClose, archive } = props;
   // router
   const router = useAppRouter();
@@ -54,7 +56,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .then(() => {
         setToast({
           type: "success",
-          title: "Archive success",
+          title: t("issue.archive.success.label"),
           message: `${projectDetails.name} has been archived successfully`,
         });
         onClose();
@@ -64,8 +66,8 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .catch(() =>
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Project could not be archived. Please try again.",
+          title: t("toast.error"),
+          message: t("common.ui.project_could_not_be_archived_please_try_again"),
         })
       )
       .finally(() => setIsLoading(false));
@@ -77,7 +79,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .then(() => {
         setToast({
           type: "success",
-          title: "Restore success",
+          title: t("issue.restore.success.title"),
           message: `You can find ${projectDetails.name} in your projects.`,
         });
         onClose();
@@ -87,8 +89,8 @@ export function ArchiveRestoreProjectModal(props: Props) {
       .catch(() =>
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Project could not be restored. Please try again.",
+          title: t("toast.error"),
+          message: t("common.ui.project_could_not_be_restored_please_try_again"),
         })
       )
       .finally(() => setIsLoading(false));
@@ -119,7 +121,7 @@ export function ArchiveRestoreProjectModal(props: Props) {
           </DialogBody>
         </DialogMain>
         <DialogActions>
-          <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={onClose} />
+          <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={onClose} />
           <Button
             variant="primary"
             size="md"

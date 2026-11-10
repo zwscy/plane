@@ -8,6 +8,7 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // constants
 import { SPREADSHEET_SELECT_GROUP } from "@plane/constants";
+import { useTranslation } from "@plane/i18n";
 // ui
 import type { IIssueDisplayFilterOptions, IIssueDisplayProperties } from "@plane/types";
 // components
@@ -16,6 +17,7 @@ import { MultipleSelectGroupAction } from "@/components/core/multiple-select";
 import { SpreadsheetColumnsToggle } from "@/components/issues/spreadsheet-columns-toggle";
 // hooks
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
+import { CustomFieldHeaders } from "./custom-field-columns";
 import { SpreadsheetHeaderColumn } from "./spreadsheet-header-column";
 
 interface Props {
@@ -31,6 +33,7 @@ interface Props {
 }
 
 export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Props) {
+  const { t } = useTranslation();
   const {
     displayProperties,
     displayFilters,
@@ -74,7 +77,7 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
                   />
                 </div>
               )}
-              <span className="text-body-xs-medium">{`${isEpic ? "Epics" : "Work items"}`}</span>
+              <span className="text-body-xs-medium">{isEpic ? t("common.epics") : t("work_items")}</span>
             </div>
           </div>
         </th>
@@ -91,6 +94,13 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
           />
         ))}
 
+        {!isEpic && (
+          <CustomFieldHeaders
+            displayProperties={displayProperties}
+            displayFilters={displayFilters}
+            onChange={handleDisplayFilterUpdate}
+          />
+        )}
         {/* Config column header, pinned to the right edge */}
         <th className="right-0 z-15 h-11 w-12 min-w-12 border-b-[0.5px] border-l-[0.5px] border-subtle bg-layer-1 shadow-direction-left md:sticky">
           <div className="flex size-full items-center justify-center">

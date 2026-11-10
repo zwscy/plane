@@ -10,6 +10,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { IState, TStateOperationsCallbacks } from "@plane/types";
 // components
 import { StateForm } from "@/components/project-states";
+import { useTranslation } from "@plane/i18n";
 
 type TStateUpdate = {
   state: IState;
@@ -18,6 +19,7 @@ type TStateUpdate = {
 };
 
 export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
+  const { t } = useTranslation();
   const { state, updateStateCallback, handleClose } = props;
   // states
   const [loader, setLoader] = useState(false);
@@ -34,8 +36,8 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
       await updateStateCallback(state.id, formData);
       setToast({
         type: "success",
-        title: "Success!",
-        message: "State updated successfully.",
+        title: t("toast.success"),
+        message: t("common.ui.state_updated_successfully"),
       });
       handleClose();
       return { status: "success" };
@@ -44,15 +46,15 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
       if (errorStatus?.status === 400) {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Another state exists with the same name. Please try again with another name.",
+          title: t("toast.error"),
+          message: t("common.ui.another_state_exists_with_the_same_name_please_try_again_with_another_name"),
         });
         return { status: "already_exists" };
       } else {
         setToast({
           type: "error",
-          title: "Error!",
-          message: "State could not be updated. Please try again.",
+          title: t("toast.error"),
+          message: t("common.ui.state_could_not_be_updated_please_try_again"),
         });
         return { status: "error" };
       }
@@ -65,7 +67,7 @@ export const StateUpdate = observer(function StateUpdate(props: TStateUpdate) {
       onSubmit={onSubmit}
       onCancel={onCancel}
       buttonDisabled={loader}
-      buttonTitle={loader ? `Updating` : `Update`}
+      buttonTitle={loader ? t("updating") : t("update")}
     />
   );
 });

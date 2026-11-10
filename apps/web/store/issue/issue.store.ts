@@ -5,6 +5,7 @@
  */
 
 import { set, update } from "lodash-es";
+import { mergeCustomFieldValues } from "@/helpers/custom-field-views";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
 // types
@@ -110,7 +111,13 @@ export class IssueStore implements IIssueStore {
     runInAction(() => {
       set(this.issuesMap, [issueId, "updated_at"], getCurrentDateTimeInISO());
       Object.keys(issue).forEach((key) => {
-        set(this.issuesMap, [issueId, key], issue[key as keyof TIssue]);
+        set(
+          this.issuesMap,
+          [issueId, key],
+          key === "custom_fields"
+            ? mergeCustomFieldValues(this.issuesMap[issueId].custom_fields, issue.custom_fields)
+            : issue[key as keyof TIssue]
+        );
       });
     });
   };

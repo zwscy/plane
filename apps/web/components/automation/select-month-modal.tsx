@@ -20,6 +20,7 @@ import {
 } from "@makeplane/propel/components/dialog";
 import { InputField } from "@makeplane/propel/components/input-field";
 import type { IProject } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 
 // types
 type Props = {
@@ -31,6 +32,7 @@ type Props = {
 };
 
 export function SelectMonthModal({ type, initialValues, isOpen, handleClose, handleChange }: Props) {
+  const { t } = useTranslation();
   const { workspaceSlug, projectId } = useParams();
 
   const {
@@ -58,7 +60,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
       control={control}
       name={name}
       rules={{
-        required: "Select a month between 1 and 12.",
+        required: t("common.ui.month_range_validation"),
         min: 1,
         max: 12,
       }}
@@ -72,11 +74,11 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
           ref={ref}
           size="2xl"
           orientation="vertical"
-          placeholder="Enter Months"
+          placeholder={t("common.ui.enter_months")}
           min={1}
           max={12}
-          endIcon={<span className="text-body-xs-regular text-secondary">Months</span>}
-          error={errors[name] ? "Select a month between 1 and 12." : undefined}
+          endIcon={<span className="text-body-xs-regular text-secondary">{t("common.ui.months_unit")}</span>}
+          error={errors[name] ? t("common.ui.month_range_validation") : undefined}
         />
       )}
     />
@@ -94,7 +96,7 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
           <DialogMain>
             <DialogHeader>
               <DialogHeading>
-                <DialogTitle>Customize time range</DialogTitle>
+                <DialogTitle>{t("common.customize_time_range")}</DialogTitle>
               </DialogHeading>
             </DialogHeader>
             <DialogBody>
@@ -104,13 +106,13 @@ export function SelectMonthModal({ type, initialValues, isOpen, handleClose, han
             </DialogBody>
           </DialogMain>
           <DialogActions>
-            <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={onClose} />
+            <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={onClose} />
             <Button
               variant="primary"
               size="md"
               stretch="auto"
               type="submit"
-              label={isSubmitting ? "Submitting..." : "Submit"}
+              label={isSubmitting ? t("submitting") : t("submit")}
               loading={isSubmitting}
             />
           </DialogActions>

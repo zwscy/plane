@@ -11,6 +11,7 @@ import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useModule } from "@/hooks/store/use-module";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export function ArchiveModuleModal(props: Props) {
+  const { t } = useTranslation();
   const { workspaceSlug, projectId, moduleId, isOpen, handleClose } = props;
   // router
   const router = useAppRouter();
@@ -43,16 +45,16 @@ export function ArchiveModuleModal(props: Props) {
       await archiveModule(workspaceSlug, projectId, moduleId);
       setToast({
         type: "success",
-        title: "Archive success",
-        message: "Your archives can be found in project archives.",
+        title: t("issue.archive.success.label"),
+        message: t("issue.archive.success.message"),
       });
       onClose();
       router.push(`/${workspaceSlug}/projects/${projectId}/modules`);
     } catch {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Module could not be archived. Please try again.",
+        title: t("toast.error"),
+        message: t("common.ui.module_could_not_be_archived_please_try_again"),
       });
     } finally {
       setIsArchiving(false);
@@ -66,10 +68,10 @@ export function ArchiveModuleModal(props: Props) {
       handleSubmit={handleArchiveModule}
       isSubmitting={isArchiving}
       variant="primary"
-      title={`Archive module ${moduleName}`}
-      content="Are you sure you want to archive the module? All your archives can be restored later."
-      primaryButtonText={{ loading: "Archiving", default: "Archive" }}
-      secondaryButtonText="Cancel"
+      title={t("common.ui.archive_module_named", { name: String(moduleName) })}
+      content={t("common.ui.archive_module_confirmation")}
+      primaryButtonText={{ loading: t("common.archiving"), default: t("archive") }}
+      secondaryButtonText={t("cancel")}
     />
   );
 }

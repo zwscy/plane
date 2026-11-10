@@ -90,3 +90,4 @@ from .device import Device, DeviceSession
 from .sticky import Sticky
 
 from .description import Description, DescriptionVersion
+from .custom_field import ProjectCustomField

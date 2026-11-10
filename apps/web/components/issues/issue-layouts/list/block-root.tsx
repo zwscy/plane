@@ -20,6 +20,7 @@ import { DropIndicator } from "@plane/blocks/common";
 import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { ListLoaderItemRow } from "@/components/ui/loader/layouts/list-layout-loader";
 // hooks
+import { useOrderedSubIssues } from "@/hooks/use-ordered-sub-issues";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -48,7 +49,8 @@ type Props = {
   isEpic?: boolean;
 };
 
-export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
+// Keep recursion bound to the observed export rather than the unwrapped render function.
+export const IssueBlockRoot = observer(function IssueBlockRootRenderer(props: Props) {
   const {
     issueId,
     issuesMap,
@@ -78,6 +80,8 @@ export const IssueBlockRoot = observer(function IssueBlockRoot(props: Props) {
   const { isMobile } = usePlatformOS();
   // store hooks
   const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
+
+  useOrderedSubIssues(issueId, isExpanded, isEpic);
 
   const isSubIssue = nestingLevel !== 0;
 

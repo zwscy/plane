@@ -50,8 +50,10 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web imports
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
+import { useTranslation } from "@plane/i18n";
 
 export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
+  const { t } = useTranslation();
   // refs
   const parentRef = useRef<HTMLDivElement>(null);
   // states
@@ -133,7 +135,7 @@ export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
               <Breadcrumbs.Item
                 component={
                   <BreadcrumbLink
-                    label="Modules"
+                    label={t("common.modules")}
                     href={`/${workspaceSlug}/projects/${projectId}/modules/`}
                     icon={<ModuleOutline className="h-4 w-4 text-tertiary" />}
                     isLast
@@ -198,7 +200,7 @@ export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
             </div>
             {moduleId && <WorkItemFiltersToggle entityType={EIssuesStoreType.MODULE} entityId={moduleId} />}
             <FiltersDropdown
-              title="Display"
+              title={t("common.display")}
               placement="bottom-end"
               miniIcon={<PreferencesOutline className="size-3.5" />}
             >
@@ -225,7 +227,7 @@ export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
                     variant="secondary"
                     size="md"
                     stretch="auto"
-                    label="Analytics"
+                    label={t("common.analytics")}
                     onClick={() => setAnalyticsModal(true)}
                   />
                 </span>
@@ -234,7 +236,7 @@ export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
                     variant="secondary"
                     size="md"
                     icon={<Icon icon={BarOutline} />}
-                    aria-label="Analytics"
+                    aria-label={t("common.analytics")}
                     onClick={() => setAnalyticsModal(true)}
                   />
                 </span>
@@ -244,7 +246,7 @@ export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
                   variant="primary"
                   size="md"
                   stretch="auto"
-                  label="Add work item"
+                  label={t("add_work_item")}
                   onClick={() => {
                     toggleCreateIssueModal(true, EIssuesStoreType.MODULE);
                   }}
@@ -259,7 +261,7 @@ export const ModuleIssuesHeader = observer(function ModuleIssuesHeader() {
             variant={isSidebarCollapsed ? "ghost" : "tertiary"}
             size="md"
             icon={<Icon icon={RightSidePaneOutline} />}
-            aria-label="Toggle sidebar"
+            aria-label={t("common.ui.toggle_sidebar")}
             aria-pressed={!isSidebarCollapsed}
             onClick={toggleSidebar}
           />

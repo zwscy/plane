@@ -10,12 +10,14 @@ import { Controller } from "react-hook-form";
 // plane imports
 import type { IUserTheme } from "@plane/types";
 import { InputColorPicker } from "./input-color-picker";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   control: Control<IUserTheme>;
 };
 
 export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(props: Props) {
+  const { t } = useTranslation();
   const { control } = props;
 
   const handleValueChange = (val: string | undefined, onChange: (...args: unknown[]) => void) => {
@@ -30,7 +32,8 @@ export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(p
       {/* Neutral Color */}
       <div className="flex flex-col gap-2">
         <h3 className="text-body-sm-medium">
-          Neutral color<span className="text-danger-primary">*</span>
+          {t("common.ui.neutral_color")}
+          <span className="text-danger-primary">*</span>
         </h3>
         <div className="w-full">
           <Controller
@@ -40,7 +43,7 @@ export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(p
               required: "Neutral color is required",
               pattern: {
                 value: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-                message: "Enter a valid hex code",
+                message: t("common.ui.enter_a_valid_hex_code"),
               },
             }}
             render={({ field: { value, onChange } }) => (
@@ -63,7 +66,8 @@ export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(p
       {/* Brand Color */}
       <div className="flex flex-col gap-2">
         <h3 className="text-body-sm-medium">
-          Brand color<span className="text-danger-primary">*</span>
+          {t("common.ui.brand_color")}
+          <span className="text-danger-primary">*</span>
         </h3>
         <div className="w-full">
           <Controller
@@ -73,7 +77,7 @@ export const CustomThemeColorInputs = observer(function CustomThemeColorInputs(p
               required: "Brand color is required",
               pattern: {
                 value: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-                message: "Enter a valid hex code",
+                message: t("common.ui.enter_a_valid_hex_code"),
               },
             }}
             render={({ field: { value, onChange } }) => (

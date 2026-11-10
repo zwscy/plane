@@ -19,6 +19,7 @@ import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useFileSize } from "@/hooks/use-file-size";
 // local imports
 import { useAttachmentOperations } from "./helper";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -33,6 +34,7 @@ type Props = {
 };
 
 export const IssueAttachmentActionButton = observer(function IssueAttachmentActionButton(props: Props) {
+  const { t } = useTranslation();
   const { workspaceSlug, projectId, issueId, customButton, tooltip, disabled = false, issueServiceType } = props;
   // state
   const [isLoading, setIsLoading] = useState(false);
@@ -66,8 +68,8 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
           .catch(() => {
             setToast({
               type: "error",
-              title: "Error!",
-              message: "File could not be attached. Try uploading again.",
+              title: t("toast.error"),
+              message: t("attachment.error"),
             });
           })
           .finally(() => {
@@ -80,7 +82,7 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
 
       setToast({
         type: "error",
-        title: "Error!",
+        title: t("toast.error"),
         message:
           totalAttachedFiles > 1
             ? "Only one file can be uploaded at a time."
@@ -88,7 +90,7 @@ export const IssueAttachmentActionButton = observer(function IssueAttachmentActi
       });
       return;
     },
-    [attachmentOperations, maxFileSize, workspaceSlug, handleFetchPropertyActivities, setLastWidgetAction]
+    [attachmentOperations, maxFileSize, workspaceSlug, handleFetchPropertyActivities, setLastWidgetAction, t]
   );
 
   const { getRootProps, getInputProps, open } = useDropzone({

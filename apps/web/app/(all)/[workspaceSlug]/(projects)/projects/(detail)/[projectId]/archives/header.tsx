@@ -21,6 +21,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web imports
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
+import { useTranslation } from "@plane/i18n";
 
 type TProps = {
   activeTab: "issues" | "cycles" | "modules";
@@ -51,6 +52,7 @@ const PROJECT_ARCHIVES_BREADCRUMB_LIST: {
 };
 
 export const ProjectArchivesHeader = observer(function ProjectArchivesHeader(props: TProps) {
+  const { t } = useTranslation();
   const { activeTab } = props;
   // router
   const { workspaceSlug, projectId } = useParams();
@@ -82,7 +84,7 @@ export const ProjectArchivesHeader = observer(function ProjectArchivesHeader(pro
               component={
                 <BreadcrumbLink
                   href={`/${workspaceSlug}/projects/${projectId}/archives/issues`}
-                  label="Archives"
+                  label={t("archives")}
                   icon={<ArchiveOutline className="h-4 w-4 text-tertiary" />}
                 />
               }

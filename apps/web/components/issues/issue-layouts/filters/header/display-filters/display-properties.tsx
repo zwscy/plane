@@ -4,6 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { useParams } from "next/navigation";
+import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
+import { getVisibleCustomFields } from "@/helpers/custom-field-views";
 import { observer } from "mobx-react";
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { MenuGroup, MenuLabel } from "@makeplane/propel/components/menu";
@@ -22,6 +25,7 @@ type Props = {
   cycleViewDisabled?: boolean;
   moduleViewDisabled?: boolean;
   isEpic?: boolean;
+  allowCustomFields?: boolean;
 };
 
 export const FilterDisplayProperties = observer(function FilterDisplayProperties(props: Props) {
@@ -32,9 +36,16 @@ export const FilterDisplayProperties = observer(function FilterDisplayProperties
     cycleViewDisabled = false,
     moduleViewDisabled = false,
     isEpic = false,
+    allowCustomFields = true,
   } = props;
   // hooks
   const { t } = useTranslation();
+  const { workspaceSlug, projectId } = useParams();
+  const { fields } = useProjectCustomFields(
+    workspaceSlug?.toString(),
+    isEpic || !allowCustomFields ? undefined : projectId?.toString()
+  );
+  const customFields = getVisibleCustomFields(fields);
 
   // Filter out "cycle" and "module" keys if cycleViewDisabled or moduleViewDisabled is true
   // Also filter out display properties that should not be rendered
@@ -72,6 +83,22 @@ export const FilterDisplayProperties = observer(function FilterDisplayProperties
               render={<Toggle size="sm" render={<div />} data-pressed={isSelected ? "" : undefined} />}
             >
               <ToggleLabel>{t(displayProperty.titleTranslationKey)}</ToggleLabel>
+            </BaseMenu.CheckboxItem>
+          );
+        })}
+        {customFields.map((field) => {
+          const isSelected = displayProperties.custom_fields?.[field.id] !== false;
+          return (
+            <BaseMenu.CheckboxItem
+              key={field.id}
+              checked={isSelected}
+              closeOnClick={false}
+              onCheckedChange={(checked) =>
+                handleUpdate({ custom_fields: { ...displayProperties.custom_fields, [field.id]: checked } })
+              }
+              render={<Toggle size="sm" render={<div />} data-pressed={isSelected ? "" : undefined} />}
+            >
+              <ToggleLabel>{field.name}</ToggleLabel>
             </BaseMenu.CheckboxItem>
           );
         })}

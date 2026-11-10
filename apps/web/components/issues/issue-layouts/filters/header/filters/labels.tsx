@@ -10,6 +10,7 @@ import { observer } from "mobx-react";
 import type { IIssueLabel } from "@plane/types";
 // components
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export const FilterLabels = observer(function FilterLabels(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate, labels } = props;
 
   const options = useMemo(
@@ -31,6 +33,12 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
   );
 
   return (
-    <FilterSubmenu label="Label" options={options} appliedFilters={appliedFilters} onToggle={handleUpdate} searchable />
+    <FilterSubmenu
+      label={t("common.label")}
+      options={options}
+      appliedFilters={appliedFilters}
+      onToggle={handleUpdate}
+      searchable
+    />
   );
 });

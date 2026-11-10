@@ -70,7 +70,11 @@ export function TabNavigationOverflowMenu({ overflowItems, isActive, tabPreferen
                 <MenuSubmenuTrigger label={`${t(item.i18n_key)} — ${t("aria_labels.common.more_actions")}`} />
                 <MenuSubmenuContent>
                   {isHidden && (
-                    <MenuItem icon={<Icon icon={PinOutline} />} label="Show" onClick={() => onShow(item.key)} />
+                    <MenuItem
+                      icon={<Icon icon={PinOutline} />}
+                      label={t("common.ui.show")}
+                      onClick={() => onShow(item.key)}
+                    />
                   )}
                   <MenuItem
                     icon={<Icon icon={DefaultTabOutline} />}

@@ -24,6 +24,7 @@ import { useUser, useUserPermissions } from "@/hooks/store/user";
 // local imports
 import { WorkItemFiltersHOC } from "./base";
 import type { TEnableSaveViewProps, TEnableUpdateViewProps, TSharedWorkItemFiltersHOCProps } from "./shared";
+import { useTranslation } from "@plane/i18n";
 
 type TWorkspaceLevelWorkItemFiltersHOCProps = TSharedWorkItemFiltersHOCProps & {
   workspaceSlug: string;
@@ -33,6 +34,7 @@ type TWorkspaceLevelWorkItemFiltersHOCProps = TSharedWorkItemFiltersHOCProps & {
 export const WorkspaceLevelWorkItemFiltersHOC = observer(function WorkspaceLevelWorkItemFiltersHOC(
   props: TWorkspaceLevelWorkItemFiltersHOCProps
 ) {
+  const { t } = useTranslation();
   const { children, enableSaveView, enableUpdateView, entityId, initialWorkItemFilters, workspaceSlug } = props;
   // states
   const [isCreateViewModalOpen, setIsCreateViewModalOpen] = useState(false);
@@ -123,8 +125,8 @@ export const WorkspaceLevelWorkItemFiltersHOC = observer(function WorkspaceLevel
       if (!viewDetails) {
         setToast({
           type: "error",
-          title: "We couldn't find the view",
-          message: "The view you're trying to update doesn't exist.",
+          title: t("common.ui.we_couldn_t_find_the_view"),
+          message: t("common.ui.the_view_you_re_trying_to_update_doesn_t_exist"),
         });
 
         return;
@@ -142,19 +144,19 @@ export const WorkspaceLevelWorkItemFiltersHOC = observer(function WorkspaceLevel
         .then(() => {
           setToast({
             type: "success",
-            title: "Success!",
-            message: "Your view has been updated successfully.",
+            title: t("toast.success"),
+            message: t("common.ui.your_view_has_been_updated_successfully"),
           });
         })
         .catch(() => {
           setToast({
             type: "error",
-            title: "Error!",
-            message: "Your view could not be updated. Please try again.",
+            title: t("toast.error"),
+            message: t("common.ui.your_view_could_not_be_updated_please_try_again"),
           });
         });
     },
-    [viewDetails, updateGlobalView, workspaceSlug, getViewFilterPayload]
+    [viewDetails, updateGlobalView, workspaceSlug, getViewFilterPayload, t]
   );
 
   const saveViewOptions = useMemo(

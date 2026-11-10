@@ -116,6 +116,7 @@ class OffsetPaginator:
         )
         # Set desc to true when `-` exists in the order by
         self.desc = True if order_by and order_by.startswith("-") else False
+        self.custom_order = bool(self.key and self.key[0] == "_custom_field_order")
         self.queryset = queryset
         self.max_limit = max_limit
         self.max_offset = max_offset
@@ -136,7 +137,7 @@ class OffsetPaginator:
         if self.key:
             queryset = queryset.order_by(
                 (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
-                "-created_at",
+                *(["sequence_id", "id"] if self.custom_order else ["-created_at"]),
             )
         # The current page
         page = cursor.offset
@@ -258,14 +259,14 @@ class GroupedOffsetPaginator(OffsetPaginator):
                         if self.desc
                         else F(*self.key).asc(nulls_last=True)  # Order by asc if set
                     ),
-                    F("created_at").desc(),
+                    *([F("sequence_id").asc(), F("id").asc()] if self.custom_order else [F("created_at").desc()]),
                 ),
             )
         )
         # Filter the results by row number
         results = queryset.filter(row_number__gt=offset, row_number__lt=stop).order_by(
             (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
-            F("created_at").desc(),
+            *([F("sequence_id").asc(), F("id").asc()] if self.custom_order else [F("created_at").desc()]),
         )
 
         # Adjust cursors based on the grouped results for pagination
@@ -460,7 +461,7 @@ class SubGroupedOffsetPaginator(OffsetPaginator):
                 ],
                 order_by=(
                     (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
-                    "-created_at",
+                    *(["sequence_id", "id"] if self.custom_order else ["-created_at"]),
                 ),
             )
         )
@@ -468,7 +469,7 @@ class SubGroupedOffsetPaginator(OffsetPaginator):
         # Filter the results
         results = queryset.filter(row_number__gt=offset, row_number__lt=stop).order_by(
             (F(*self.key).desc(nulls_last=True) if self.desc else F(*self.key).asc(nulls_last=True)),
-            F("created_at").desc(),
+            *([F("sequence_id").asc(), F("id").asc()] if self.custom_order else [F("created_at").desc()]),
         )
 
         # Adjust cursors based on the grouped results for pagination

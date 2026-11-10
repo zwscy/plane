@@ -11,6 +11,8 @@ from django.db import IntegrityError
 # Third Party imports
 from rest_framework import serializers
 
+from plane.utils.custom_fields import CustomFieldsWriteMixin
+
 # Module imports
 from .base import BaseSerializer, DynamicBaseSerializer
 from .user import UserLiteSerializer
@@ -79,7 +81,7 @@ class IssueProjectLiteSerializer(BaseSerializer):
 
 ##TODO: Find a better way to write this serializer
 ## Find a better approach to save manytomany?
-class IssueCreateSerializer(BaseSerializer):
+class IssueCreateSerializer(CustomFieldsWriteMixin, BaseSerializer):
     # ids
     state_id = serializers.PrimaryKeyRelatedField(
         source="state", queryset=State.all_state_objects.all(), required=False, allow_null=True
@@ -796,6 +798,7 @@ class IssueSerializer(DynamicBaseSerializer):
         fields = [
             "id",
             "name",
+            "custom_fields",
             "state_id",
             "sort_order",
             "completed_at",
@@ -853,6 +856,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             # Basic fields
             "id": instance.id,
             "name": instance.name,
+            "custom_fields": instance.custom_fields,
             "state_id": instance.state_id,
             "sort_order": instance.sort_order,
             "completed_at": instance.completed_at,

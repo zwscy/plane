@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 
 import type { TProjectActivity } from "@plane/types";
 import { ActivityBlockComponent } from "./activity-block";
@@ -18,13 +19,14 @@ type TActivityItem = {
 
 export const ActivityItem = observer(function ActivityItem(props: TActivityItem) {
   const { activity, ends } = props;
+  const { t, currentLocale } = useTranslation();
 
   if (!activity) return null;
 
   const activityType = activity.field;
   if (!activityType) return null;
 
-  const { message, customUserName } = messages(activity);
+  const { message, customUserName } = messages(activity, t, currentLocale);
   const icon = iconsMap[activityType] || iconsMap.default;
 
   return (

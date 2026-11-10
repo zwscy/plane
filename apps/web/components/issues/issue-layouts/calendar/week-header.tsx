@@ -5,8 +5,9 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import { EStartOfTheWeek } from "@plane/types";
-import { getOrderedDays } from "@plane/utils";
+import { formatDateForDisplay, getOrderedDays, isChineseDateLocale } from "@plane/utils";
 import { DAYS_LIST } from "@plane/constants";
 // helpers
 // hooks
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export const CalendarWeekHeader = observer(function CalendarWeekHeader(props: Props) {
+  const { currentLocale } = useTranslation();
   const { isLoading, showWeekends } = props;
   // hooks
   const { data } = useUserProfile();
@@ -41,7 +43,9 @@ export const CalendarWeekHeader = observer(function CalendarWeekHeader(props: Pr
 
         return (
           <div key={day.shortTitle} className="flex h-11 items-center justify-center bg-layer-1 px-4 md:justify-end">
-            {day.shortTitle}
+            {isChineseDateLocale(currentLocale)
+              ? formatDateForDisplay(new Date(2026, 10, 1 + day.value), "EEE", currentLocale)
+              : day.shortTitle}
           </div>
         );
       })}

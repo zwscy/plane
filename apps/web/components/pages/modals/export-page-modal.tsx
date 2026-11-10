@@ -29,6 +29,7 @@ import { setToast } from "@plane/blocks/toast";
 import { PDFDocument } from "@/components/editor/pdf";
 // hooks
 import { useParseEditorContent } from "@/hooks/use-parse-editor-content";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   editorRef: EditorRefApi | null;
@@ -115,6 +116,7 @@ const defaultValues: TFormValues = {
 };
 
 export function ExportPageModal(props: Props) {
+  const { t } = useTranslation();
   const { editorRef, isOpen, onClose, pageTitle } = props;
   // states
   const [isExporting, setIsExporting] = useState(false);
@@ -199,16 +201,16 @@ export function ExportPageModal(props: Props) {
       }
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Page exported successfully.",
+        title: t("toast.success"),
+        message: t("common.ui.page_exported_successfully"),
       });
       handleClose();
     } catch (error) {
       console.error("Error in exporting page:", error);
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Page could not be exported. Please try again later.",
+        title: t("toast.error"),
+        message: t("common.ui.page_could_not_be_exported_please_try_again_later"),
       });
     } finally {
       setIsExporting(false);
@@ -226,19 +228,19 @@ export function ExportPageModal(props: Props) {
         <DialogMain>
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>Export page</DialogTitle>
+              <DialogTitle>{t("common.ui.export_page")}</DialogTitle>
             </DialogHeading>
           </DialogHeader>
           <DialogBody>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="shrink-0 text-body-sm-medium text-primary">Export format</span>
+                <span className="shrink-0 text-body-sm-medium text-primary">{t("common.ui.export_format")}</span>
                 <Controller
                   control={control}
                   name="export_format"
                   render={({ field: { onChange, value } }) => (
                     <ExportOptionSelect
-                      label="Export format"
+                      label={t("common.ui.export_format")}
                       options={EXPORT_FORMATS}
                       value={value}
                       onChange={(val) => onChange(val as TExportFormats)}
@@ -247,14 +249,17 @@ export function ExportPageModal(props: Props) {
                 />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <span className="shrink-0 text-body-sm-medium text-primary">Include content</span>
+                <span className="shrink-0 text-body-sm-medium text-primary">{t("common.ui.include_content")}</span>
                 <Controller
                   control={control}
                   name="content_variety"
                   render={({ field: { onChange, value } }) => (
                     <ExportOptionSelect
-                      label="Include content"
-                      options={CONTENT_VARIETY}
+                      label={t("common.ui.include_content")}
+                      options={CONTENT_VARIETY.map((option) => ({
+                        ...option,
+                        label: t(option.key === "everything" ? "common.ui.everything" : "common.ui.no_images"),
+                      }))}
                       value={value}
                       onChange={(val) => onChange(val as TContentVariety)}
                     />
@@ -263,13 +268,13 @@ export function ExportPageModal(props: Props) {
               </div>
               {isPDFSelected && (
                 <div className="flex items-center justify-between gap-2">
-                  <span className="shrink-0 text-body-sm-medium text-primary">Page format</span>
+                  <span className="shrink-0 text-body-sm-medium text-primary">{t("common.ui.page_format")}</span>
                   <Controller
                     control={control}
                     name="page_format"
                     render={({ field: { onChange, value } }) => (
                       <ExportOptionSelect
-                        label="Page format"
+                        label={t("common.ui.page_format")}
                         options={PAGE_FORMATS}
                         value={value}
                         onChange={(val) => onChange(val as TPageFormats)}
@@ -282,7 +287,7 @@ export function ExportPageModal(props: Props) {
           </DialogBody>
         </DialogMain>
         <DialogActions>
-          <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+          <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
           <Button
             variant="primary"
             size="md"

@@ -1,0 +1,8 @@
+# Package the verified host build; API and UI source live in this repository.
+# The pinned CE runtime serves the same SPA directory on port 3000.
+FROM makeplane/plane-frontend:v1.4.3
+ARG SOURCE_REVISION=development
+LABEL org.opencontainers.image.source="https://github.com/zwscy/plane"
+LABEL org.opencontainers.image.revision="${SOURCE_REVISION}"
+RUN rm -rf /usr/share/nginx/html/*
+COPY . /usr/share/nginx/html/

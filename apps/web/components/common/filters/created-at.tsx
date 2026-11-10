@@ -9,6 +9,7 @@ import { observer } from "mobx-react";
 import { DATE_BEFORE_FILTER_OPTIONS } from "@plane/constants";
 // local imports
 import { DateFilterSubmenu, isCustomDateFilterValue } from "./date-filter-submenu";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -16,11 +17,12 @@ type Props = {
 };
 
 export const FilterCreatedDate = observer(function FilterCreatedDate(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate } = props;
 
   return (
     <DateFilterSubmenu
-      label="Created date"
+      label={t("workspace_projects.sort.created_at")}
       options={DATE_BEFORE_FILTER_OPTIONS}
       appliedFilters={appliedFilters}
       onToggleOption={handleUpdate}

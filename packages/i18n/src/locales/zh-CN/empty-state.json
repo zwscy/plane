@@ -78,8 +78,8 @@
       "cta_primary": "添加工作项"
     },
     "pages": {
-      "title": "记录一切 — 从笔记到 PRD",
-      "description": "页面让您在一个地方捕获和组织信息。编写会议笔记、项目文档和 PRD,嵌入工作项,并使用现成的组件进行结构化。",
+      "title": "记录一切 — 从笔记到产品需求文档",
+      "description": "页面让您在一个地方捕获和组织信息。编写会议笔记、项目文档和产品需求文档，嵌入工作项，并使用现成的组件进行结构化。",
       "cta_primary": "创建您的第一个页面"
     },
     "archive_pages": {
@@ -222,9 +222,9 @@
       "cta_primary": "添加访问令牌"
     },
     "webhooks": {
-      "title": "尚未添加 Webhook",
+      "title": "尚未添加事件回调",
       "description": "在项目事件发生时自动向外部服务发送通知。",
-      "cta_primary": "添加 webhook"
+      "cta_primary": "添加事件回调"
     },
     "work_item_types": {
       "title": "创建和自定义工作项类型",

@@ -6,12 +6,10 @@
 
 import React, { useState } from "react";
 import { observer } from "mobx-react";
-import { HelpOutline, PagesOutline, UserAltOutline } from "@makeplane/propel/icons";
-import { TALK_TO_SALES_URL } from "@plane/constants";
+import { HelpOutline } from "@makeplane/propel/icons";
 import { useTranslation } from "@plane/i18n";
 // ui
-import { Icon } from "@makeplane/propel/components/icon";
-import { Menu, MenuContent, MenuFooter, MenuItem, MenuSeparator, MenuTrigger } from "@makeplane/propel/components/menu";
+import { Menu, MenuContent, MenuFooter, MenuItem, MenuTrigger } from "@makeplane/propel/components/menu";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import { IconButton } from "@makeplane/propel/elements/icon-button";
 // components
@@ -55,23 +53,8 @@ export const HelpMenuRoot = observer(function HelpMenuRoot() {
             </MenuFooter>
           }
         >
-          <MenuItem
-            icon={<Icon icon={PagesOutline} tint="secondary" />}
-            label={t("documentation")}
-            onClick={() => window.open("https://go.plane.so/p-docs", "_blank")}
-          />
-          <MenuItem
-            icon={<Icon icon={UserAltOutline} tint="secondary" />}
-            label={t("contact_sales")}
-            onClick={() => window.open(TALK_TO_SALES_URL, "_blank", "noopener,noreferrer")}
-          />
-          <MenuSeparator />
           <MenuItem label={t("keyboard_shortcuts")} onClick={() => toggleShortcutsListModal(true)} />
           <MenuItem label={t("whats_new")} onClick={() => setProductUpdatesModalOpen(true)} />
-          <MenuItem
-            label="Forum"
-            onClick={() => window.open("https://forum.plane.so", "_blank", "noopener,noreferrer")}
-          />
         </MenuContent>
       </Menu>
     </>

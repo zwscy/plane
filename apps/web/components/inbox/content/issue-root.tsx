@@ -33,6 +33,7 @@ import { IntakeWorkItemVersionService } from "@/services/inbox";
 import type { IInboxIssueStore } from "@/store/inbox/inbox-issue.store";
 // local imports
 import { InboxIssueContentProperties } from "./issue-properties";
+import { useTranslation } from "@plane/i18n";
 // services init
 const intakeWorkItemVersionService = new IntakeWorkItemVersionService();
 
@@ -46,6 +47,7 @@ type Props = {
 };
 
 export const InboxIssueMainContent = observer(function InboxIssueMainContent(props: Props) {
+  const { t } = useTranslation();
   const { workspaceSlug, projectId, inboxIssue, isEditable, isSubmitting, setIsSubmitting } = props;
   // refs
   const editorRef = useRef<EditorRefApi>(null);
@@ -82,16 +84,16 @@ export const InboxIssueMainContent = observer(function InboxIssueMainContent(pro
         try {
           await removeIssue(workspaceSlug, projectId, _issueId);
           setToast({
-            title: "Success!",
+            title: t("toast.success"),
             type: "success",
-            message: "Work item deleted successfully",
+            message: t("inbox_issue.modals.delete.success"),
           });
         } catch (error) {
           console.log("Error in deleting work item:", error);
           setToast({
-            title: "Error!",
+            title: t("toast.error"),
             type: "error",
-            message: "Work item delete failed",
+            message: t("common.ui.work_item_delete_failed"),
           });
         }
       },
@@ -100,9 +102,9 @@ export const InboxIssueMainContent = observer(function InboxIssueMainContent(pro
           await inboxIssue.updateIssue(data);
         } catch (_error) {
           setToast({
-            title: "Work item update failed",
+            title: t("common.ui.work_item_update_failed"),
             type: "error",
-            message: "Work item update failed",
+            message: t("common.ui.work_item_update_failed"),
           });
         }
       },
@@ -116,7 +118,7 @@ export const InboxIssueMainContent = observer(function InboxIssueMainContent(pro
       },
     }),
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
-    [inboxIssue]
+    [inboxIssue, t]
   );
 
   if (!issue) return <></>;

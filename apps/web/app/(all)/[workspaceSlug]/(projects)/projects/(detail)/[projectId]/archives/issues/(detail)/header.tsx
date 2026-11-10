@@ -23,10 +23,12 @@ import { ProjectBreadcrumb } from "@/components/breadcrumbs/project";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
 // services
 import { IssueService } from "@/services/issue";
+import { useTranslation } from "@plane/i18n";
 
 const issueService = new IssueService();
 
 export const ProjectArchivedIssueDetailsHeader = observer(function ProjectArchivedIssueDetailsHeader() {
+  const { t } = useTranslation();
   // router
   const { workspaceSlug, projectId, archivedIssueId } = useParams();
   const projectCrumb = useProjectCrumbProps(workspaceSlug?.toString(), projectId?.toString());
@@ -53,7 +55,7 @@ export const ProjectArchivedIssueDetailsHeader = observer(function ProjectArchiv
             component={
               <BreadcrumbLink
                 href={`/${workspaceSlug}/projects/${projectId}/archives/issues`}
-                label="Archives"
+                label={t("archives")}
                 icon={<ArchiveOutline className="h-4 w-4 text-tertiary" />}
               />
             }
@@ -62,7 +64,7 @@ export const ProjectArchivedIssueDetailsHeader = observer(function ProjectArchiv
             component={
               <BreadcrumbLink
                 href={`/${workspaceSlug}/projects/${projectId}/archives/issues`}
-                label="Work items"
+                label={t("work_items")}
                 icon={<WorkItemsOutline className="h-4 w-4 text-tertiary" />}
               />
             }

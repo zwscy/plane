@@ -23,7 +23,7 @@ export function PageSearchInput(props: Props) {
       aria-label={t("search")}
       clearLabel={t("common.clear")}
       size="md"
-      placeholder="Search pages"
+      placeholder={t("common.ui.search_pages")}
       value={searchQuery}
       onValueChange={(value) => updateSearchQuery(value)}
     />

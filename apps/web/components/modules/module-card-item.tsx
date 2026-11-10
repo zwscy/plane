@@ -87,11 +87,11 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
     setPromiseToast(addToFavoritePromise, {
       loading: "Adding module to favorites...",
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => "Module added to favorites.",
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => "Couldn't add the module to favorites. Please try again.",
       },
     });
@@ -111,11 +111,11 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
     setPromiseToast(removeFromFavoritePromise, {
       loading: "Removing module from favorites...",
       success: {
-        title: "Success!",
+        title: t("toast.success"),
         message: () => "Module removed from favorites.",
       },
       error: {
-        title: "Error!",
+        title: t("toast.error"),
         message: () => "Couldn't remove the module from favorites. Please try again.",
       },
     });
@@ -133,14 +133,14 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Module updated successfully.",
+          title: t("toast.success"),
+          message: t("common.ui.module_updated_successfully"),
         });
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err?.detail ?? "Module could not be updated. Please try again.",
         });
       });
@@ -243,7 +243,7 @@ export const ModuleCardItem = observer(function ModuleCardItem(props: Props) {
               {moduleLeadDetails ? (
                 <ButtonAvatars showTooltip={false} userIds={moduleLeadDetails?.id} />
               ) : (
-                <Tooltip label="No lead">
+                <Tooltip label={t("workspace_projects.card.no_lead")}>
                   <span className="grid size-5 place-items-center text-tertiary">
                     <LeadOutline className="size-4" />
                   </span>

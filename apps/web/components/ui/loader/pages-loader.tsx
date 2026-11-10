@@ -5,12 +5,14 @@
  */
 
 import { range } from "lodash-es";
+import { useTranslation } from "@plane/i18n";
 
 export function PagesLoader() {
+  const { t } = useTranslation();
   return (
     <div className="flex h-full flex-col space-y-5 overflow-hidden p-6">
       <div className="flex justify-between gap-4">
-        <h3 className="text-h4-semibold text-primary">Pages</h3>
+        <h3 className="text-h4-semibold text-primary">{t("common.pages")}</h3>
       </div>
       <div className="flex items-center gap-3">
         {range(5).map((i) => (

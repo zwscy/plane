@@ -9,6 +9,7 @@ import { STATE_GROUPS } from "@plane/constants";
 import { StateGroupIcon } from "@plane/blocks/icons";
 // components
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -22,11 +23,12 @@ const STATE_GROUP_OPTIONS = Object.values(STATE_GROUPS).map((stateGroup) => ({
 }));
 
 export const FilterStateGroup = observer(function FilterStateGroup(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate } = props;
 
   return (
     <FilterSubmenu
-      label="State group"
+      label={t("common.state_group")}
       options={STATE_GROUP_OPTIONS}
       appliedFilters={appliedFilters}
       onToggle={handleUpdate}

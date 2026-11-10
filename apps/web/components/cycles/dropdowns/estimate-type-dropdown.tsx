@@ -13,6 +13,7 @@ import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useCycle } from "@/hooks/store/use-cycle";
 // local imports
 import { cycleEstimateOptions } from "../analytics-sidebar/issue-progress";
+import { useTranslation } from "@plane/i18n";
 
 type TProps = {
   value: TCycleEstimateType;
@@ -23,6 +24,7 @@ type TProps = {
 };
 
 export const EstimateTypeDropdown = observer(function EstimateTypeDropdown(props: TProps) {
+  const { t } = useTranslation();
   const { value, onChange, projectId, cycleId, showDefault = false } = props;
   const { getIsPointsDataAvailable } = useCycle();
   const { areEstimateEnabledByProjectId, currentProjectEstimateType } = useProjectEstimates();
@@ -38,7 +40,7 @@ export const EstimateTypeDropdown = observer(function EstimateTypeDropdown(props
         getOptionLabel={(option) => option.label}
         showSearch={false}
         pinSelected={false}
-        placeholder="None"
+        placeholder={t("none")}
       >
         <Select.Trigger variant="select-ghost-md" appendIcon={null}>
           <Select.Value />

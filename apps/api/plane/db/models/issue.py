@@ -134,6 +134,7 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         blank=True,
     )
     name = models.CharField(max_length=255, verbose_name="Issue Name")
+    custom_fields = models.JSONField(blank=True, default=dict)
     description_json = models.JSONField(blank=True, default=dict)
     description_html = models.TextField(blank=True, default="<p></p>")
     description_stripped = models.TextField(blank=True, null=True)

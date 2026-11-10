@@ -21,6 +21,7 @@ import {
 import { InputField } from "@makeplane/propel/components/input-field";
 import { setToast } from "@plane/blocks/toast";
 import type { ILinkDetails, ModuleLink } from "@plane/types";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   createLink: (formData: ModuleLink) => Promise<void>;
@@ -36,6 +37,7 @@ const defaultValues: ModuleLink = {
 };
 
 export function CreateUpdateModuleLinkModal(props: Props) {
+  const { t } = useTranslation();
   const { isOpen, handleClose, createLink, updateLink, data } = props;
   // form info
   const {
@@ -63,14 +65,14 @@ export function CreateUpdateModuleLinkModal(props: Props) {
         await createLink(payload);
         setToast({
           type: "success",
-          title: "Success!",
+          title: t("toast.success"),
           message: "Module link created successfully.",
         });
       } else {
         await updateLink(payload, data.id);
         setToast({
           type: "success",
-          title: "Success!",
+          title: t("toast.success"),
           message: "Module link updated successfully.",
         });
       }
@@ -78,7 +80,7 @@ export function CreateUpdateModuleLinkModal(props: Props) {
     } catch (error: any) {
       setToast({
         type: "error",
-        title: "Error!",
+        title: t("toast.error"),
         message: error?.data?.error ?? "Some error occurred. Please try again.",
       });
     }
@@ -103,7 +105,9 @@ export function CreateUpdateModuleLinkModal(props: Props) {
           <DialogMain>
             <DialogHeader>
               <DialogHeading>
-                <DialogTitle>{data ? "Update" : "Add"} link</DialogTitle>
+                <DialogTitle>
+                  {data ? "Update" : "Add"} {t("common.link")}
+                </DialogTitle>
               </DialogHeading>
             </DialogHeader>
             <DialogBody tabIndex={0}>
@@ -120,12 +124,12 @@ export function CreateUpdateModuleLinkModal(props: Props) {
                       type="text"
                       size="lg"
                       orientation="vertical"
-                      label="URL"
+                      label={t("common.url")}
                       value={value}
                       onChange={onChange}
                       ref={ref}
                       error={errors.url?.message}
-                      placeholder="Type or paste a URL"
+                      placeholder={t("common.type_or_paste_a_url")}
                     />
                   )}
                 />
@@ -138,13 +142,13 @@ export function CreateUpdateModuleLinkModal(props: Props) {
                       type="text"
                       size="lg"
                       orientation="vertical"
-                      label="Display title"
-                      description="Optional"
+                      label={t("common.display_title")}
+                      description={t("common.optional")}
                       value={value}
                       onChange={onChange}
                       ref={ref}
                       error={errors.title?.message}
-                      placeholder="What you'd like to see this link as"
+                      placeholder={t("common.link_title_placeholder")}
                     />
                   )}
                 />
@@ -152,7 +156,7 @@ export function CreateUpdateModuleLinkModal(props: Props) {
             </DialogBody>
           </DialogMain>
           <DialogActions>
-            <Button variant="secondary" size="md" stretch="auto" onClick={onClose} label="Cancel" />
+            <Button variant="secondary" size="md" stretch="auto" onClick={onClose} label={t("cancel")} />
             <Button
               variant="primary"
               size="md"

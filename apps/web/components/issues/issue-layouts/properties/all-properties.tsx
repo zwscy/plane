@@ -45,6 +45,9 @@ import {
   getIssueDueDateClassName,
 } from "@plane/utils";
 // components
+import { CustomFieldEditor, CustomFieldValue } from "@/components/issues/custom-fields";
+import { getVisibleCustomFields } from "@/helpers/custom-field-views";
+import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
 import { CycleSelect } from "@/components/dropdowns/cycle/cycle-select";
 import { EstimateSelect, getEstimatePointDisplayValue } from "@/components/dropdowns/estimate/estimate-select";
 import { MemberSelect } from "@/components/dropdowns/member/member-select";
@@ -101,6 +104,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
     isEpic = false,
     overflowBudgetPx,
     isRowDragging = false,
+    activeLayout,
   } = props;
   // i18n
   const { t, currentLocale } = useTranslation();
@@ -127,6 +131,10 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
   // router
   const router = useAppRouter();
   const { workspaceSlug, projectId } = useParams();
+  const { fields: customFields } = useProjectCustomFields(
+    workspaceSlug?.toString(),
+    isEpic || activeLayout === "gantt_chart" ? undefined : (issue.project_id ?? undefined)
+  );
 
   // derived values
   const stateDetails = getStateById(issue.state_id);
@@ -671,6 +679,48 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             showTooltip={false}
           />
         ),
+      },
+    });
+  }
+
+  for (const field of getVisibleCustomFields(customFields, displayProperties.custom_fields)) {
+    const value = issue.custom_fields?.[field.id] ?? null;
+    const fieldProps = {
+      workspaceSlug: workspaceSlug?.toString() ?? "",
+      projectId: issue.project_id,
+      field,
+      value,
+      compact: true,
+    };
+    const renderEditor = () => (
+      <CustomFieldEditor
+        {...fieldProps}
+        disabled={isReadOnly || !updateIssue}
+        onChange={async (nextValue) => {
+          await updateIssue?.(issue.project_id, issue.id, { custom_fields: { [field.id]: nextValue } });
+        }}
+      />
+    );
+    entries.push({
+      key: `custom_fields__${field.id}`,
+      hidePriority: 100,
+      measureKey: JSON.stringify([field.name, value]),
+      chip: (
+        <div
+          role="presentation"
+          className="flex max-w-64 items-center gap-1 rounded border border-subtle px-2 py-0.5"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <span className="shrink-0 text-secondary">{field.name}:</span>
+          {renderEditor()}
+        </div>
+      ),
+      menuRow: {
+        icon: <span className="size-4" />,
+        label: field.name,
+        preview: <CustomFieldValue {...fieldProps} />,
+        disabled: isReadOnly,
+        editor: renderEditor,
       },
     });
   }

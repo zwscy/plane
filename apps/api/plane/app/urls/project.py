@@ -4,6 +4,8 @@
 
 from django.urls import path
 
+from plane.app.views.project.custom_field import ProjectCustomFieldEndpoint, ProjectCustomFieldDetailEndpoint
+
 from plane.app.views import (
     ProjectViewSet,
     DeployBoardViewSet,
@@ -22,6 +24,14 @@ from plane.app.views import (
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/custom-fields/",
+        ProjectCustomFieldEndpoint.as_view(), name="project-custom-fields",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/custom-fields/<uuid:field_id>/",
+        ProjectCustomFieldDetailEndpoint.as_view(), name="project-custom-field",
+    ),
     path(
         "workspaces/<str:slug>/projects/",
         ProjectViewSet.as_view({"get": "list", "post": "create"}),
