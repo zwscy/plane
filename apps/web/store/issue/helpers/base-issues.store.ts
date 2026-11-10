@@ -8,6 +8,7 @@ import { isEqual, concat, get, indexOf, isEmpty, orderBy, pull, set, uniq, updat
 import { action, computed, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
 // plane constants
+import { setToast } from "@plane/blocks/toast";
 import { ALL_ISSUES, ISSUE_PRIORITIES } from "@plane/constants";
 // types
 import type {
@@ -28,6 +29,7 @@ import type {
 } from "@plane/types";
 import { EIssueServiceType, EIssueLayoutTypes } from "@plane/types";
 // helpers
+import { isCustomFieldOrderBy, preserveCustomFieldOrder } from "@/helpers/custom-field-views";
 import { convertToISODateString } from "@plane/utils";
 // plane web imports
 // services
@@ -141,7 +143,7 @@ export const ISSUE_FILTER_DEFAULT_DATA: Record<TIssueDisplayFilterOptions, keyof
 };
 
 // This constant maps the order by keys to the respective issue property that the key relies on
-const ISSUE_ORDERBY_KEY: Record<TIssueOrderByOptions, keyof TIssue> = {
+const ISSUE_ORDERBY_KEY: Partial<Record<TIssueOrderByOptions, keyof TIssue>> = {
   created_at: "created_at",
   "-created_at": "created_at",
   updated_at: "updated_at",
@@ -332,7 +334,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     const orderBy = this.orderBy;
     if (!orderBy) return;
 
-    return ISSUE_ORDERBY_KEY[orderBy];
+    return isCustomFieldOrderBy(orderBy) ? "custom_fields" : ISSUE_ORDERBY_KEY[orderBy];
   }
 
   // The Issue Property corresponding to the group by value
@@ -539,6 +541,9 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     // If shouldUpdateList is true, call fetchParentStats
     // oxlint-disable-next-line no-unused-expressions
     shouldUpdateList && (await this.fetchParentStats(workspaceSlug, projectId));
+    // Quick-add removes its temporary row and attaches native relations before refreshing.
+    if (shouldUpdateList && !data.tempId)
+      await this.refreshCustomFieldOrder(workspaceSlug, projectId, response.parent_id ?? undefined);
 
     return response;
   }
@@ -576,15 +581,65 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
       } as TIssue);
 
       // call API to update the issue
-      await this.issueService.patchIssue(workspaceSlug, projectId, issueId, data);
+      const response = await this.issueService.patchIssue(workspaceSlug, projectId, issueId, data);
+      // The server returns the merged JSON map; replacing it with the partial PATCH loses other values.
+      if (data.custom_fields && response?.custom_fields)
+        this.rootIssueStore.issues.addIssue([
+          { ...this.rootIssueStore.issues.getIssueById(issueId), ...response } as TIssue,
+        ]);
 
       // call fetch Parent Stats
       this.fetchParentStats(workspaceSlug, projectId);
     } catch (error) {
       // If errored out update store again to revert the change
-      this.rootIssueStore.issues.updateIssue(issueId, issueBeforeUpdate ?? {});
+      if (data.custom_fields && issueBeforeUpdate) this.rootIssueStore.issues.addIssue([issueBeforeUpdate]);
+      else this.rootIssueStore.issues.updateIssue(issueId, issueBeforeUpdate ?? {});
       this.updateIssueList(issueBeforeUpdate, { ...issueBeforeUpdate, ...data } as TIssue);
       throw error;
+    }
+    if (data.custom_fields) {
+      await this.refreshCustomFieldOrder(workspaceSlug, projectId, issueBeforeUpdate?.parent_id ?? undefined);
+    }
+  }
+
+  protected async refreshCustomFieldOrder(workspaceSlug: string, projectId: string, parentId?: string) {
+    try {
+      const root = this.rootIssueStore;
+      const shouldRefreshRoot = (filters: { order_by?: string; sub_issue?: boolean } | undefined) =>
+        isCustomFieldOrderBy(filters?.order_by) && (!parentId || filters?.sub_issue);
+      if (root.projectId === projectId) {
+        const viewId = root.viewId;
+        const cycleId = root.cycleId;
+        const moduleId = root.moduleId;
+        if (viewId) {
+          if (shouldRefreshRoot(root.projectViewIssuesFilter.issueFilters?.displayFilters))
+            await root.projectViewIssues.fetchIssuesWithExistingPagination(
+              workspaceSlug,
+              projectId,
+              viewId,
+              "mutation"
+            );
+        } else if (cycleId) {
+          if (shouldRefreshRoot(root.cycleIssuesFilter.issueFilters?.displayFilters))
+            await root.cycleIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation", cycleId);
+        } else if (moduleId) {
+          if (shouldRefreshRoot(root.moduleIssuesFilter.issueFilters?.displayFilters))
+            await root.moduleIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation", moduleId);
+        } else if (shouldRefreshRoot(root.projectIssuesFilter.issueFilters?.displayFilters)) {
+          await root.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
+        }
+      }
+      if (parentId) await root.issueDetail.subIssues.refreshCustomFieldOrder(workspaceSlug, projectId, parentId);
+    } catch {
+      // A completed POST/PATCH must remain successful when this read-only reorder fails.
+      setToast({
+        type: "warning",
+        title: "工作项已保存",
+        message: "排序刷新失败，当前列表已保留，可重试刷新。",
+        actionItems: [
+          { label: "重试刷新", onClick: () => this.refreshCustomFieldOrder(workspaceSlug, projectId, parentId) },
+        ],
+      });
     }
   }
 
@@ -665,6 +720,7 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
     if (promiseRequests && promiseRequests.length > 0) {
       await Promise.all(promiseRequests);
     }
+    await this.refreshCustomFieldOrder(workspaceSlug, projectId, response.parent_id ?? undefined);
     return response;
   }
 
@@ -1764,6 +1820,8 @@ export abstract class BaseIssuesStore implements IBaseIssuesStore {
   }
 
   issuesSortWithOrderBy = (issueIds: string[], key: TIssueOrderByOptions | undefined): string[] => {
+    const serverOrder = preserveCustomFieldOrder(issueIds, key);
+    if (serverOrder) return serverOrder;
     const issues = this.rootIssueStore.issues.getIssuesByIds(issueIds, this.isArchived ? "archived" : "un-archived");
     const array = orderBy(issues, (issue) => convertToISODateString(issue["created_at"]), ["desc"]);
 

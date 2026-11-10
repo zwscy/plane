@@ -8,6 +8,7 @@
 import type { TIssue } from "@plane/types";
 
 export const DEFAULT_WORK_ITEM_FORM_VALUES: Partial<TIssue> = {
+  custom_fields: {},
   project_id: "",
   type_id: null,
   name: "",

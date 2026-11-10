@@ -468,7 +468,12 @@ class IssueListCreateAPIEndpoint(BaseAPIView):
             total_issue_queryset = total_issue_queryset.filter(created_by=request.user)
 
         # Priority Ordering
-        if order_by_param == "priority" or order_by_param == "-priority":
+        custom_order = request.GET.get("order_by", "")
+        if custom_order.lstrip("-").startswith("custom_fields__"):
+            from plane.utils.custom_field_ordering import order_custom_field
+
+            issue_queryset, _ = order_custom_field(issue_queryset, custom_order, project_id)
+        elif order_by_param == "priority" or order_by_param == "-priority":
             priority_order = priority_order if order_by_param == "priority" else priority_order[::-1]
             issue_queryset = issue_queryset.annotate(
                 priority_order=Case(

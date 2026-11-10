@@ -7,7 +7,7 @@
 import { set } from "lodash-es";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
-import type { EIssueFilterType } from "@plane/constants";
+import { EIssueFilterType } from "@plane/constants";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
@@ -96,6 +96,14 @@ export class WorkItemSubIssueFiltersStore implements IWorkItemSubIssueFiltersSto
     runInAction(() => {
       updateSubWorkItemFilters(this.subIssueFilters, filterType, filters, workItemId);
     });
+    if (filterType === EIssueFilterType.DISPLAY_FILTERS && "order_by" in filters) {
+      const root = this.subIssueStore.rootIssueDetailStore.rootIssueStore;
+      const parent = root.issues.getIssueById(workItemId);
+      if (root.workspaceSlug && parent?.project_id)
+        void this.subIssueStore
+          .fetchSubIssues(root.workspaceSlug, parent.project_id, workItemId, filters.order_by)
+          .catch(console.error);
+    }
   };
 
   /**

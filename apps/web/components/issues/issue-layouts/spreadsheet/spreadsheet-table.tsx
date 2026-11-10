@@ -7,6 +7,9 @@
 import type { MutableRefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
+import { useParams } from "next/navigation";
+import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
+import { getVisibleCustomFields } from "@/helpers/custom-field-views";
 // plane imports
 import type { IIssueDisplayFilterOptions, IIssueDisplayProperties, TIssue } from "@plane/types";
 // components
@@ -61,6 +64,8 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
     isEpic = false,
   } = props;
 
+  const { workspaceSlug, projectId } = useParams();
+  const { fields } = useProjectCustomFields(workspaceSlug?.toString(), isEpic ? undefined : projectId?.toString());
   // states
   const isScrolled = useRef(false);
   const [intersectionElement, setIntersectionElement] = useState<HTMLTableSectionElement | null>(null);
@@ -110,7 +115,9 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
 
   const ignoreFieldsForCounting: (keyof IIssueDisplayProperties)[] = ["key"];
   if (!isEstimateEnabled) ignoreFieldsForCounting.push("estimate");
-  const displayPropertiesCount = getDisplayPropertiesCount(displayProperties, ignoreFieldsForCounting);
+  const displayPropertiesCount =
+    getDisplayPropertiesCount(displayProperties, ignoreFieldsForCounting) +
+    getVisibleCustomFields(fields, displayProperties.custom_fields).length;
 
   return (
     <table

@@ -1,3 +1,5 @@
+> 本 Fork 增加项目级自定义字段。中文使用说明、本地构建和回退方式见 [自定义字段版本说明](deploy/custom/README.md)。
+
 <br /><br />
 
 <p align="center">

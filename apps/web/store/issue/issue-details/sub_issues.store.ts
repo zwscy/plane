@@ -16,8 +16,11 @@ import type {
   TSubIssuesStateDistribution,
   TIssueServiceType,
   TLoader,
+  TIssueOrderByOptions,
 } from "@plane/types";
 // services
+import { isCustomFieldOrderBy } from "@/helpers/custom-field-views";
+import { setToast } from "@plane/blocks/toast";
 import { IssueService } from "@/services/issue";
 // store
 import type { IIssueDetail } from "./root.store";
@@ -25,7 +28,12 @@ import type { IWorkItemSubIssueFiltersStore } from "./sub_issues_filter.store";
 import { WorkItemSubIssueFiltersStore } from "./sub_issues_filter.store";
 
 export interface IIssueSubIssuesStoreActions {
-  fetchSubIssues: (workspaceSlug: string, projectId: string, parentIssueId: string) => Promise<TIssueSubIssues>;
+  fetchSubIssues: (
+    workspaceSlug: string,
+    projectId: string,
+    parentIssueId: string,
+    orderBy?: TIssueOrderByOptions
+  ) => Promise<TIssueSubIssues>;
   createSubIssues: (
     workspaceSlug: string,
     projectId: string,
@@ -59,6 +67,7 @@ export interface IIssueSubIssuesStore extends IIssueSubIssuesStoreActions {
   subIssuesByIssueId: (issueId: string) => string[] | undefined;
   subIssueHelpersByIssueId: (issueId: string) => TSubIssueHelpers;
   // actions
+  refreshCustomFieldOrder: (workspaceSlug: string, projectId: string, parentIssueId: string) => Promise<void>;
   fetchOtherProjectProperties: (workspaceSlug: string, projectIds: string[]) => Promise<void>;
   setSubIssueHelpers: (parentIssueId: string, key: TSubIssueHelpersKeys, value: string) => void;
 }
@@ -69,6 +78,8 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
   subIssues: TIssueSubIssuesIdMap = {};
   subIssueHelpers: Record<string, TSubIssueHelpers> = {};
   loader: TLoader = undefined;
+  private orderByByParent: Record<string, TIssueOrderByOptions | undefined> = {};
+  private fetchVersionByParent: Record<string, number> = {};
 
   filters: IWorkItemSubIssueFiltersStore;
   // root store
@@ -125,9 +136,45 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
     });
   };
 
-  fetchSubIssues = async (workspaceSlug: string, projectId: string, parentIssueId: string) => {
+  refreshCustomFieldOrder = async (workspaceSlug: string, projectId: string, parentIssueId: string) => {
+    const orderBy = this.orderByByParent[parentIssueId];
+    if (!this.subIssues[parentIssueId] || !isCustomFieldOrderBy(orderBy)) return;
+    try {
+      await this.fetchSubIssues(workspaceSlug, projectId, parentIssueId, orderBy);
+    } catch {
+      runInAction(() => {
+        this.loader = undefined;
+      });
+      setToast({
+        type: "warning",
+        title: "工作项已保存",
+        message: "子任务排序刷新失败，当前列表已保留，可重试刷新。",
+        actionItems: [
+          { label: "重试刷新", onClick: () => this.refreshCustomFieldOrder(workspaceSlug, projectId, parentIssueId) },
+        ],
+      });
+    }
+  };
+
+  fetchSubIssues = async (
+    workspaceSlug: string,
+    projectId: string,
+    parentIssueId: string,
+    orderBy?: TIssueOrderByOptions
+  ) => {
     this.loader = "init-loader";
-    const response = await this.issueService.subIssues(workspaceSlug, projectId, parentIssueId);
+    const activeOrderBy =
+      orderBy ??
+      this.orderByByParent[parentIssueId] ??
+      this.filters.getSubIssueFilters(parentIssueId).displayFilters?.order_by;
+    this.orderByByParent[parentIssueId] = activeOrderBy;
+    const version = (this.fetchVersionByParent[parentIssueId] ?? 0) + 1;
+    this.fetchVersionByParent[parentIssueId] = version;
+    const response = await this.issueService.subIssues(workspaceSlug, projectId, parentIssueId, {
+      order_by: activeOrderBy,
+    });
+    // A prior order request may finish after a newer one; only the latest can populate siblings.
+    if (this.fetchVersionByParent[parentIssueId] !== version) return response;
 
     const subIssuesStateDistribution = response?.state_distribution ?? {};
 
@@ -201,6 +248,7 @@ export class IssueSubIssuesStore implements IIssueSubIssuesStore {
       [parentIssueId, "sub_issues_count"],
       this.subIssues[parentIssueId].length
     );
+    await this.refreshCustomFieldOrder(workspaceSlug, projectId, parentIssueId);
 
     return;
   };

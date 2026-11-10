@@ -34,5 +34,6 @@ export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, IconGlyph | Re
   states: StateOutline,
   labels: LabelsOutline,
   estimates: EstimateOutline,
+  custom_fields: LabelsOutline,
   automations: TriggerOutline,
 };

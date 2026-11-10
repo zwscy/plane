@@ -18,6 +18,7 @@ import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { CustomFieldOrderGuard } from "../custom-field-order-guard";
 import { IssuePeekOverview } from "../../peek-overview";
 import { CalendarLayout } from "../calendar/roots/project-root";
 import { BaseGanttRoot } from "../gantt";
@@ -86,7 +87,9 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
                   <Spinner className="h-4 w-4" />
                 </div>
               )}
-              <ProjectIssueLayout activeLayout={activeLayout} />
+              <CustomFieldOrderGuard>
+                <ProjectIssueLayout activeLayout={activeLayout} />
+              </CustomFieldOrderGuard>
             </div>
             {/* peek overview */}
             <IssuePeekOverview />

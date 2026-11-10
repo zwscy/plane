@@ -18,6 +18,7 @@ import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { CustomFieldOrderGuard } from "../custom-field-order-guard";
 import { IssuePeekOverview } from "../../peek-overview";
 import { ArchivedIssueListLayout } from "../list/roots/archived-issue-root";
 
@@ -57,7 +58,9 @@ export const ArchivedIssueLayoutRoot = observer(function ArchivedIssueLayoutRoot
           <>
             {archivedWorkItemsFilter && <WorkItemFiltersRow filter={archivedWorkItemsFilter} />}
             <div className="relative h-full w-full overflow-auto">
-              <ArchivedIssueListLayout />
+              <CustomFieldOrderGuard>
+                <ArchivedIssueListLayout />
+              </CustomFieldOrderGuard>
             </div>
             <IssuePeekOverview />
           </>

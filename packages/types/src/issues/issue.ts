@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import type { TCustomFieldValue } from "../custom-fields";
 import type { TIssuePriorities } from "../issues";
 import type { TStateGroups } from "../state";
 import type { TIssuePublicComment } from "./activity/issue_comment";
@@ -47,6 +48,7 @@ export type TBaseIssue = {
   sequence_id: number;
   name: string;
   sort_order: number;
+  custom_fields?: Record<string, TCustomFieldValue>;
 
   state_id: string | null;
   priority: TIssuePriorities | null;

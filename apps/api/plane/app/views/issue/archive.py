@@ -127,7 +127,7 @@ class IssueArchiveViewSet(BaseViewSet):
 
         # Issue queryset
         issue_queryset, order_by_param = order_issue_queryset(
-            issue_queryset=issue_queryset, order_by_param=order_by_param
+            issue_queryset=issue_queryset, order_by_param=order_by_param, project_id=project_id
         )
 
         # Group by

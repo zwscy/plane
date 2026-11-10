@@ -18,6 +18,7 @@ import { useIssues } from "@/hooks/store/use-issues";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
+import { CustomFieldOrderGuard } from "../custom-field-order-guard";
 import { IssuePeekOverview } from "../../peek-overview";
 import { ProjectViewCalendarLayout } from "../calendar/roots/project-view-root";
 import { BaseGanttRoot } from "../gantt";
@@ -103,7 +104,9 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
           <div className="relative flex h-full w-full flex-col overflow-hidden">
             {projectViewWorkItemsFilter && <WorkItemFiltersRow filter={projectViewWorkItemsFilter} />}
             <div className="relative h-full w-full overflow-auto">
-              <ProjectViewIssueLayout activeLayout={activeLayout} viewId={viewId.toString()} />
+              <CustomFieldOrderGuard>
+                <ProjectViewIssueLayout activeLayout={activeLayout} viewId={viewId.toString()} />
+              </CustomFieldOrderGuard>
             </div>
             {/* peek overview */}
             <IssuePeekOverview />

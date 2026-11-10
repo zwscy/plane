@@ -9,6 +9,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { observer } from "mobx-react";
+import { cloneDeep } from "lodash-es";
 import { useParams } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
 // editor
@@ -51,6 +52,8 @@ import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
 import { useWorkspaceDraftIssues } from "@/hooks/store/workspace-draft";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { IssueCustomFields } from "@/components/issues/custom-fields";
+import { getCustomFieldPatch, getDraftConversionPayload } from "@/components/issues/custom-fields/helpers";
 import { useProjectIssueProperties } from "@/hooks/use-project-issue-properties";
 
 export interface IssueFormProps {
@@ -137,6 +140,9 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
   const { fetchCycles } = useProjectIssueProperties();
   const { getStateById } = useProjectState();
 
+  // Keep the edit baseline independent of later shared-store mutations.
+  const initialCustomFields = useRef(cloneDeep(data?.custom_fields ?? {}));
+
   // form info
   const methods = useForm<TIssue>({
     defaultValues: { ...DEFAULT_WORK_ITEM_FORM_VALUES, project_id: defaultProjectId, ...data },
@@ -178,11 +184,12 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
 
   // Reset form when data prop changes
   useEffect(() => {
+    initialCustomFields.current = cloneDeep(data?.custom_fields ?? {});
     if (data) {
       reset({ ...DEFAULT_WORK_ITEM_FORM_VALUES, project_id: projectId, ...data });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...dataResetProperties]);
+  }, [data?.id, ...dataResetProperties]);
 
   // Update the issue type id when the project id changes
   useEffect(() => {
@@ -240,6 +247,13 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
           type_id: getValues<"type_id">("type_id"),
         };
 
+    if (data?.id) {
+      // A stale modal must not resend unchanged keys from its full initial value map.
+      const customFieldPatch = getCustomFieldPatch(formData.custom_fields, initialCustomFields.current);
+      delete submitData.custom_fields;
+      if (Object.keys(customFieldPatch).length) submitData.custom_fields = customFieldPatch;
+    }
+
     // this condition helps to move the issues from draft to project issues
     if (formData.hasOwnProperty("is_draft")) submitData.is_draft = formData.is_draft;
 
@@ -280,10 +294,11 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
         isDraft: true,
       });
 
-      await moveIssue(workspaceSlug.toString(), data.id, {
-        ...data,
-        ...getValues(),
-      } as TWorkspaceDraftIssue);
+      await moveIssue(
+        workspaceSlug.toString(),
+        data.id,
+        getDraftConversionPayload(data, getValues(), initialCustomFields.current) as TWorkspaceDraftIssue
+      );
     } catch {
       setToast({
         type: "error",
@@ -358,6 +373,10 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
       <div className="flex min-h-0 flex-1 gap-2 bg-transparent">
         <form
           ref={formRef}
+          onSubmitCapture={() => {
+            // Commit the focused custom-field editor before react-hook-form reads the values.
+            if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+          }}
           onSubmit={handleSubmit((data) => handleFormSubmit(data))}
           className="flex min-h-0 w-full flex-1 flex-col"
         >
@@ -414,6 +433,21 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                 onAssetUpload={onAssetUpload}
                 onClose={onClose}
               />
+              {workspaceSlug && projectId && (
+                <div className="py-4">
+                  <IssueCustomFields
+                    key={projectId}
+                    workspaceSlug={workspaceSlug.toString()}
+                    projectId={projectId}
+                    values={watch("custom_fields")}
+                    disabled={isDisabled}
+                    onChange={(patch) => {
+                      setValue("custom_fields", { ...getValues("custom_fields"), ...patch }, { shouldDirty: true });
+                      handleFormChange();
+                    }}
+                  />
+                </div>
+              )}
             </DialogBody>
             <div className="shrink-0">
               <IssueDefaultProperties

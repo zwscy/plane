@@ -5,6 +5,7 @@
  */
 
 import { get, set, concat, uniq, update } from "lodash-es";
+import { isCustomFieldOrderBy } from "@/helpers/custom-field-views";
 import { action, observable, makeObservable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
 // plane imports
@@ -195,7 +196,14 @@ export class CycleIssues extends BaseIssuesStore implements ICycleIssues {
       // set loader and clear store
       runInAction(() => {
         this.setLoader(loadType);
-        this.clear(!isExistingPaginationOptions); // clear while fetching from server.
+        // Keep mounted tree rows during custom-order mutation refreshes; the response replaces
+        // IDs and counts together in onfetchIssues after the request completes.
+        if (!(isExistingPaginationOptions && loadType === "mutation" && isCustomFieldOrderBy(this.orderBy)))
+          this.clear(!isExistingPaginationOptions);
+        else {
+          this.controller.abort();
+          this.controller = new AbortController();
+        }
       });
 
       // get params from pagination options
@@ -291,6 +299,7 @@ export class CycleIssues extends BaseIssuesStore implements ICycleIssues {
   override createIssue = async (workspaceSlug: string, projectId: string, data: Partial<TIssue>, cycleId: string) => {
     const response = await super.createIssue(workspaceSlug, projectId, data, cycleId, false);
     await this.addIssueToCycle(workspaceSlug, projectId, cycleId, [response.id], false);
+    if (!data.tempId) await this.refreshCustomFieldOrder(workspaceSlug, projectId, response.parent_id ?? undefined);
     return response;
   };
 
@@ -424,6 +433,7 @@ export class CycleIssues extends BaseIssuesStore implements ICycleIssues {
     if (currentModuleIds.length > 0) {
       await this.changeModulesInIssue(workspaceSlug, projectId, response.id, currentModuleIds, []);
     }
+    await this.refreshCustomFieldOrder(workspaceSlug, projectId, response.parent_id ?? undefined);
 
     return response;
   };

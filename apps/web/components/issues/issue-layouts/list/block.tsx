@@ -81,12 +81,9 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   // hooks
   const { sidebarCollapsed: isSidebarCollapsed } = useAppTheme();
   const { getProjectIdentifierById, currentProjectNextSequenceId } = useProject();
-  const {
-    getIsIssuePeeked,
-    peekIssue,
-    setPeekIssue,
-    subIssues: subIssuesStore,
-  } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
+  const { getIsIssuePeeked, peekIssue, setPeekIssue } = useIssueDetail(
+    isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES
+  );
 
   const handleIssuePeekOverview = (issue: TIssue) =>
     workspaceSlug &&
@@ -151,11 +148,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     if (nestingLevel >= 3) {
       handleIssuePeekOverview(issue);
     } else {
-      setExpanded((prevState) => {
-        if (!prevState && workspaceSlug && issue && issue.project_id)
-          subIssuesStore.fetchSubIssues(workspaceSlug.toString(), issue.project_id, issue.id);
-        return !prevState;
-      });
+      setExpanded((prevState) => !prevState);
     }
   };
 

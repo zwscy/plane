@@ -4,6 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import { useParams } from "next/navigation";
+import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
+import { getVisibleCustomFields } from "@/helpers/custom-field-views";
 import { observer } from "mobx-react";
 import { PreferencesOutline } from "@makeplane/propel/icons";
 // plane imports
@@ -15,7 +18,7 @@ import type { IIssueDisplayProperties } from "@plane/types";
 import { SpreadSheetPropertyIcon } from "./issue-layouts/utils";
 
 type TColumnOption = {
-  key: keyof IIssueDisplayProperties;
+  key: string;
   label: string;
   icon: string | undefined;
 };
@@ -37,9 +40,12 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
   const { columns, displayProperties, handleDisplayPropertiesUpdate, isEstimateEnabled, isEpic = false } = props;
   // i18n
   const { t } = useTranslation();
+  const { workspaceSlug, projectId } = useParams();
+  const { fields } = useProjectCustomFields(workspaceSlug?.toString(), isEpic ? undefined : projectId?.toString());
+  const customFields = getVisibleCustomFields(fields);
 
   const options: TColumnOption[] = columns
-    .filter((key) => key !== "estimate" || isEstimateEnabled)
+    .filter((key) => key !== "custom_fields" && (key !== "estimate" || isEstimateEnabled))
     .map((key) => {
       const details = SPREADSHEET_PROPERTY_DETAILS[key];
       // Matches the column header, which names the sub-item count after the epic's work items.
@@ -48,14 +54,30 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
       return { key, label, icon: details?.icon };
     });
 
-  const selectedKeys = options.filter((option) => !!displayProperties[option.key]).map((option) => option.key);
+  options.push(
+    ...customFields.map((field) => ({ key: `custom_fields__${field.id}`, label: field.name, icon: undefined }))
+  );
+  const isVisible = (key: string) =>
+    key.startsWith("custom_fields__")
+      ? displayProperties.custom_fields?.[key.slice("custom_fields__".length)] !== false
+      : !!displayProperties[key as keyof IIssueDisplayProperties];
+  const selectedKeys = options.filter((option) => isVisible(option.key)).map((option) => option.key);
 
   const handleChange = (nextKeys: string[]) => {
     const next = new Set(nextKeys);
     const updates: Partial<IIssueDisplayProperties> = {};
     options.forEach(({ key }) => {
-      const isVisible = next.has(key);
-      if (!!displayProperties[key] !== isVisible) updates[key] = isVisible;
+      const visible = next.has(key);
+      if (isVisible(key) === visible) return;
+      if (key.startsWith("custom_fields__")) {
+        updates.custom_fields = {
+          ...displayProperties.custom_fields,
+          ...updates.custom_fields,
+          [key.slice("custom_fields__".length)]: visible,
+        };
+      } else {
+        Object.assign(updates, { [key]: visible });
+      }
     });
     if (Object.keys(updates).length > 0) handleDisplayPropertiesUpdate(updates);
   };

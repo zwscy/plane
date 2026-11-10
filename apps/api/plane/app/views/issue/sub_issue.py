@@ -141,12 +141,13 @@ class SubIssuesEndpoint(BaseAPIView):
         group_by = request.GET.get("group_by", False)
 
         if order_by_param:
-            sub_issues, order_by_param = order_issue_queryset(sub_issues, order_by_param)
+            sub_issues, order_by_param = order_issue_queryset(sub_issues, order_by_param, project_id=project_id)
 
         sub_issues = list(
             sub_issues.values(
                 "id",
                 "name",
+                "custom_fields",
                 "state_id",
                 "sort_order",
                 "completed_at",

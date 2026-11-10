@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { isCustomFieldOrderBy } from "@/helpers/custom-field-views";
 import { uniq, orderBy, isEmpty, indexOf, groupBy, cloneDeep, set } from "lodash-es";
 import { ALL_ISSUES, EIssueFilterType, FILTER_TO_ISSUE_MAP, ISSUE_PRIORITIES } from "@plane/constants";
 import type {
@@ -278,6 +279,7 @@ export const getFilteredWorkItems = (workItems: TIssue[], filters: IIssueFilterO
  * @returns The ordered array of work items.
  */
 export const getOrderedWorkItems = (workItems: TIssue[], orderByKey: TIssueOrderByOptions): string[] => {
+  if (isCustomFieldOrderBy(orderByKey)) return getIssueIds(workItems);
   switch (orderByKey) {
     case "-updated_at":
       return getIssueIds(orderBy(workItems, (item) => convertToISODateString(item["updated_at"]), ["desc"]));
