@@ -1,0 +1,13 @@
+[Unit]
+Description=Isolated resources for the Plane dev2 deployment
+
+[Slice]
+MemoryAccounting=yes
+MemoryHigh=1500M
+MemoryMax=1800M
+CPUQuota=150%
+TasksAccounting=yes
+TasksMax=1024
+
+[Install]
+WantedBy=slices.target

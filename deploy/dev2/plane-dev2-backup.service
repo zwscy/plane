@@ -1,0 +1,22 @@
+[Unit]
+Description=Consistent Plane dev2 backup with three-set retention
+Requires=docker.service
+After=docker.service
+ConditionPathExists=/home/plane/plane.env
+ConditionPathExists=/home/plane/private/backup.key
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 /home/plane/deploy/backup.py --root /home/plane --backups /www/backup/plane --keep 3
+# Each Docker operation has a bound; allow long archives to finish without
+# systemd terminating the process before its service-recovery finally block.
+TimeoutStartSec=infinity
+TimeoutStopSec=5min
+Nice=10
+IOSchedulingClass=idle
+CPUQuota=50%
+MemoryMax=256M

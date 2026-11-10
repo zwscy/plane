@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Plane dev2 backup at 03:30 Asia/Shanghai
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Asia/Shanghai
+Persistent=true
+AccuracySec=1min
+Unit=plane-dev2-backup.service
+
+[Install]
+WantedBy=timers.target

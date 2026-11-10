@@ -1,0 +1,246 @@
+# Dedicated amd64 dev2 stack. Verify all loaded image IDs against the deployment manifest.
+x-runtime: &runtime
+  restart: unless-stopped
+  init: true
+  platform: linux/amd64
+  pull_policy: never
+  cgroup_parent: plane-dev2.slice
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  pids_limit: 192
+
+x-db-env: &db-env
+  PGHOST: plane-db
+  PGDATABASE: ${POSTGRES_DB:-plane}
+  POSTGRES_USER: ${POSTGRES_USER:-plane}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in plane.env}
+  POSTGRES_DB: ${POSTGRES_DB:-plane}
+  POSTGRES_PORT: "5432"
+  PGDATA: /var/lib/postgresql/data
+
+x-redis-env: &redis-env
+  REDIS_HOST: plane-redis
+  REDIS_PORT: "6379"
+  REDIS_URL: redis://plane-redis:6379/
+
+x-minio-env: &minio-env
+  MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:?Set AWS_ACCESS_KEY_ID in plane.env}
+  MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:?Set AWS_SECRET_ACCESS_KEY in plane.env}
+
+x-aws-s3-env: &aws-s3-env
+  AWS_REGION: ${AWS_REGION:-}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?Set AWS_ACCESS_KEY_ID in plane.env}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?Set AWS_SECRET_ACCESS_KEY in plane.env}
+  AWS_S3_ENDPOINT_URL: http://plane-minio:9000
+  AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-uploads}
+
+x-proxy-env: &proxy-env
+  APP_DOMAIN: ${APP_DOMAIN:-localhost}
+  FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-5242880}
+  CERT_EMAIL: ""
+  CERT_ACME_DNS: ""
+  LISTEN_HTTP_PORT: "80"
+  LISTEN_HTTPS_PORT: "443"
+  BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-uploads}
+  SITE_ADDRESS: ":80"
+
+x-app-env: &app-env
+  WEB_URL: ${WEB_URL:?Set WEB_URL in plane.env}
+  DEBUG: "0"
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?Set CORS_ALLOWED_ORIGINS in plane.env}
+  GUNICORN_WORKERS: "1"
+  USE_MINIO: "1"
+  DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in plane.env}
+  SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in plane.env}
+  AMQP_URL: ${AMQP_URL:?Set AMQP_URL in plane.env}
+  API_KEY_RATE_LIMIT: ${API_KEY_RATE_LIMIT:-60/minute}
+  MINIO_ENDPOINT_SSL: "0"
+  LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY:?Set LIVE_SERVER_SECRET_KEY in plane.env}
+  WEBHOOK_ALLOWED_IPS: ${WEBHOOK_ALLOWED_IPS:-}
+  WEBHOOK_ALLOWED_HOSTS: ${WEBHOOK_ALLOWED_HOSTS:-}
+
+x-app: &app
+  <<: *runtime
+  image: ${PLANE_BACKEND_IMAGE:?Set immutable PLANE_BACKEND_IMAGE in plane.env}
+  environment:
+    <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+
+services:
+  web:
+    <<: *runtime
+    image: ${PLANE_FRONTEND_IMAGE:?Set immutable PLANE_FRONTEND_IMAGE in plane.env}
+    mem_limit: 80m
+    cpus: 0.25
+    depends_on:
+      - api
+      - worker
+
+  space:
+    <<: *runtime
+    image: ${PLANE_SPACE_IMAGE:?Set immutable v1.4.3 PLANE_SPACE_IMAGE in plane.env}
+    mem_limit: 128m
+    cpus: 0.35
+    depends_on:
+      - api
+      - worker
+      - web
+
+  admin:
+    <<: *runtime
+    image: ${PLANE_ADMIN_IMAGE:?Set immutable v1.4.3 PLANE_ADMIN_IMAGE in plane.env}
+    mem_limit: 80m
+    cpus: 0.25
+    depends_on:
+      - api
+      - web
+
+  live:
+    <<: *runtime
+    image: ${PLANE_LIVE_IMAGE:?Set immutable v1.4.3 PLANE_LIVE_IMAGE in plane.env}
+    environment:
+      <<: *redis-env
+      API_BASE_URL: http://api:8000
+      LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY:?Set LIVE_SERVER_SECRET_KEY in plane.env}
+    mem_limit: 224m
+    cpus: 0.50
+    depends_on:
+      - api
+      - web
+
+  api:
+    <<: *app
+    command: ./bin/docker-entrypoint-api.sh
+    mem_limit: 288m
+    cpus: 0.75
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/logs/api:/code/plane/logs
+    depends_on:
+      - plane-db
+      - plane-redis
+      - plane-mq
+
+  worker:
+    <<: *app
+    # The upstream entrypoint auto-sizes Celery from host CPUs.
+    command:
+      - /bin/bash
+      - -ec
+      - >-
+        python manage.py wait_for_db;
+        python manage.py wait_for_migrations;
+        exec celery -A plane worker --loglevel=info --concurrency=1 --max-tasks-per-child=100
+    mem_limit: 384m
+    cpus: 0.75
+    stop_grace_period: 60s
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/logs/worker:/code/plane/logs
+    depends_on:
+      - api
+      - plane-db
+      - plane-redis
+      - plane-mq
+
+  beat-worker:
+    <<: *app
+    command:
+      - /bin/bash
+      - -ec
+      - >-
+        python manage.py wait_for_db;
+        python manage.py wait_for_migrations;
+        exec celery -A plane beat --loglevel=info --schedule=/code/plane/logs/celerybeat-schedule
+    mem_limit: 224m
+    cpus: 0.25
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/logs/beat-worker:/code/plane/logs
+    depends_on:
+      - api
+      - plane-db
+      - plane-redis
+      - plane-mq
+
+  migrator:
+    <<: *app
+    restart: "no"
+    profiles: [migration]
+    command: ./bin/docker-entrypoint-migrator.sh
+    mem_limit: 288m
+    cpus: 0.75
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/logs/migrator:/code/plane/logs
+    depends_on:
+      - plane-db
+      - plane-redis
+
+  plane-db:
+    <<: *runtime
+    image: ${PLANE_POSTGRES_IMAGE:?Set immutable PostgreSQL 15 PLANE_POSTGRES_IMAGE in plane.env}
+    command: [postgres, -c, max_connections=100, -c, shared_buffers=64MB]
+    environment:
+      <<: *db-env
+    mem_limit: 256m
+    cpus: 0.50
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  plane-redis:
+    <<: *runtime
+    image: ${PLANE_REDIS_IMAGE:?Set immutable Valkey 7.2.11 PLANE_REDIS_IMAGE in plane.env}
+    command: [valkey-server, --appendonly, "yes", --maxmemory, 48mb, --maxmemory-policy, noeviction]
+    mem_limit: 96m
+    cpus: 0.25
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/redis:/data
+
+  plane-mq:
+    <<: *runtime
+    image: ${PLANE_RABBITMQ_IMAGE:?Set immutable RabbitMQ 3.13.6 PLANE_RABBITMQ_IMAGE in plane.env}
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-plane}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in plane.env}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-plane}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit vm_memory_high_watermark {absolute,201326592} +S 1:1
+    hostname: plane-dev2-mq
+    mem_limit: 288m
+    cpus: 0.50
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/rabbitmq:/var/lib/rabbitmq
+
+  plane-minio:
+    <<: *runtime
+    image: ${PLANE_MINIO_IMAGE:?Set immutable Silo RELEASE.2026-09-16T00-00-00Z PLANE_MINIO_IMAGE in plane.env}
+    command: server /export --console-address ":9090"
+    environment:
+      <<: *minio-env
+    mem_limit: 256m
+    cpus: 0.50
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/uploads:/export
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/minio-state:/data
+
+  proxy:
+    <<: *runtime
+    image: ${PLANE_PROXY_IMAGE:?Set immutable v1.4.3 PLANE_PROXY_IMAGE in plane.env}
+    environment:
+      <<: *proxy-env
+    mem_limit: 96m
+    cpus: 0.35
+    ports:
+      - "127.0.0.1:8090:80"
+    volumes:
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/proxy/config:/config
+      - ${PLANE_DATA_ROOT:-/home/plane/data}/proxy/data:/data
+    depends_on:
+      - web
+      - api
+      - space
+      - admin
+      - live
