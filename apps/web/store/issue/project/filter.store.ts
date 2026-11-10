@@ -4,8 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { isEmpty, set } from "lodash-es";
-import { action, computed, makeObservable, observable, runInAction } from "mobx";
+import { isEmpty, isEqual, set } from "lodash-es";
+import { action, computed, makeObservable, observable, runInAction, toJS } from "mobx";
 // base class
 import { computedFn } from "mobx-utils";
 import type { TSupportedFilterTypeForUpdate } from "@plane/constants";
@@ -13,6 +13,8 @@ import { EIssueFilterType } from "@plane/constants";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
+  IProjectDisplayConfig,
+  IProjectUserPropertiesResponse,
   TIssueKanbanFilters,
   IIssueFilters,
   TIssueParams,
@@ -22,6 +24,7 @@ import type {
 } from "@plane/types";
 import { EIssuesStoreType } from "@plane/types";
 import { handleIssueQueryParamsByLayout } from "@plane/utils";
+import { isCustomFieldOrderBy } from "@/helpers/custom-field-views";
 import type { IBaseIssueFilterStore } from "../helpers/issue-filter-helper.store";
 import { IssueFilterHelperStore } from "../helpers/issue-filter-helper.store";
 // helpers
@@ -43,6 +46,11 @@ export interface IProjectIssuesFilter extends IBaseIssueFilterStore {
   getIssueFilters(projectId: string): IIssueFilters | undefined;
   // action
   fetchFilters: (workspaceSlug: string, projectId: string) => Promise<void>;
+  getUseProjectDefault: (projectId: string) => boolean | undefined;
+  getProjectDisplayConfig: (projectId: string) => IProjectDisplayConfig | Record<string, never> | undefined;
+  getDisplayConfigPending: (projectId: string) => boolean;
+  saveProjectDisplayConfig: (workspaceSlug: string, projectId: string) => Promise<void>;
+  resetProjectDisplayConfig: (workspaceSlug: string, projectId: string) => Promise<void>;
   updateFilterExpression: (
     workspaceSlug: string,
     projectId: string,
@@ -59,6 +67,13 @@ export interface IProjectIssuesFilter extends IBaseIssueFilterStore {
 export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProjectIssuesFilter {
   // observables
   filters: { [projectId: string]: IIssueFilters } = {};
+  useProjectDefault: Record<string, boolean | undefined> = {};
+  projectDisplayConfigs: Record<string, IProjectDisplayConfig | Record<string, never>> = {};
+  displayConfigPending: Record<string, number> = {};
+  private displayRequestIds: Record<string, number> = {};
+  private richFilterRequestIds: Record<string, number> = {};
+  private displayWrites: Record<string, Promise<unknown> | undefined> = {};
+  private richFilterWrites: Record<string, Promise<unknown> | undefined> = {};
   // root store
   rootIssueStore: IIssueRootStore;
   // services
@@ -69,6 +84,9 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     makeObservable(this, {
       // observables
       filters: observable,
+      useProjectDefault: observable,
+      projectDisplayConfigs: observable,
+      displayConfigPending: observable,
       // computed
       issueFilters: computed,
       appliedFilters: computed,
@@ -76,6 +94,11 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       fetchFilters: action,
       updateFilterExpression: action,
       updateFilters: action,
+      applyUserProperties: action,
+      saveProjectDisplayConfig: action,
+      resetProjectDisplayConfig: action,
+      beginDisplayRequest: action,
+      finishDisplayRequest: action,
     });
     // root store
     this.rootIssueStore = _rootStore;
@@ -96,6 +119,104 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
 
     return this.getAppliedFilters(projectId);
   }
+
+  getUseProjectDefault = (projectId: string) => this.useProjectDefault[projectId];
+  getProjectDisplayConfig = (projectId: string) => this.projectDisplayConfigs[projectId];
+  getDisplayConfigPending = (projectId: string) => !!this.displayConfigPending[projectId];
+
+  applyUserProperties = (projectId: string, response: IProjectUserPropertiesResponse) => {
+    // Display writes and refreshes must not replace a newer, independently edited rich filter.
+    if (!this.filters[projectId]) set(this.filters, [projectId, "richFilters"], response.rich_filters);
+    set(this.filters, [projectId, "displayFilters"], this.computedDisplayFilters(response.display_filters));
+    set(this.filters, [projectId, "displayProperties"], this.computedDisplayProperties(response.display_properties));
+    this.useProjectDefault[projectId] = response.use_project_default;
+    this.projectDisplayConfigs[projectId] = response.project_display_config;
+  };
+
+  beginDisplayRequest = (projectId: string) => {
+    this.displayConfigPending[projectId] = (this.displayConfigPending[projectId] ?? 0) + 1;
+    this.displayRequestIds[projectId] = (this.displayRequestIds[projectId] ?? 0) + 1;
+    return this.displayRequestIds[projectId];
+  };
+
+  finishDisplayRequest = (projectId: string) => {
+    this.displayConfigPending[projectId] = Math.max(0, (this.displayConfigPending[projectId] ?? 0) - 1);
+  };
+
+  private enqueueWrite = <T>(
+    pendingWrites: Record<string, Promise<unknown> | undefined>,
+    projectId: string,
+    write: () => Promise<T>
+  ): Promise<T> => {
+    const previous = pendingWrites[projectId];
+    const pending = previous ? previous.catch(() => undefined).then(write) : write();
+    pendingWrites[projectId] = pending;
+    const clear = () => {
+      if (pendingWrites[projectId] === pending) delete pendingWrites[projectId];
+    };
+    void pending.then(clear, clear);
+    return pending;
+  };
+
+  private refreshIssuesForDisplayChanges = async (
+    workspaceSlug: string,
+    projectId: string,
+    previous: IIssueDisplayFilterOptions | undefined
+  ) => {
+    const current = this.getIssueFilters(projectId)?.displayFilters;
+    if (
+      !previous ||
+      projectId !== this.rootIssueStore.projectId ||
+      (previous.order_by === current?.order_by && previous.sub_issue === current?.sub_issue)
+    )
+      return;
+    try {
+      await this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
+    } catch (error) {
+      // The preference write already succeeded; a failed task refresh must not roll it back.
+      console.error("error while refreshing issues after display settings changed", error);
+    }
+  };
+
+  saveProjectDisplayConfig = async (workspaceSlug: string, projectId: string) => {
+    const filters = this.getIssueFilters(projectId);
+    if (!filters || this.getDisplayConfigPending(projectId)) return;
+    const snapshot: IProjectDisplayConfig = {
+      display_properties: toJS(filters.displayProperties ?? {}),
+      order_by: filters.displayFilters?.order_by ?? "sort_order",
+      sub_issue: filters.displayFilters?.sub_issue ?? true,
+    };
+    const requestId = this.beginDisplayRequest(projectId);
+    try {
+      const response = await this.enqueueWrite(this.displayWrites, projectId, async () => {
+        await this.projectService.updateProjectDisplayConfig(workspaceSlug, projectId, snapshot);
+        return this.projectService.getProjectUserProperties(workspaceSlug, projectId);
+      });
+      if (requestId === this.displayRequestIds[projectId]) {
+        const previous = this.getIssueFilters(projectId)?.displayFilters;
+        this.applyUserProperties(projectId, response);
+        await this.refreshIssuesForDisplayChanges(workspaceSlug, projectId, previous);
+      }
+    } finally {
+      this.finishDisplayRequest(projectId);
+    }
+  };
+
+  resetProjectDisplayConfig = async (workspaceSlug: string, projectId: string) => {
+    if (this.getDisplayConfigPending(projectId)) return;
+    const previous = this.getIssueFilters(projectId)?.displayFilters;
+    const requestId = this.beginDisplayRequest(projectId);
+    try {
+      const response = await this.enqueueWrite(this.displayWrites, projectId, () =>
+        this.projectService.resetProjectDisplayConfig(workspaceSlug, projectId)
+      );
+      if (requestId !== this.displayRequestIds[projectId]) return;
+      this.applyUserProperties(projectId, response);
+      await this.refreshIssuesForDisplayChanges(workspaceSlug, projectId, previous);
+    } finally {
+      this.finishDisplayRequest(projectId);
+    }
+  };
 
   getIssueFilters(projectId: string) {
     const displayFilters = this.filters[projectId] || undefined;
@@ -135,11 +256,12 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
   );
 
   fetchFilters = async (workspaceSlug: string, projectId: string) => {
+    const requestId = (this.displayRequestIds[projectId] ?? 0) + 1;
+    this.displayRequestIds[projectId] = requestId;
+    const pendingWrite = this.displayWrites[projectId];
+    if (pendingWrite) await pendingWrite.catch(() => undefined);
     const _filters = await this.projectService.getProjectUserProperties(workspaceSlug, projectId);
-
-    const richFilters = _filters?.rich_filters;
-    const displayFilters = this.computedDisplayFilters(_filters?.display_filters);
-    const displayProperties = this.computedDisplayProperties(_filters?.display_properties);
+    if (requestId !== this.displayRequestIds[projectId]) return;
 
     // fetching the kanban toggle helpers in the local storage
     const kanbanFilters = {
@@ -158,12 +280,12 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       kanbanFilters.sub_group_by = _kanbanFilters?.kanban_filters?.sub_group_by || [];
     }
 
+    const previous = this.getIssueFilters(projectId)?.displayFilters;
     runInAction(() => {
-      set(this.filters, [projectId, "richFilters"], richFilters);
-      set(this.filters, [projectId, "displayFilters"], displayFilters);
-      set(this.filters, [projectId, "displayProperties"], displayProperties);
+      this.applyUserProperties(projectId, _filters);
       set(this.filters, [projectId, "kanbanFilters"], kanbanFilters);
     });
+    await this.refreshIssuesForDisplayChanges(workspaceSlug, projectId, previous);
   };
 
   /**
@@ -176,22 +298,35 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     projectId,
     filters
   ) => {
+    const previousRichFilters = toJS(this.filters[projectId]?.richFilters);
+    const requestId = (this.richFilterRequestIds[projectId] ?? 0) + 1;
+    this.richFilterRequestIds[projectId] = requestId;
     try {
       runInAction(() => {
         set(this.filters, [projectId, "richFilters"], filters);
       });
 
       this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
-      await this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
-        rich_filters: filters,
-      });
+      const response = await this.enqueueWrite(this.richFilterWrites, projectId, () =>
+        this.projectService.updateProjectUserProperties(workspaceSlug, projectId, { rich_filters: filters })
+      );
+      if (requestId === this.richFilterRequestIds[projectId])
+        runInAction(() => {
+          set(this.filters, [projectId, "richFilters"], response.rich_filters);
+        });
     } catch (error) {
+      if (requestId === this.richFilterRequestIds[projectId])
+        runInAction(() => {
+          set(this.filters, [projectId, "richFilters"], previousRichFilters);
+        });
       console.log("error while updating rich filters", error);
       throw error;
     }
   };
 
   updateFilters: IProjectIssuesFilter["updateFilters"] = async (workspaceSlug, projectId, type, filters) => {
+    const previousFilters = toJS(this.filters[projectId]);
+    let requestId: number | undefined;
     try {
       if (isEmpty(this.filters) || isEmpty(this.filters[projectId])) return;
 
@@ -204,18 +339,25 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
 
       switch (type) {
         case EIssueFilterType.DISPLAY_FILTERS: {
-          const updatedDisplayFilters = filters as IIssueDisplayFilterOptions;
+          const updatedDisplayFilters = Object.fromEntries(
+            Object.entries(filters).filter(
+              ([key, value]) => !isEqual(value, _filters.displayFilters[key as keyof IIssueDisplayFilterOptions])
+            )
+          ) as IIssueDisplayFilterOptions;
+          if (isEmpty(updatedDisplayFilters)) return;
+          requestId = this.beginDisplayRequest(projectId);
           _filters.displayFilters = { ..._filters.displayFilters, ...updatedDisplayFilters };
 
           // set sub_group_by to null if group_by is set to null
-          if (_filters.displayFilters.group_by === null) {
+          if (_filters.displayFilters.group_by === null && _filters.displayFilters.sub_group_by !== null) {
             _filters.displayFilters.sub_group_by = null;
             updatedDisplayFilters.sub_group_by = null;
           }
           // set sub_group_by to null if layout is switched to kanban group_by and sub_group_by are same
           if (
             _filters.displayFilters.layout === "kanban" &&
-            _filters.displayFilters.group_by === _filters.displayFilters.sub_group_by
+            _filters.displayFilters.group_by === _filters.displayFilters.sub_group_by &&
+            _filters.displayFilters.sub_group_by !== null
           ) {
             _filters.displayFilters.sub_group_by = null;
             updatedDisplayFilters.sub_group_by = null;
@@ -227,6 +369,16 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
           }
 
           runInAction(() => {
+            // A layout-only change must keep following the shared sort. Normalize its optimistic
+            // rendering without sending an order_by delta that would create a personal override.
+            if (
+              this.getUseProjectDefault(projectId) &&
+              updatedDisplayFilters.layout &&
+              !["list", "spreadsheet"].includes(updatedDisplayFilters.layout) &&
+              isCustomFieldOrderBy(_filters.displayFilters.order_by) &&
+              !Object.hasOwn(updatedDisplayFilters, "order_by")
+            )
+              set(this.filters, [projectId, "displayFilters", "order_by"], "-created_at");
             Object.keys(updatedDisplayFilters).forEach((_key) => {
               set(
                 this.filters,
@@ -244,14 +396,38 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
             this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
           }
 
-          await this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
-            display_filters: _filters.displayFilters,
-          });
+          const response = await this.enqueueWrite(this.displayWrites, projectId, () =>
+            this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
+              display_filters: updatedDisplayFilters,
+            })
+          );
+          if (requestId === this.displayRequestIds[projectId]) {
+            const previous = this.getIssueFilters(projectId)?.displayFilters;
+            this.applyUserProperties(projectId, response);
+            await this.refreshIssuesForDisplayChanges(workspaceSlug, projectId, previous);
+          }
 
           break;
         }
         case EIssueFilterType.DISPLAY_PROPERTIES: {
-          const updatedDisplayProperties = filters as IIssueDisplayProperties;
+          const updatedDisplayProperties = Object.fromEntries(
+            Object.entries(filters).filter(
+              ([key, value]) =>
+                key !== "custom_fields" &&
+                !isEqual(value, _filters.displayProperties[key as keyof IIssueDisplayProperties])
+            )
+          ) as IIssueDisplayProperties;
+          const customFields = (filters as IIssueDisplayProperties).custom_fields;
+          if (customFields) {
+            const changes = Object.fromEntries(
+              Object.entries(customFields).filter(
+                ([key, value]) => value !== _filters.displayProperties.custom_fields?.[key]
+              )
+            );
+            if (!isEmpty(changes)) updatedDisplayProperties.custom_fields = changes;
+          }
+          if (isEmpty(updatedDisplayProperties)) return;
+          requestId = this.beginDisplayRequest(projectId);
           _filters.displayProperties = { ..._filters.displayProperties, ...updatedDisplayProperties };
 
           runInAction(() => {
@@ -259,14 +435,26 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
               set(
                 this.filters,
                 [projectId, "displayProperties", _key],
-                updatedDisplayProperties[_key as keyof IIssueDisplayProperties]
+                _key === "custom_fields"
+                  ? {
+                      ...this.filters[projectId].displayProperties?.custom_fields,
+                      ...updatedDisplayProperties.custom_fields,
+                    }
+                  : updatedDisplayProperties[_key as keyof IIssueDisplayProperties]
               );
             });
           });
 
-          await this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
-            display_properties: _filters.displayProperties,
-          });
+          const response = await this.enqueueWrite(this.displayWrites, projectId, () =>
+            this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
+              display_properties: updatedDisplayProperties,
+            })
+          );
+          if (requestId === this.displayRequestIds[projectId]) {
+            const previous = this.getIssueFilters(projectId)?.displayFilters;
+            this.applyUserProperties(projectId, response);
+            await this.refreshIssuesForDisplayChanges(workspaceSlug, projectId, previous);
+          }
           break;
         }
 
@@ -296,8 +484,21 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
           break;
       }
     } catch (error) {
-      this.fetchFilters(workspaceSlug, projectId);
+      if (requestId === undefined || requestId === this.displayRequestIds[projectId]) {
+        runInAction(() => {
+          set(this.filters, [projectId, "displayFilters"], previousFilters?.displayFilters);
+          set(this.filters, [projectId, "displayProperties"], previousFilters?.displayProperties);
+          set(this.filters, [projectId, "kanbanFilters"], previousFilters?.kanbanFilters);
+        });
+        try {
+          await this.fetchFilters(workspaceSlug, projectId);
+        } catch {
+          // Keep the last effective settings when the recovery request is also unavailable.
+        }
+      }
       throw error;
+    } finally {
+      if (requestId !== undefined) this.finishDisplayRequest(projectId);
     }
   };
 }

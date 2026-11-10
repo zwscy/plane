@@ -4,6 +4,7 @@
 
 from django.urls import path
 
+from plane.app.views.project.display_config import ProjectDisplayConfigEndpoint, ProjectResetDisplayConfigEndpoint
 from plane.app.views.project.custom_field import ProjectCustomFieldEndpoint, ProjectCustomFieldDetailEndpoint
 
 from plane.app.views import (
@@ -25,12 +26,24 @@ from plane.app.views import (
 
 urlpatterns = [
     path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/display-config/",
+        ProjectDisplayConfigEndpoint.as_view(),
+        name="project-display-config",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/user-properties/reset-display/",
+        ProjectResetDisplayConfigEndpoint.as_view(),
+        name="project-reset-display-config",
+    ),
+    path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/custom-fields/",
-        ProjectCustomFieldEndpoint.as_view(), name="project-custom-fields",
+        ProjectCustomFieldEndpoint.as_view(),
+        name="project-custom-fields",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/custom-fields/<uuid:field_id>/",
-        ProjectCustomFieldDetailEndpoint.as_view(), name="project-custom-field",
+        ProjectCustomFieldDetailEndpoint.as_view(),
+        name="project-custom-field",
     ),
     path(
         "workspaces/<str:slug>/projects/",

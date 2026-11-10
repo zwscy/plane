@@ -364,10 +364,24 @@ class IssueActivitySerializer(BaseSerializer):
 
 
 class ProjectUserPropertySerializer(BaseSerializer):
+    project_display_config = serializers.JSONField(source="project.default_display_config", read_only=True)
+
+    def to_representation(self, instance):
+        from plane.utils.project_display_config import effective_display
+
+        data = super().to_representation(instance)
+        data["display_properties"], data["display_filters"] = effective_display(instance)
+        return data
+
+    def update(self, instance, validated_data):
+        from plane.utils.project_display_config import update_personal_display
+
+        return update_personal_display(instance, validated_data)
+
     class Meta:
         model = ProjectUserProperty
         fields = "__all__"
-        read_only_fields = ["user", "workspace", "project"]
+        read_only_fields = ["user", "workspace", "project", "use_project_default", "project_display_config"]
 
 
 class LabelSerializer(BaseSerializer):

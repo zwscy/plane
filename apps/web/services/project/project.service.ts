@@ -7,6 +7,7 @@
 import { API_BASE_URL } from "@plane/constants";
 import type {
   GithubRepositoriesResponse,
+  IProjectDisplayConfig,
   IProjectUserPropertiesResponse,
   ISearchIssueResponse,
   TProjectAnalyticsCount,
@@ -112,6 +113,37 @@ export class ProjectService extends APIService {
     data: Partial<IProjectUserPropertiesResponse>
   ): Promise<IProjectUserPropertiesResponse> {
     return this.patch(`/api/workspaces/${workspaceSlug}/projects/${projectId}/user-properties/`, data)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async getProjectDisplayConfig(
+    workspaceSlug: string,
+    projectId: string
+  ): Promise<IProjectDisplayConfig | Record<string, never>> {
+    return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/display-config/`)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async updateProjectDisplayConfig(
+    workspaceSlug: string,
+    projectId: string,
+    data: IProjectDisplayConfig
+  ): Promise<IProjectDisplayConfig> {
+    return this.put(`/api/workspaces/${workspaceSlug}/projects/${projectId}/display-config/`, data)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async resetProjectDisplayConfig(workspaceSlug: string, projectId: string): Promise<IProjectUserPropertiesResponse> {
+    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/user-properties/reset-display/`)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;

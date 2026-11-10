@@ -57,6 +57,15 @@
       "low": "低"
     },
     "display": {
+      "project_defaults": {
+        "following": "正在使用專案預設顯示",
+        "personal": "正在使用個人顯示設定",
+        "restore": "恢復專案預設顯示",
+        "save": "將目前顯示儲存為專案預設",
+        "saved": "專案預設顯示已儲存",
+        "restored": "已恢復專案預設顯示",
+        "failed": "顯示設定更新失敗，請重試。"
+      },
       "properties": {
         "label": "顯示屬性",
         "id": "ID",

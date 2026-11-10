@@ -31,7 +31,7 @@ const customOrder = "-custom_fields__field";
 // Execute the real project roots, layout roots, shared guard and validation hook.
 // Replace only catalog/UI/drag dependencies and the HTTP/store boundary. The actual
 // layout useEffects decide when an issue fetch runs and supply its pagination/view.
-async function renderLayout(kind, layout, order = customOrder, metadata = {}, menu = false) {
+async function renderLayout(kind, layout, order = customOrder, metadata = {}, menu = false, behavior = {}) {
   const dom = new JSDOM("<!doctype html><html><body></body></html>");
   const globals = {
     window: dom.window,
@@ -50,6 +50,10 @@ async function renderLayout(kind, layout, order = customOrder, metadata = {}, me
   const requests = [];
   const resets = [];
   const definitionRequests = [];
+  const refreshes = [];
+  const source = observable({ following: behavior.following ?? false });
+  const server = { order: behavior.refreshedOrder ?? "-created_at" };
+  const swrOptions = [];
   const params = {
     workspaceSlug: "workspace",
     projectId: "project",
@@ -61,6 +65,14 @@ async function renderLayout(kind, layout, order = customOrder, metadata = {}, me
   const issuesFilter = {
     issueFilters: filters,
     getIssueFilters: () => filters,
+    getUseProjectDefault: () => source.following,
+    fetchFilters: async (workspaceSlug, projectId) => {
+      refreshes.push({ workspaceSlug, projectId });
+      if (behavior.refreshFailure) throw new Error("offline");
+      runInAction(() => {
+        filters.displayFilters.order_by = server.order;
+      });
+    },
     updateFilterExpression: () => {},
     resetFilters: () => {},
   };
@@ -104,7 +116,15 @@ async function renderLayout(kind, layout, order = customOrder, metadata = {}, me
         FilterOrderBy: ({ allowCustomFields }) =>
           React.createElement("div", { "data-custom-order": String(allowCustomFields) }),
       },
-      swr: { __esModule: true, default: () => ({}) },
+      swr: behavior.realSWR
+        ? require("swr")
+        : {
+            __esModule: true,
+            default: (_key, _fetcher, options) => {
+              swrOptions.push(options);
+              return {};
+            },
+          },
       "@/helpers/custom-field-views": fieldViews,
       "@/hooks/store/use-issues": { useIssues: () => ({ issuesFilter, issues, issueMap: {} }) },
       "@/hooks/use-issues-actions": {
@@ -224,30 +244,46 @@ async function renderLayout(kind, layout, order = customOrder, metadata = {}, me
       ];
   const container = document.createElement("div");
   const renderer = createRoot(container);
-  await act(async () =>
-    renderer.render(
-      React.createElement(
-        Component,
-        menu
-          ? {
-              displayFilters: filters.displayFilters,
-              displayProperties: {},
-              layoutDisplayFiltersOptions: {
-                display_filters: { order_by: ["created_at"] },
-                extra_options: { access: false },
-              },
-            }
-          : {}
-      )
-    )
-  );
+  const component = () =>
+    React.createElement(
+      Component,
+      menu
+        ? {
+            displayFilters: filters.displayFilters,
+            displayProperties: {},
+            layoutDisplayFiltersOptions: {
+              display_filters: { order_by: ["created_at"] },
+              extra_options: { access: false },
+            },
+          }
+        : {}
+    );
+  const cache = new Map();
+  const swrConfig = { provider: () => cache, dedupingInterval: 0 };
+  const renderNode = (show) =>
+    behavior.realSWR
+      ? React.createElement(require("swr").SWRConfig, { value: swrConfig }, show ? component() : null)
+      : show
+        ? component()
+        : null;
+  await act(async () => renderer.render(renderNode(true)));
   return {
     filters,
     definitions,
     requests,
     resets,
     definitionRequests,
+    refreshes,
+    source,
+    server,
+    swrOptions,
     container,
+    async remount() {
+      await act(async () => renderer.render(renderNode(false)));
+      // Allow SWR's completed-request dedupe entry (configured at 0ms) to expire.
+      await new Promise((complete) => setTimeout(complete, 0));
+      await act(async () => renderer.render(renderNode(true)));
+    },
     async close() {
       await act(async () => renderer.unmount());
       dom.window.close();
@@ -425,3 +461,95 @@ for (const order of [customOrder, "-created_at"]) {
     }
   });
 }
+
+for (const fields of [[], [{ ...field, is_active: false }], [{ ...field, field_type: "members" }]]) {
+  test(`PROJECT following: invalid ${fields[0]?.field_type ?? "deleted"} custom order refreshes defaults without a personal PATCH`, async () => {
+    const ui = await renderLayout("PROJECT", "list", customOrder, { fields }, false, { following: true });
+    try {
+      assert.deepEqual(ui.refreshes, [{ workspaceSlug: "workspace", projectId: "project" }]);
+      assert.equal(ui.resets.length, 0);
+      assert.equal(ui.source.following, true);
+      assert.equal(ui.filters.displayFilters.order_by, "-created_at");
+      assert.ok(ui.requests.length > 0);
+      assert.ok(ui.requests.every((query) => query.order === "-created_at"));
+    } finally {
+      await ui.close();
+    }
+  });
+}
+
+test("PROJECT following: removing the active sort field while mounted retains follow mode", async () => {
+  const ui = await renderLayout("PROJECT", "list", customOrder, {}, false, { following: true });
+  try {
+    assert.equal(ui.requests[0].order, customOrder);
+    ui.requests.length = 0;
+    await act(async () =>
+      runInAction(() => {
+        ui.definitions.fields = [];
+      })
+    );
+    assert.equal(ui.refreshes.length, 1);
+    assert.equal(ui.resets.length, 0);
+    assert.equal(ui.source.following, true);
+    assert.ok(ui.requests.length > 0);
+    assert.ok(ui.requests.every((query) => query.order === "-created_at"));
+  } finally {
+    await ui.close();
+  }
+});
+
+for (const kind of ["CYCLE", "MODULE", "PROJECT_VIEW", "ARCHIVED"]) {
+  test(`${kind}: project follow mode never changes personal custom-sort repair`, async () => {
+    const ui = await renderLayout(kind, "list", customOrder, { fields: [] }, false, { following: true });
+    try {
+      assert.equal(ui.refreshes.length, 0);
+      assert.equal(ui.resets[0].patch.order_by, "sort_order");
+    } finally {
+      await ui.close();
+    }
+  });
+}
+
+test("PROJECT re-entry revalidates cached preferences without focus polling", async () => {
+  const ui = await renderLayout("PROJECT", "list", "-created_at", {}, false, { realSWR: true, following: true });
+  try {
+    assert.equal(ui.refreshes.length, 1);
+    ui.server.order = "start_date";
+    await ui.remount();
+    assert.equal(ui.refreshes.length, 2);
+    assert.equal(ui.filters.displayFilters.order_by, "start_date");
+  } finally {
+    await ui.close();
+  }
+});
+
+for (const layout of ["kanban", "gantt_chart", "calendar"]) {
+  test(`PROJECT following: unsupported ${layout} sort refreshes shared fallback before layout fetch`, async () => {
+    const ui = await renderLayout("PROJECT", layout, customOrder, {}, false, { following: true });
+    try {
+      assert.equal(ui.refreshes.length, 1);
+      assert.equal(ui.resets.length, 0);
+      assert.equal(ui.source.following, true);
+      assert.ok(ui.requests.length > 0);
+      assert.ok(ui.requests.every((query) => query.order === "-created_at"));
+    } finally {
+      await ui.close();
+    }
+  });
+}
+
+test("PROJECT following: a failed authoritative repair keeps unsafe fetching blocked", async () => {
+  const ui = await renderLayout("PROJECT", "list", customOrder, { fields: [] }, false, {
+    following: true,
+    refreshFailure: true,
+  });
+  try {
+    assert.equal(ui.refreshes.length, 1);
+    assert.equal(ui.resets.length, 0);
+    assert.equal(ui.source.following, true);
+    assert.equal(ui.requests.length, 0);
+    assert.equal(ui.filters.displayFilters.order_by, customOrder);
+  } finally {
+    await ui.close();
+  }
+});

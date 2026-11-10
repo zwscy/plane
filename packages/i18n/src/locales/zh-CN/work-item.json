@@ -57,6 +57,15 @@
       "low": "低"
     },
     "display": {
+      "project_defaults": {
+        "following": "正在使用项目默认显示",
+        "personal": "正在使用个人显示设置",
+        "restore": "恢复项目默认显示",
+        "save": "将当前显示保存为项目默认",
+        "saved": "项目默认显示已保存",
+        "restored": "已恢复项目默认显示",
+        "failed": "显示设置更新失败，请重试。"
+      },
       "columns": {
         "title": "列设置",
         "description": "拖动已显示字段或点击箭头调整顺序，勾选未显示字段可加入上方。工作项列固定在左侧。",

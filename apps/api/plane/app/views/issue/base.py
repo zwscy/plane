@@ -10,6 +10,7 @@ import json
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import transaction
 from django.db.models import (
     Count,
     Exists,
@@ -749,31 +750,27 @@ class IssueViewSet(BaseViewSet):
 class ProjectUserDisplayPropertyEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def patch(self, request, slug, project_id):
-        try:
-            issue_property = ProjectUserProperty.objects.get(
-                user=request.user, 
-                project_id=project_id
-            )
-        except ProjectUserProperty.DoesNotExist:
-            issue_property = ProjectUserProperty.objects.create(
-                user=request.user, 
-                project_id=project_id
-            )
+        from plane.app.views.project.display_config import scoped_project
 
-        serializer = ProjectUserPropertySerializer(
-            issue_property, 
-            data=request.data,
-            partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        with transaction.atomic():
+            project = scoped_project(request, slug, project_id, lock=True)
+            issue_property, _ = ProjectUserProperty.objects.select_for_update().get_or_create(
+                user=request.user, project=project
+            )
+            serializer = ProjectUserPropertySerializer(issue_property, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id):
-        issue_property, _ = ProjectUserProperty.objects.get_or_create(user=request.user, project_id=project_id)
-        serializer = ProjectUserPropertySerializer(issue_property)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        from plane.app.views.project.display_config import scoped_project
+
+        with transaction.atomic():
+            project = scoped_project(request, slug, project_id, lock=True)
+            issue_property, _ = ProjectUserProperty.objects.get_or_create(user=request.user, project=project)
+            serializer = ProjectUserPropertySerializer(issue_property)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class BulkDeleteIssuesEndpoint(BaseAPIView):

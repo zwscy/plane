@@ -61,7 +61,7 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
         await issuesFilter?.fetchFilters(workspaceSlug, projectId);
       }
     },
-    { revalidateIfStale: false, revalidateOnFocus: false }
+    { revalidateOnMount: true, revalidateIfStale: false, revalidateOnFocus: false }
   );
 
   if (!workspaceSlug || !projectId || !workItemFilters) return <></>;

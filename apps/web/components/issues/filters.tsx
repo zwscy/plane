@@ -22,6 +22,7 @@ import type { TProject } from "@plane/types";
 // local imports
 import { WorkItemsModal } from "../analytics/work-items/modal";
 import { WorkItemFiltersToggle } from "../work-item-filters/filters-toggle";
+import { ProjectDisplayConfigControls } from "./project-display-config-controls";
 import {
   DisplayFiltersSelection,
   FiltersDropdown,
@@ -126,6 +127,7 @@ export const HeaderFilters = observer(function HeaderFilters(props: Props) {
           moduleViewDisabled={!currentProjectDetails?.module_view}
           isEpic={storeType === EIssuesStoreType.EPIC}
         />
+        <ProjectDisplayConfigControls workspaceSlug={workspaceSlug} projectId={projectId} storeType={storeType} />
       </FiltersDropdown>
       {canUserCreateIssue ? (
         <>

@@ -57,6 +57,15 @@
       "low": "Low"
     },
     "display": {
+      "project_defaults": {
+        "following": "Following project defaults",
+        "personal": "Using personal display settings",
+        "restore": "Restore project defaults",
+        "save": "Save current display as project defaults",
+        "saved": "Project display defaults saved",
+        "restored": "Project display defaults restored",
+        "failed": "Could not update display settings. Please try again."
+      },
       "columns": {
         "title": "Column settings",
         "description": "Drag shown fields or use the arrows to reorder them. Check a hidden field to show it. The work item column stays on the left.",

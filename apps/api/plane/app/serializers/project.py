@@ -35,7 +35,7 @@ class ProjectSerializer(BaseSerializer):
         model = Project
         fields = "__all__"
         # Audit fields are set server-side by BaseModel.save().
-        read_only_fields = ["workspace", "deleted_at", "created_by", "updated_by"]
+        read_only_fields = ["workspace", "deleted_at", "created_by", "updated_by", "default_display_config"]
 
     def validate_name(self, name):
         project_id = self.instance.id if self.instance else None

@@ -206,7 +206,15 @@ export interface IIssueFiltersResponse {
   display_properties: IIssueDisplayProperties;
 }
 
+export interface IProjectDisplayConfig {
+  display_properties: IIssueDisplayProperties;
+  order_by: string;
+  sub_issue: boolean;
+}
+
 export interface IProjectUserPropertiesResponse extends IIssueFiltersResponse {
+  use_project_default: boolean;
+  project_display_config: IProjectDisplayConfig | Record<string, never>;
   sort_order: number;
   preferences: {
     pages: {

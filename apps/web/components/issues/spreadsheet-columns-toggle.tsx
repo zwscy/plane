@@ -28,6 +28,8 @@ import {
   reorderVisibleSpreadsheetColumns,
 } from "@/helpers/spreadsheet-columns";
 import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
+import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
+import { ProjectDisplayConfigControls } from "./project-display-config-controls";
 import { SpreadSheetPropertyIcon } from "./issue-layouts/utils";
 
 type TColumnOption = {
@@ -49,6 +51,7 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
   const { columns, displayProperties, handleDisplayPropertiesUpdate, isEstimateEnabled, isEpic = false } = props;
   const { t } = useTranslation();
   const { workspaceSlug, projectId } = useParams();
+  const storeType = useIssueStoreType();
   const [searchQuery, setSearchQuery] = useState("");
   const searchTerm = searchQuery.trim().toLowerCase();
   const { fields, isLoading, error } = useProjectCustomFields(
@@ -238,6 +241,13 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
               </div>
             </section>
           </div>
+          {workspaceSlug && projectId && !isEpic && (
+            <ProjectDisplayConfigControls
+              workspaceSlug={workspaceSlug.toString()}
+              projectId={projectId.toString()}
+              storeType={storeType}
+            />
+          )}
         </div>
       </PopoverContent>
     </Popover>
