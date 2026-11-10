@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { useTranslation } from "@plane/i18n";
 import { CalendarOutline } from "@makeplane/propel/icons";
 // ui
 import { CalendarAfterIcon, CalendarBeforeIcon } from "@plane/blocks/icons";
@@ -43,6 +44,12 @@ const dueDateRange: DueDate[] = [
 const formatOptionLabel = (title: string, name: string) => `${title} ${name}`;
 
 export function DateFilterSelect({ title, value, onChange }: Props) {
+  const { t } = useTranslation();
+  const dateFilterLabels: Record<string, string> = {
+    before: t("common.ui.date_filter_before"),
+    after: t("common.ui.date_filter_after"),
+    range: t("common.ui.date_filter_range"),
+  };
   const selected = dueDateRange.find((item) => item.value === value) ?? null;
 
   return (
@@ -51,7 +58,7 @@ export function DateFilterSelect({ title, value, onChange }: Props) {
       value={selected}
       onChange={onChange}
       getOptionValue={(option) => option.value}
-      getOptionLabel={(option) => formatOptionLabel(title, option.name)}
+      getOptionLabel={(option) => formatOptionLabel(title, dateFilterLabels[option.name] ?? option.name)}
       getOptionIcon={(option) => option.icon}
       showSearch={false}
       pinSelected={false}
@@ -60,7 +67,7 @@ export function DateFilterSelect({ title, value, onChange }: Props) {
       <Select.Trigger variant="select-md">
         <span className="flex items-center gap-2 text-caption-sm-regular">
           {selected?.icon}
-          <span>{formatOptionLabel(title, selected?.name ?? "")}</span>
+          <span>{formatOptionLabel(title, selected ? (dateFilterLabels[selected.name] ?? selected.name) : "")}</span>
         </span>
       </Select.Trigger>
     </Select>

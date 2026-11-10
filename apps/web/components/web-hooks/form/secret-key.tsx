@@ -73,7 +73,7 @@ export const WebhookSecretKey = observer(function WebhookSecretKey(props: Props)
         setToast({
           type: "success",
           title: `${t("success")}`,
-          message: "New key regenerated successfully.",
+          message: t("common.ui.new_key_regenerated_successfully"),
         });
 
         if (currentWebhook && webhookSecretKey) {
@@ -94,8 +94,13 @@ export const WebhookSecretKey = observer(function WebhookSecretKey(props: Props)
   const toggleShowKey = () => setShouldShowKey((prevState) => !prevState);
 
   const SECRET_KEY_OPTIONS = [
-    { label: "View secret key", Icon: shouldShowKey ? HideOutline : ShowOutline, onClick: toggleShowKey, key: "eye" },
-    { label: "Copy secret key", Icon: CopyOutline, onClick: handleCopySecretKey, key: "copy" },
+    {
+      label: t("common.ui.view_secret_key"),
+      Icon: shouldShowKey ? HideOutline : ShowOutline,
+      onClick: toggleShowKey,
+      key: "eye",
+    },
+    { label: t("common.ui.copy_secret_key"), Icon: CopyOutline, onClick: handleCopySecretKey, key: "copy" },
   ];
 
   return (

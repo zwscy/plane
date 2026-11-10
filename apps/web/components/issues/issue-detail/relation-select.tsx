@@ -25,6 +25,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { useTimeLineRelationOptions } from "@/components/relations";
 import type { TIssueRelationTypes } from "@plane/types";
 import type { TRelationObject } from "../issue-detail-widgets/relations";
+import { useTranslation } from "@plane/i18n";
 
 type TIssueRelationSelect = {
   className?: string;
@@ -36,6 +37,7 @@ type TIssueRelationSelect = {
 };
 
 export const IssueRelationSelect = observer(function IssueRelationSelect(props: TIssueRelationSelect) {
+  const { t } = useTranslation();
   const { className = "", workspaceSlug, projectId, issueId, relationKey, disabled = false } = props;
   // hooks
   const { getProjectById } = useProject();
@@ -55,8 +57,8 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
     if (data.length === 0) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Please select at least one work item.",
+        title: t("toast.error"),
+        message: t("issue.select.error"),
       });
       return;
     }
@@ -137,7 +139,7 @@ export const IssueRelationSelect = observer(function IssueRelationSelect(props: 
                       </Link>
                     </Tooltip>
                     {!disabled && (
-                      <Tooltip label="Remove" side="bottom" disabled={isMobile}>
+                      <Tooltip label={t("common.remove")} side="bottom" disabled={isMobile}>
                         {/* eslint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions */}
                         <span
                           onClick={(e) => {

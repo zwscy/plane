@@ -7,6 +7,7 @@
 import type { RefObject } from "react";
 import { useState } from "react";
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import type { IBaseLayoutsBaseItem, IBlockUpdateData } from "@plane/types";
 import { Loader } from "@plane/blocks/skeleton";
 import { Row } from "@plane/blocks/layout";
@@ -32,6 +33,7 @@ type Props<T extends IBaseLayoutsBaseItem> = {
 };
 
 export const BaseGanttSidebar = observer(function BaseGanttSidebar<T extends IBaseLayoutsBaseItem>(props: Props<T>) {
+  const { t } = useTranslation();
   const {
     blockUpdateHandler,
     blockIds,
@@ -123,9 +125,7 @@ export const BaseGanttSidebar = observer(function BaseGanttSidebar<T extends IBa
                             <div className="flex-grow truncate">{renderItem(item)}</div>
                             {duration && (
                               <div className="flex-shrink-0 text-body-xs-regular text-secondary">
-                                <span>
-                                  {duration} day{duration > 1 ? "s" : ""}
-                                </span>
+                                <span>{t("workspace_projects.common.days_count", { days: duration })}</span>
                               </div>
                             )}
                           </div>

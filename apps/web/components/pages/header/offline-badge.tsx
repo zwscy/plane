@@ -14,12 +14,14 @@ import { WebDisabledOutline } from "@makeplane/propel/icons";
 import useOnlineStatus from "@/hooks/use-online-status";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   page: TPageInstance;
 };
 
 export const PageOfflineBadge = observer(function PageOfflineBadge({ page }: Props) {
+  const { t } = useTranslation();
   // use online status
   const { isOnline } = useOnlineStatus();
 
@@ -27,10 +29,17 @@ export const PageOfflineBadge = observer(function PageOfflineBadge({ page }: Pro
 
   return (
     <Tooltip
-      label="You are offline. You can continue making changes. They will be synced when you are back online."
+      label={t(
+        "common.ui.you_are_offline_you_can_continue_making_changes_they_will_be_synced_when_you_are_back_online"
+      )}
       layout="stacked"
     >
-      <Badge variant="neutral" size="sm" startIcon={<Icon icon={WebDisabledOutline} />} label="Offline" />
+      <Badge
+        variant="neutral"
+        size="sm"
+        startIcon={<Icon icon={WebDisabledOutline} />}
+        label={t("common.ui.offline")}
+      />
     </Tooltip>
   );
 });

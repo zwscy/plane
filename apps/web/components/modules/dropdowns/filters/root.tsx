@@ -15,6 +15,7 @@ import { FilterMembers } from "./members";
 import { FilterStartDate } from "./start-date";
 import { FilterStatus } from "./status";
 import { FilterTargetDate } from "./target-date";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   displayFilters: TModuleDisplayFilters;
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export const ModuleFiltersSelection = observer(function ModuleFiltersSelection(props: Props) {
+  const { t } = useTranslation();
   const {
     displayFilters,
     filters,
@@ -40,7 +42,7 @@ export const ModuleFiltersSelection = observer(function ModuleFiltersSelection(p
       {!isArchived && (
         <>
           <MenuCheckboxItem
-            label="Favorites"
+            label={t("favorites")}
             checked={!!displayFilters.favorites}
             onCheckedChange={(checked) => handleDisplayFiltersUpdate({ favorites: checked })}
           />

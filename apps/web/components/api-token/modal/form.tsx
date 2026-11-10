@@ -100,7 +100,18 @@ export function CreateApiTokenForm(props: Props) {
     watch,
   } = useForm<IApiToken>({ defaultValues });
   // hooks
-  const { t } = useTranslation();
+  const { t, currentLocale } = useTranslation();
+  const expiryLabels: Record<string, string> = {
+    "1_week": t("notification.snooze.1_week"),
+    "1_month": t("common.ui.api_token_expiry_1_month"),
+    "3_months": t("common.ui.api_token_expiry_3_months"),
+    "1_year": t("common.ui.api_token_expiry_1_year"),
+    custom: t("common.ui.custom_option"),
+  };
+  const expiryOptions = EXPIRY_SELECT_OPTIONS.map((option) => ({
+    value: option.value,
+    label: expiryLabels[option.value] ?? option.label,
+  }));
   // store hooks
   const { data: userProfile } = useUserProfile();
 
@@ -109,8 +120,8 @@ export function CreateApiTokenForm(props: Props) {
     if (!neverExpires && (!data.expired_at || (data.expired_at === "custom" && !customDate)))
       return setToast({
         type: "error",
-        title: "Error!",
-        message: "Please select an expiration date.",
+        title: t("toast.error"),
+        message: t("common.ui.select_expiration_date_error"),
       });
 
     const payload: Partial<IApiToken> = {
@@ -202,21 +213,21 @@ export function CreateApiTokenForm(props: Props) {
                   render={({ field: { onChange, value } }) => (
                     <SelectField<string>
                       name="expired_at"
-                      aria-label="Set expiration date"
+                      aria-label={t("common.ui.set_expiration_date")}
                       size="md"
                       variant="pill"
                       value={value ?? null}
                       onValueChange={(expiry) => {
                         if (expiry) onChange(expiry);
                       }}
-                      options={EXPIRY_SELECT_OPTIONS}
+                      options={expiryOptions}
                       itemToStringLabel={(expiry) =>
                         expiry === "custom"
-                          ? "Custom date"
-                          : (EXPIRY_SELECT_OPTIONS.find((option) => option.value === expiry)?.label ?? expiry)
+                          ? t("common.ui.custom_expiration_date")
+                          : (expiryOptions.find((option) => option.value === expiry)?.label ?? expiry)
                       }
                       icon={<CalendarOutline className="size-3.5 shrink-0" />}
-                      placeholder="Set expiration date"
+                      placeholder={t("common.ui.set_expiration_date")}
                       disabled={neverExpires}
                     />
                   )}
@@ -227,7 +238,7 @@ export function CreateApiTokenForm(props: Props) {
                     onChange={(date) => setCustomDate(date)}
                     minDate={tomorrow}
                     icon={<CalendarOutline />}
-                    placeholder="Set date"
+                    placeholder={t("common.ui.set_date")}
                     disabled={neverExpires}
                     clearable
                     weekStartsOn={userProfile?.start_of_the_week}
@@ -239,10 +250,16 @@ export function CreateApiTokenForm(props: Props) {
                 <span className="text-caption-sm-regular text-placeholder">
                   {expiredAt === "custom"
                     ? customDate
-                      ? `Expires ${renderFormattedDate(customDateFormatted ?? "")} at ${renderFormattedTime(customDateFormatted ?? "")}`
+                      ? t("common.ui.expires_date_at_time", {
+                          date: renderFormattedDate(customDateFormatted ?? "", undefined, currentLocale),
+                          time: renderFormattedTime(customDateFormatted ?? "", undefined, currentLocale),
+                        })
                       : null
                     : expiredAt
-                      ? `Expires ${renderFormattedDate(expiryDate ?? "")} at ${renderFormattedTime(expiryDate ?? "")}`
+                      ? t("common.ui.expires_date_at_time", {
+                          date: renderFormattedDate(expiryDate ?? "", undefined, currentLocale),
+                          time: renderFormattedTime(expiryDate ?? "", undefined, currentLocale),
+                        })
                       : null}
                 </span>
               )}

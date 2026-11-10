@@ -26,19 +26,20 @@ import { useUserProfile } from "@/hooks/store/user";
 // local components
 import { CommonOnboardingHeader } from "../common";
 import type { TProfileSetupFormValues } from "../profile/root";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   handleStepChange: (step: EOnboardingSteps, skipInvites?: boolean) => void;
 };
 
 const ROLES = [
-  { id: "product-manager", label: "Product Manager", icon: CubeOutline },
-  { id: "engineering-manager", label: "Engineering Manager", icon: ViewsOutline },
-  { id: "designer", label: "Designer", icon: PenToolOutline },
-  { id: "developer", label: "Developer", icon: MonitorOutline },
-  { id: "founder-executive", label: "Founder/Executive", icon: RocketOutline },
-  { id: "operations-manager", label: "Operations Manager", icon: RefreshOutline },
-  { id: "others", label: "Others", icon: CubeOutline },
+  { id: "product-manager", label: "common.ui.product_manager", icon: CubeOutline },
+  { id: "engineering-manager", label: "common.ui.engineering_manager", icon: ViewsOutline },
+  { id: "designer", label: "common.ui.designer", icon: PenToolOutline },
+  { id: "developer", label: "common.ui.developer", icon: MonitorOutline },
+  { id: "founder-executive", label: "common.ui.founder_executive", icon: RocketOutline },
+  { id: "operations-manager", label: "common.ui.operations_manager", icon: RefreshOutline },
+  { id: "others", label: "common.ui.others", icon: CubeOutline },
 ];
 
 const defaultValues = {
@@ -46,6 +47,7 @@ const defaultValues = {
 };
 
 export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange }: Props) {
+  const { t } = useTranslation();
   // store hooks
   const { data: profile, updateUserProfile } = useUserProfile();
   // form info
@@ -70,13 +72,13 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
       [await updateUserProfile(profileUpdatePayload)];
       setToast({
         type: "success",
-        title: "Success",
+        title: t("success"),
         message: "Profile setup completed!",
       });
     } catch {
       setToast({
         type: "error",
-        title: "Error",
+        title: t("error"),
         message: "Profile setup failed. Please try again!",
       });
     }
@@ -97,10 +99,13 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10">
       {/* Header */}
-      <CommonOnboardingHeader title="What's your role?" description="Let's set up Plane for how you work." />
+      <CommonOnboardingHeader
+        title={t("common.ui.what_s_your_role")}
+        description={t("common.ui.let_s_set_up_plane_for_how_you_work")}
+      />
       {/* Role Selection */}
       <fieldset className="flex min-w-0 flex-col gap-3">
-        <legend className="mb-3 text-body-sm-semibold text-placeholder">Select one</legend>
+        <legend className="mb-3 text-body-sm-semibold text-placeholder">{t("common.ui.select_one")}</legend>
         <Controller
           control={control}
           name="role"
@@ -151,7 +156,7 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
                         "text-primary": !isSelected,
                       })}
                     >
-                      {role.label}
+                      {t(role.label)}
                     </span>
                   </button>
                 );
@@ -163,14 +168,21 @@ export const RoleSetupStep = observer(function RoleSetupStep({ handleStepChange 
       </fieldset>
       {/* Action Buttons */}
       <div className="space-y-3">
-        <Button variant="primary" type="submit" stretch="full" size="lg" disabled={isButtonDisabled} label="Continue" />
+        <Button
+          variant="primary"
+          type="submit"
+          stretch="full"
+          size="lg"
+          disabled={isButtonDisabled}
+          label={t("common.continue")}
+        />
         <Button
           variant="ghost"
           onClick={handleSkip}
           stretch="full"
           size="lg"
           render={<button type="button" />}
-          label="Skip"
+          label={t("common.ui.skip")}
         />
       </div>
     </form>

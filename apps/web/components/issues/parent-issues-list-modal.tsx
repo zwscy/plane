@@ -133,13 +133,13 @@ export function ParentIssuesListModal({
           <SelectionDialogList className="h-92 border-b-0">
             {searchTerm !== "" && (
               <h5 className="px-3 py-1 text-body-xs-regular text-secondary">
-                Search results for{" "}
+                {t("common.ui.search_results_for")}{" "}
                 <span className="text-primary">
                   {'"'}
                   {searchTerm}
                   {'"'}
                 </span>{" "}
-                in project:
+                {t("common.ui.in_project")}
               </h5>
             )}
 

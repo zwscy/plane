@@ -6,7 +6,8 @@
 
 import { observer } from "mobx-react";
 // plane utils
-import { cn } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
+import { cn, formatDateForDisplay, isChineseDateLocale } from "@plane/utils";
 // hooks
 import { useTimeLineChartStore } from "@/hooks/use-timeline-chart";
 //
@@ -15,6 +16,8 @@ import type { IMonthBlock, IQuarterMonthBlock } from "../../views";
 import { groupMonthsToQuarters } from "../../views";
 
 export const QuarterChartView = observer(function QuarterChartView(_props: any) {
+  const { t, currentLocale } = useTranslation();
+  const isChinese = isChineseDateLocale(currentLocale);
   const { currentViewData, renderView } = useTimeLineChartStore();
   const monthBlocks: IMonthBlock[] = renderView;
 
@@ -40,17 +43,25 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
                     left: `${SIDEBAR_WIDTH}px`,
                   }}
                 >
-                  {quarterBlock?.title}
+                  {isChinese
+                    ? `${quarterBlock.year}年 ${quarterBlock.quarterNumber * 3 + 1}月 - ${quarterBlock.quarterNumber * 3 + 3}月`
+                    : quarterBlock?.title}
                   {quarterBlock.today && (
                     <span
                       className={cn("ml-2 rounded-sm bg-accent-primary px-1 text-caption-2xs-medium text-on-color")}
                     >
-                      Current
+                      {t("current")}
                     </span>
                   )}
                 </div>
                 <div className="sticky px-3 py-2 text-caption-sm-regular whitespace-nowrap text-placeholder capitalize">
-                  {quarterBlock.shortTitle}
+                  {isChinese
+                    ? formatDateForDisplay(
+                        new Date(quarterBlock.year, quarterBlock.quarterNumber * 3, 1),
+                        "QQQ",
+                        currentLocale
+                      )
+                    : quarterBlock.shortTitle}
                 </div>
               </div>
               {/** Months Sub title */}
@@ -72,7 +83,9 @@ export const QuarterChartView = observer(function QuarterChartView(_props: any) 
                           "rounded-lg bg-accent-primary px-2 text-on-color": monthBlock.today,
                         })}
                       >
-                        {monthBlock.monthData.shortTitle}
+                        {isChinese
+                          ? formatDateForDisplay(new Date(monthBlock.year, monthBlock.month, 1), "MMM", currentLocale)
+                          : monthBlock.monthData.shortTitle}
                       </span>
                     </div>
                   </div>

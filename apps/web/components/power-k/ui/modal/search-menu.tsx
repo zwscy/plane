@@ -18,6 +18,7 @@ import { WorkspaceService } from "@/services/workspace.service";
 import type { TPowerKContext, TPowerKPageType } from "../../core/types";
 import { PowerKModalNoSearchResultsCommand } from "./no-results-command";
 import { PowerKModalSearchResults } from "./search-results";
+import { useTranslation } from "@plane/i18n";
 // services init
 const workspaceService = new WorkspaceService();
 
@@ -31,6 +32,7 @@ type Props = {
 };
 
 export function PowerKModalSearchMenu(props: Props) {
+  const { t } = useTranslation();
   const { activePage, context, isWorkspaceLevel, searchTerm, updateSearchTerm, handleSearchMenuClose } = props;
   // states
   const [resultsCount, setResultsCount] = useState(0);
@@ -89,7 +91,7 @@ export function PowerKModalSearchMenu(props: Props) {
               "animate-pulse": isSearching,
             })}
           >
-            Search results for{" "}
+            {t("common.ui.search_results_for")}{" "}
             <span className="font-medium">
               {'"'}
               {searchTerm}

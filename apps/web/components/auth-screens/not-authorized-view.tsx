@@ -11,6 +11,7 @@ import { EmptyStateDetailed } from "@plane/blocks/empty-state";
 import { cn } from "@plane/utils";
 // layouts
 import DefaultLayout from "@/layouts/default-layout";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   actionButton?: React.ReactNode;
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export const NotAuthorizedView = observer(function NotAuthorizedView(props: Props) {
+  const { t } = useTranslation();
   const { actionButton, className } = props;
 
   return (
@@ -30,7 +32,7 @@ export const NotAuthorizedView = observer(function NotAuthorizedView(props: Prop
         align="center"
         assetKey="no-access"
         assetClassName="size-40"
-        title="Oops! You are not authorized to view this page"
+        title={t("common.ui.oops_you_are_not_authorized_to_view_this_page")}
         customButton={actionButton}
       />
     </DefaultLayout>

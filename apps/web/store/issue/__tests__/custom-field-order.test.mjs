@@ -420,6 +420,7 @@ for (const layout of ["spreadsheet", "list"]) {
     };
     const icon = (props) => React.createElement("svg", { className: props.className });
     const mocks = {
+      "@plane/i18n": { useTranslation: () => ({ t: (key) => key, currentLocale: "en" }) },
       "next/navigation": { useParams: () => ({ workspaceSlug: "workspace", projectId: "project" }) },
       "@makeplane/propel/icons": { ChevronRightOutline: icon, MoreHorizontalOutline: icon },
       "@plane/hooks": { useOutsideClickDetector: () => {} },

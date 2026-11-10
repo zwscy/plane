@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { useTranslation } from "@plane/i18n";
 import type { FC, ReactNode } from "react";
 import { HierarchyOutline } from "@makeplane/propel/icons";
 // types
@@ -29,6 +30,7 @@ export function ActivityBlockComponent(props: TActivityBlockComponent) {
   const { icon: Icon, activity, ends, children, customUserName } = props;
   // hooks
   const { isMobile } = usePlatformOS();
+  const { currentLocale } = useTranslation();
 
   if (!activity) return <></>;
   return (
@@ -54,11 +56,11 @@ export function ActivityBlockComponent(props: TActivityBlockComponent) {
         </div>
         <div className="mt-1">
           <Tooltip
-            label={`${renderFormattedDate(activity.created_at)}, ${renderFormattedTime(activity.created_at)}`}
+            label={`${renderFormattedDate(activity.created_at, undefined, currentLocale)}, ${renderFormattedTime(activity.created_at, undefined, currentLocale)}`}
             disabled={isMobile}
           >
             <span className="cursor-help font-medium whitespace-nowrap text-tertiary">
-              {calculateTimeAgo(activity.created_at)}
+              {calculateTimeAgo(activity.created_at, currentLocale)}
             </span>
           </Tooltip>
         </div>

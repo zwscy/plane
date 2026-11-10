@@ -6,7 +6,8 @@
 
 import { observer } from "mobx-react";
 // components
-import { cn } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
+import { cn, formatDateForDisplay, isChineseDateLocale } from "@plane/utils";
 import { HEADER_HEIGHT, SIDEBAR_WIDTH } from "@/components/gantt-chart/constants";
 // helpers
 // hooks
@@ -16,6 +17,8 @@ import type { IMonthView } from "../../views";
 import { getNumberOfDaysBetweenTwoDates } from "../../views/helpers";
 
 export const MonthChartView = observer(function MonthChartView(_props: any) {
+  const { t, currentLocale } = useTranslation();
+  const isChinese = isChineseDateLocale(currentLocale);
   // chart hook
   const { currentViewData, renderView } = useTimeLineChartStore();
   const monthView: IMonthView = renderView;
@@ -54,12 +57,14 @@ export const MonthChartView = observer(function MonthChartView(_props: any) {
                       left: `${SIDEBAR_WIDTH}px`,
                     }}
                   >
-                    {monthBlock?.title}
+                    {isChinese
+                      ? formatDateForDisplay(new Date(monthBlock.year, monthBlock.month, 1), "MMMM yyyy", currentLocale)
+                      : monthBlock?.title}
                     {monthBlock.today && (
                       <span
                         className={cn("ml-2 rounded-sm bg-accent-primary px-1 text-caption-2xs-medium text-on-color")}
                       >
-                        Current
+                        {t("current")}
                       </span>
                     )}
                   </div>
@@ -88,7 +93,11 @@ export const MonthChartView = observer(function MonthChartView(_props: any) {
                       {weekBlock.startDate.getDate()}-{weekBlock.endDate.getDate()}
                     </span>
                   </div>
-                  <div className="space-x-1 text-caption-sm-medium">{weekBlock.weekData.shortTitle}</div>
+                  <div className="space-x-1 text-caption-sm-medium">
+                    {isChinese
+                      ? t("date_picker.week_number", { week: weekBlock.weekNumber })
+                      : weekBlock.weekData.shortTitle}
+                  </div>
                 </div>
               ))}
             </div>

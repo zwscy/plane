@@ -67,11 +67,11 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
   return (
     <div className="flex w-full flex-col divide-y-2 divide-subtle-1">
       <div className="w-full overflow-y-auto">
-        <h5 className="mb-2 text-body-sm-medium">Properties</h5>
+        <h5 className="mb-2 text-body-sm-medium">{t("common.properties")}</h5>
         <div className={`divide-y-2 divide-subtle-1 ${!isEditable ? "opacity-60" : ""}`}>
           <div className="flex flex-col gap-3">
             {/* Intake State */}
-            <SidebarPropertyListItem icon={StateOutline} label="State">
+            <SidebarPropertyListItem icon={StateOutline} label={t("common.state")}>
               {issue?.state_id &&
                 (isIntakeAccepted ? (
                   <StateSelect
@@ -93,7 +93,7 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
                 ))}
             </SidebarPropertyListItem>
             {/* Assignee */}
-            <SidebarPropertyListItem icon={MembersOutline} label="Assignees">
+            <SidebarPropertyListItem icon={MembersOutline} label={t("common.assignees")}>
               <MemberSelect
                 value={issue?.assignee_ids ?? []}
                 onChange={(val) => {
@@ -102,14 +102,14 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
                 }}
                 disabled={!isEditable}
                 projectId={projectId?.toString() ?? ""}
-                placeholder="Add assignees"
+                placeholder={t("issue.add.assignee")}
                 multiple
                 variant="select-ghost-md"
                 showLabel={(issue?.assignee_ids ?? []).length <= 1}
               />
             </SidebarPropertyListItem>
             {/* Priority */}
-            <SidebarPropertyListItem icon={PriorityOutline} label="Priority">
+            <SidebarPropertyListItem icon={PriorityOutline} label={t("common.priority")}>
               <PrioritySelect
                 value={issue?.priority}
                 onChange={(val) => {
@@ -125,9 +125,9 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
         <div className={`mt-3 divide-y-2 divide-subtle-1 ${!isEditable ? "opacity-60" : ""}`}>
           <div className="flex flex-col gap-3">
             {/* Due Date */}
-            <SidebarPropertyListItem icon={DueDateOutline} label="Due date">
+            <SidebarPropertyListItem icon={DueDateOutline} label={t("common.order_by.due_date")}>
               <DateSelect
-                placeholder="Add due date"
+                placeholder={t("issue.add.due_date")}
                 value={getDate(issue.target_date) ?? null}
                 onChange={(val) => {
                   if (!issue?.id) return;
@@ -144,7 +144,7 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
               />
             </SidebarPropertyListItem>
             {/* Labels */}
-            <SidebarPropertyListItem icon={LabelsOutline} label="Labels">
+            <SidebarPropertyListItem icon={LabelsOutline} label={t("common.labels")}>
               {issue?.id && (
                 <IssueLabel
                   workspaceSlug={workspaceSlug}
@@ -160,7 +160,7 @@ export const InboxIssueContentProperties = observer(function InboxIssueContentPr
             </SidebarPropertyListItem>
             {/* duplicate to*/}
             {duplicateIssueDetails && (
-              <SidebarPropertyListItem icon={DuplicateOfOutline} label="Duplicate of">
+              <SidebarPropertyListItem icon={DuplicateOfOutline} label={t("issue.relation.duplicate")}>
                 <ControlLink
                   href={duplicateWorkItemLink}
                   onClick={() => {

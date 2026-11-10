@@ -266,8 +266,9 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
             <DialogHeading>
               <DialogTitle>{t("customize_navigation")}</DialogTitle>
               <DialogDescription>
-                Selected items will always stay visible in your sidebar. You can still find the others anytime from the
-                More menu. These changes are personal to you and won&apos;t affect anyone else on your workspace.
+                {t(
+                  "common.ui.selected_items_will_always_stay_visible_in_your_sidebar_you_can_still_find_the_others_anytime_from_the_more_me"
+                )}
               </DialogDescription>
             </DialogHeading>
           </DialogHeader>
@@ -334,13 +335,15 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
                         size="md"
                         value="ACCORDION"
                         label={t("accordion_navigation_control")}
-                        description="Feature tabs will appear as nested items under project and acts as accordion."
+                        description={t(
+                          "common.ui.feature_tabs_will_appear_as_nested_items_under_project_and_acts_as_accordion"
+                        )}
                       />
                       <RadioGroupFieldOption
                         size="md"
                         value="TABBED"
                         label={t("horizontal_navigation_bar")}
-                        description="Feature tabs will appear as horizontal tabs inside a project."
+                        description={t("common.ui.feature_tabs_will_appear_as_horizontal_tabs_inside_a_project")}
                       />
                     </RadioGroup>
                   </Field>
@@ -388,7 +391,7 @@ export const CustomizeNavigationDialog = observer(function CustomizeNavigationDi
                           </InputGroup>
                           {parseInt(projectCountInput) < 1 && projectCountInput !== "" && (
                             <InputFieldError id={`${projectCountId}-error`} size="md">
-                              Minimum value is 1
+                              {t("common.ui.minimum_value_is_1")}
                             </InputFieldError>
                           )}
                         </InputField>

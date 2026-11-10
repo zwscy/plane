@@ -9,6 +9,7 @@ import { ChevronRightOutline } from "@makeplane/propel/icons";
 import { Badge } from "@makeplane/propel/components/badge";
 import { Switch } from "@makeplane/propel/components/switch";
 import { joinUrlPath } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -20,6 +21,7 @@ type Props = {
 };
 
 export function ProjectFeatureToggle(props: Props) {
+  const { t } = useTranslation();
   const { workspaceSlug, projectId, featureItem, value, handleSubmit, disabled } = props;
   return featureItem?.href ? (
     <Link href={joinUrlPath(workspaceSlug, "settings", "projects", projectId, "features", featureItem?.href)}>
@@ -34,7 +36,7 @@ export function ProjectFeatureToggle(props: Props) {
       checked={value}
       onCheckedChange={() => handleSubmit(featureItem?.key, featureItem?.property)}
       disabled={disabled}
-      aria-label="Toggle project feature"
+      aria-label={t("common.ui.toggle_project_feature")}
     />
   );
 }

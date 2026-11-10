@@ -9,6 +9,7 @@ import { Banner } from "@makeplane/propel/components/banner";
 import { Button } from "@makeplane/propel/components/button";
 import { Icon } from "@makeplane/propel/components/icon";
 import { TransferWorkItemOutline } from "@makeplane/propel/icons";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   handleClick: () => void;
@@ -17,13 +18,14 @@ type Props = {
 };
 
 export function TransferIssues(props: Props) {
+  const { t } = useTranslation();
   const { handleClick, canTransferIssues = false, disabled = false } = props;
   return (
     <div className="mb-4">
       <Banner
         placement="page"
         variant="neutral"
-        title="Completed cycles are not editable."
+        title={t("common.ui.completed_cycles_are_not_editable")}
         actions={
           canTransferIssues && (
             <Button
@@ -34,7 +36,7 @@ export function TransferIssues(props: Props) {
               iconPosition="start"
               onClick={handleClick}
               disabled={disabled}
-              label="Transfer work items"
+              label={t("product_tour.cycle.step_four.title")}
             />
           )
         }

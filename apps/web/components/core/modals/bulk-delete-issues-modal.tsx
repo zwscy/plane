@@ -103,8 +103,8 @@ export const BulkDeleteIssuesModal = observer(function BulkDeleteIssuesModal(pro
     if (!data.delete_issue_ids || data.delete_issue_ids.length === 0) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Please select at least one work item.",
+        title: t("toast.error"),
+        message: t("issue.select.error"),
       });
       return;
     }
@@ -115,16 +115,16 @@ export const BulkDeleteIssuesModal = observer(function BulkDeleteIssuesModal(pro
       .then(() => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Work items deleted successfully!",
+          title: t("toast.success"),
+          message: t("common.ui.work_items_deleted_successfully"),
         });
         handleClose();
       })
       .catch(() =>
         setToast({
           type: "error",
-          title: "Error!",
-          message: "Something went wrong. Please try again.",
+          title: t("toast.error"),
+          message: t("common.errors.default.message"),
         })
       );
   };
@@ -133,7 +133,9 @@ export const BulkDeleteIssuesModal = observer(function BulkDeleteIssuesModal(pro
     issues.length > 0 ? (
       <div className="p-2">
         {query === "" && (
-          <h2 className="mt-4 mb-2 px-3 text-caption-sm-semibold text-primary">Select work items to delete</h2>
+          <h2 className="mt-4 mb-2 px-3 text-caption-sm-semibold text-primary">
+            {t("common.ui.select_work_items_to_delete")}
+          </h2>
         )}
         <ComboboxList aria-label={t("power_k.actions_commands.bulk_delete_work_items")}>
           {issues.map((issue) => (
@@ -206,7 +208,7 @@ export const BulkDeleteIssuesModal = observer(function BulkDeleteIssuesModal(pro
           </Combobox>
           {issues.length > 0 && (
             <DialogActions>
-              <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+              <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
               <Button
                 variant="danger"
                 size="md"

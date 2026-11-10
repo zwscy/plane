@@ -102,20 +102,20 @@
         }
       },
       "webhooks": {
-        "heading": "Webhooks",
+        "heading": "事件回调（Webhook）",
         "description": "在项目事件发生时自动向外部服务发送通知。",
-        "title": "Webhooks",
-        "add_webhook": "添加 webhook",
+        "title": "事件回调",
+        "add_webhook": "添加事件回调",
         "modal": {
-          "title": "创建 webhook",
-          "details": "Webhook 详情",
+          "title": "创建事件回调",
+          "details": "事件回调详情",
           "payload": "负载 URL",
-          "question": "您希望触发此 webhook 的事件有哪些？",
+          "question": "您希望哪些事件触发此事件回调？",
           "error": "URL 为必填项"
         },
         "secret_key": {
           "title": "密钥",
-          "message": "生成令牌以登录 webhook 负载"
+          "message": "生成用于验证事件回调负载的令牌"
         },
         "options": {
           "all": "发送所有内容",
@@ -123,28 +123,28 @@
         },
         "toasts": {
           "created": {
-            "title": "Webhook 已创建",
-            "message": "Webhook 已成功创建"
+            "title": "事件回调已创建",
+            "message": "事件回调已成功创建"
           },
           "not_created": {
-            "title": "Webhook 未创建",
-            "message": "无法创建 webhook"
+            "title": "事件回调未创建",
+            "message": "无法创建事件回调"
           },
           "updated": {
-            "title": "Webhook 已更新",
-            "message": "Webhook 已成功更新"
+            "title": "事件回调已更新",
+            "message": "事件回调已成功更新"
           },
           "not_updated": {
-            "title": "Webhook 未更新",
-            "message": "无法更新 webhook"
+            "title": "事件回调未更新",
+            "message": "无法更新事件回调"
           },
           "removed": {
-            "title": "Webhook 已移除",
-            "message": "Webhook 已成功移除"
+            "title": "事件回调已移除",
+            "message": "事件回调已成功移除"
           },
           "not_removed": {
-            "title": "Webhook 未移除",
-            "message": "无法移除 webhook"
+            "title": "事件回调未移除",
+            "message": "无法移除事件回调"
           },
           "secret_key_copied": {
             "message": "密钥已复制到剪贴板。"
@@ -350,13 +350,13 @@
           "placeholder": "https://example.com/setup"
         },
         "webhook_url": {
-          "label": "Webhook URL",
-          "description": "我们将在此接收来自安装了您应用的工作区的 Webhook 事件和更新。",
+          "label": "事件回调 URL",
+          "description": "我们将向此地址发送来自已安装您应用的工作区的事件回调通知和更新。",
           "placeholder": "https://example.com/webhook"
         },
         "webhook_secret": {
-          "label": "Webhook 密钥",
-          "description": "用于验证传入 Webhook 请求的密钥。",
+          "label": "事件回调密钥",
+          "description": "用于验证传入事件回调请求的密钥。",
           "placeholder": "输入随机密钥"
         },
         "redirect_uris": {
@@ -382,9 +382,9 @@
         "app_slug_title": "应用别名",
         "app_slug_error": "应用别名为必填项",
         "invalid_website_error": "无效的网站",
-        "webhook_url_title": "Webhook URL",
-        "webhook_url_error": "Webhook URL为必填项",
-        "invalid_webhook_url_error": "无效的Webhook URL",
+        "webhook_url_title": "事件回调 URL",
+        "webhook_url_error": "事件回调 URL 为必填项",
+        "invalid_webhook_url_error": "无效的事件回调 URL",
         "redirect_uris_title": "重定向URI",
         "redirect_uris_error": "重定向URI为必填项",
         "invalid_redirect_uris_error": "无效的重定向URI",
@@ -476,7 +476,7 @@
         "write": "写入",
         "scope_description": {
           "projects": "访问项目及所有项目相关实体",
-          "wiki": "访问 Wiki 及所有 Wiki 相关实体",
+          "wiki": "访问知识库及所有知识库相关实体",
           "workspaces": "访问工作区及所有工作区相关实体",
           "stickies": "访问便签及所有便签相关实体",
           "profile": "访问用户资料信息",
@@ -502,8 +502,8 @@
         "description": "Plane API 可用于将您在 Plane 中的数据与任何外部系统集成。创建令牌以开始使用。"
       },
       "webhooks": {
-        "title": "尚未添加 webhook",
-        "description": "创建 webhook 以接收实时更新并自动执行操作。"
+        "title": "尚未添加事件回调",
+        "description": "创建事件回调以接收实时更新并自动执行操作。"
       },
       "exports": {
         "title": "尚无导出",

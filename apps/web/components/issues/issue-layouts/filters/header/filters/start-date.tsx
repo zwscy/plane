@@ -9,6 +9,7 @@ import { observer } from "mobx-react";
 import { DATE_AFTER_FILTER_OPTIONS } from "@plane/constants";
 // components
 import { DateFilterSubmenu, isCustomDateFilterValue } from "@/components/common/filters/date-filter-submenu";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -16,11 +17,12 @@ type Props = {
 };
 
 export const FilterStartDate = observer(function FilterStartDate(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate } = props;
 
   return (
     <DateFilterSubmenu
-      label="Start date"
+      label={t("common.order_by.start_date")}
       options={DATE_AFTER_FILTER_OPTIONS}
       appliedFilters={appliedFilters}
       onToggleOption={handleUpdate}

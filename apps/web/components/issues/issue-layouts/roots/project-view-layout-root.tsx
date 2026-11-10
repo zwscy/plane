@@ -25,6 +25,7 @@ import { BaseGanttRoot } from "../gantt";
 import { ProjectViewKanBanLayout } from "../kanban/roots/project-view-root";
 import { ProjectViewListLayout } from "../list/roots/project-view-root";
 import { ProjectViewSpreadsheetLayout } from "../spreadsheet/roots/project-view-root";
+import { useTranslation } from "@plane/i18n";
 
 function ProjectViewIssueLayout(props: { activeLayout: EIssueLayoutTypes | undefined; viewId: string }) {
   switch (props.activeLayout) {
@@ -44,6 +45,7 @@ function ProjectViewIssueLayout(props: { activeLayout: EIssueLayoutTypes | undef
 }
 
 export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
+  const { t } = useTranslation();
   // router
   const { workspaceSlug: routerWorkspaceSlug, projectId: routerProjectId, viewId: routerViewId } = useParams();
   const workspaceSlug = routerWorkspaceSlug ? routerWorkspaceSlug?.toString() : undefined;
@@ -89,7 +91,7 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
       <ProjectLevelWorkItemFiltersHOC
         enableSaveView
         saveViewOptions={{
-          label: "Save as",
+          label: t("rich_filters.view_controls.save_as"),
         }}
         enableUpdateView
         entityId={viewId}

@@ -44,7 +44,7 @@ export const WorkspaceDraftIssueQuickActions = observer(function WorkspaceDraftI
               key={item.key}
               variant={resolveItemVariant(item)}
               icon={item.icon ? <Icon icon={item.icon} /> : undefined}
-              label={t(item.title || "")}
+              label={item.title || ""}
               description={item.description}
               onClick={() => {
                 item.action();

@@ -17,6 +17,7 @@ import { API_TOKENS_LIST } from "@plane/constants";
 // local imports
 import { CreateApiTokenForm } from "./form";
 import { GeneratedTokenDetails } from "./generated-token-details";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   isOpen: boolean;
@@ -27,6 +28,7 @@ type Props = {
 const apiTokenService = new APITokenService();
 
 export function CreateApiTokenModal(props: Props) {
+  const { t } = useTranslation();
   const { isOpen, onClose } = props;
   // states
   const [neverExpires, setNeverExpires] = useState<boolean>(false);
@@ -73,7 +75,7 @@ export function CreateApiTokenModal(props: Props) {
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err.message || err.detail,
         });
 

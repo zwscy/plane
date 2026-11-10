@@ -140,7 +140,10 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
 
   return (
     <div className="mt-6 mb-10 flex flex-col divide-y divide-subtle overflow-hidden rounded-lg border border-subtle bg-layer-2">
-      <DefaultSettingItem title="Project Lead" description="Select the project lead for the project.">
+      <DefaultSettingItem
+        title={t("project_settings.members.project_lead")}
+        description={t("project_settings.members.project_lead_description")}
+      >
         {currentProjectDetails ? (
           <Controller
             control={control}
@@ -167,7 +170,10 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
           </Loader>
         )}
       </DefaultSettingItem>
-      <DefaultSettingItem title="Default Assignee" description="Select the default assignee for the project.">
+      <DefaultSettingItem
+        title={t("project_settings.members.default_assignee")}
+        description={t("project_settings.members.default_assignee_description")}
+      >
         {currentProjectDetails ? (
           <Controller
             control={control}
@@ -196,8 +202,8 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
       </DefaultSettingItem>
       {currentProjectDetails && (
         <DefaultSettingItem
-          title="Guest access"
-          description="This will allow guests to have view access to all the project work items."
+          title={t("common.ui.guest_access")}
+          description={t("project_settings.members.guest_super_permissions.sub_heading")}
         >
           <div className="flex items-center justify-end">
             <Switch
@@ -205,7 +211,7 @@ export const ProjectSettingsMemberDefaults = observer(function ProjectSettingsMe
               checked={!!currentProjectDetails?.guest_view_all_features}
               onCheckedChange={toggleGuestViewAllIssues}
               disabled={!isAdmin}
-              aria-label="Guest access"
+              aria-label={t("common.ui.guest_access")}
             />
           </div>
         </DefaultSettingItem>

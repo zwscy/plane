@@ -10,6 +10,7 @@ import { Logo } from "@plane/blocks/emoji-icon-picker";
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   appliedFilters: string[] | null;
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export const FilterProjects = observer(function FilterProjects(props: Props) {
+  const { t } = useTranslation();
   const { appliedFilters, handleUpdate } = props;
   // store hooks
   const { getProjectById, joinedProjectIds } = useProject();
@@ -39,7 +41,7 @@ export const FilterProjects = observer(function FilterProjects(props: Props) {
 
   return (
     <FilterSubmenu
-      label="Project"
+      label={t("common.project")}
       options={options}
       appliedFilters={appliedFilters}
       onToggle={handleUpdate}

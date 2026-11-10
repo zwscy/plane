@@ -23,8 +23,10 @@ import { useAppRailPreferences } from "@/hooks/use-navigation-preferences";
 import { useAppRailVisibility } from "@/lib/app-rail/context";
 // local imports
 import { AppSidebarItemsRoot } from "./items-root";
+import { useTranslation } from "@plane/i18n";
 
 export const AppRailRoot = observer(() => {
+  const { t } = useTranslation();
   // router
   const { workspaceSlug, projectId } = useParams();
   const pathname = usePathname();
@@ -57,7 +59,7 @@ export const AppRailRoot = observer(() => {
               <div className="mx-2 border-t border-strong" />
               <AppSidebarItem
                 item={{
-                  label: "Settings",
+                  label: t("settings"),
                   icon: <SettingsOutline className="size-5" />,
                   href: `/${workspaceSlug}/settings`,
                   isActive: isWorkspaceSettingsPath,
@@ -70,16 +72,19 @@ export const AppRailRoot = observer(() => {
         <ContextMenuContent>
           <ContextMenuItem
             onClick={() => updateDisplayMode("icon_only")}
-            label="Icon only"
+            label={t("common.ui.icon_only")}
             selected={preferences.displayMode === "icon_only"}
           />
           <ContextMenuItem
             onClick={() => updateDisplayMode("icon_with_label")}
-            label="Icon with name"
+            label={t("common.ui.icon_with_name")}
             selected={preferences.displayMode === "icon_with_label"}
           />
           <ContextMenuSeparator />
-          <ContextMenuItem onClick={toggleAppRail} label={isCollapsed ? "Dock App Rail" : "Undock App Rail"} />
+          <ContextMenuItem
+            onClick={toggleAppRail}
+            label={isCollapsed ? t("common.ui.dock_app_rail") : t("common.ui.undock_app_rail")}
+          />
         </ContextMenuContent>
       </ContextMenu>
     </div>

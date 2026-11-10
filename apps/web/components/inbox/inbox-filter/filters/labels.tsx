@@ -10,12 +10,14 @@ import type { IIssueLabel } from "@plane/types";
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   labels: IIssueLabel[] | undefined;
 };
 
 export const FilterLabels = observer(function FilterLabels(props: Props) {
+  const { t } = useTranslation();
   const { labels } = props;
   // hooks
   const { inboxFilters, handleInboxIssueFilters } = useProjectInbox();
@@ -34,6 +36,12 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
     );
 
   return (
-    <FilterSubmenu label="Label" options={options} appliedFilters={filterValue} onToggle={handleToggle} searchable />
+    <FilterSubmenu
+      label={t("common.label")}
+      options={options}
+      appliedFilters={filterValue}
+      onToggle={handleToggle}
+      searchable
+    />
   );
 });

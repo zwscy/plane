@@ -33,7 +33,7 @@ export const InboxIssueAppliedFiltersState = observer(function InboxIssueApplied
   if (filteredValues.length === 0) return <></>;
   return (
     <div className={APPLIED_FILTER_GROUP_CLASSNAME}>
-      <div className="text-caption-sm-regular text-secondary">State</div>
+      <div className="text-caption-sm-regular text-secondary">{t("common.state")}</div>
       {filteredValues.map((value) => {
         const optionDetail = currentOptionDetail(value);
         if (!optionDetail) return <></>;

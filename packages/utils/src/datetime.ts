@@ -5,7 +5,48 @@
  */
 
 import { differenceInDays, format, formatDistanceToNow, isAfter, isEqual, isValid, parseISO } from "date-fns";
+import { zhCN } from "date-fns/locale/zh-CN";
 import { isNumber } from "lodash-es";
+
+/** Resolve the same browser preference as i18n without coupling shared utilities to React/i18next. */
+export const getDateDisplayLocale = (): string => {
+  if (typeof window !== "undefined") {
+    try {
+      const language = window.localStorage.getItem("userLanguage");
+      if (language) return language;
+    } catch {
+      // Storage can be unavailable in restricted browser contexts; the document still carries the language.
+    }
+  }
+  return typeof document !== "undefined" ? document.documentElement.lang || "en" : "en";
+};
+
+export const isChineseDateLocale = (locale: string = getDateDisplayLocale()): boolean => locale === "zh-CN";
+
+/** Formatting locale only: never set date-fns defaults, which would also change week calculations. */
+export const getDateFnsLocale = (locale: string = getDateDisplayLocale()) =>
+  isChineseDateLocale(locale) ? zhCN : undefined;
+
+const CHINESE_DISPLAY_TOKENS: Record<string, string> = {
+  "MMM dd, yyyy": "yyyy年M月d日",
+  "MMM d, yyyy": "yyyy年M月d日",
+  "MMM dd": "M月d日",
+  "MMM d": "M月d日",
+  "MMM yyyy": "yyyy年M月",
+  "MMM, yyyy": "yyyy年M月",
+  "MMMM yyyy": "yyyy年M月",
+  "hh:mm a": "a hh:mm",
+};
+
+/** Localize display tokens while preserving numeric preferences and machine formats such as yyyy-MM-dd. */
+export const formatDateForDisplay = (
+  date: Date,
+  formatToken: string = "MMM dd, yyyy",
+  locale: string = getDateDisplayLocale()
+): string =>
+  format(date, isChineseDateLocale(locale) ? (CHINESE_DISPLAY_TOKENS[formatToken] ?? formatToken) : formatToken, {
+    locale: getDateFnsLocale(locale),
+  });
 
 // Format Date Helpers
 /**
@@ -18,7 +59,8 @@ import { isNumber } from "lodash-es";
  */
 export const renderFormattedDate = (
   date: string | Date | undefined | null,
-  formatToken: string = "MMM dd, yyyy"
+  formatToken: string = "MMM dd, yyyy",
+  locale: string = getDateDisplayLocale()
 ): string | undefined => {
   // Parse the date to check if it is valid
   const parsedDate = getDate(date);
@@ -29,10 +71,10 @@ export const renderFormattedDate = (
   let formattedDate;
   try {
     // Format the date in the format provided or default format (MMM dd, yyyy)
-    formattedDate = format(parsedDate, formatToken);
+    formattedDate = formatDateForDisplay(parsedDate, formatToken, locale);
   } catch (_e) {
     // Format the date in format (MMM dd, yyyy) in case of any error
-    formattedDate = format(parsedDate, "MMM dd, yyyy");
+    formattedDate = formatDateForDisplay(parsedDate, "MMM dd, yyyy", locale);
   }
   return formattedDate;
 };
@@ -43,7 +85,10 @@ export const renderFormattedDate = (
  * @param {string | Date} date
  * @example renderShortDateFormat("2024-01-01") // Jan 01
  */
-export const renderFormattedDateWithoutYear = (date: string | Date): string => {
+export const renderFormattedDateWithoutYear = (
+  date: string | Date,
+  locale: string = getDateDisplayLocale()
+): string => {
   // Parse the date to check if it is valid
   const parsedDate = getDate(date);
   // return if undefined
@@ -51,7 +96,7 @@ export const renderFormattedDateWithoutYear = (date: string | Date): string => {
   // Check if the parsed date is valid before formatting
   if (!isValid(parsedDate)) return ""; // Return empty string for invalid dates
   // Format the date in short format (MMM dd)
-  const formattedDate = format(parsedDate, "MMM dd");
+  const formattedDate = formatDateForDisplay(parsedDate, "MMM dd", locale);
   return formattedDate;
 };
 
@@ -82,7 +127,11 @@ export const renderFormattedPayloadDate = (date: Date | string | undefined | nul
  * @example renderFormattedTime("2024-01-01 13:00:00") // 13:00
  * @example renderFormattedTime("2024-01-01 13:00:00", "12-hour") // 01:00 PM
  */
-export const renderFormattedTime = (date: string | Date, timeFormat: "12-hour" | "24-hour" = "24-hour"): string => {
+export const renderFormattedTime = (
+  date: string | Date,
+  timeFormat: "12-hour" | "24-hour" = "24-hour",
+  locale: string = getDateDisplayLocale()
+): string => {
   // Parse the date to check if it is valid
   const parsedDate = new Date(date);
   // return if undefined
@@ -91,7 +140,7 @@ export const renderFormattedTime = (date: string | Date, timeFormat: "12-hour" |
   if (!isValid(parsedDate)) return ""; // Return empty string for invalid dates
   // Format the date in 12 hour format if in12HourFormat is true
   if (timeFormat === "12-hour") {
-    const formattedTime = format(parsedDate, "hh:mm a");
+    const formattedTime = formatDateForDisplay(parsedDate, "hh:mm a", locale);
     return formattedTime;
   }
   // Format the date in 24 hour format
@@ -168,52 +217,60 @@ export const findHowManyDaysLeft = (
  * @param {string | Date} time
  * @example calculateTimeAgo("2023-01-01") // 1 year ago
  */
-export const calculateTimeAgo = (time: string | number | Date | null): string => {
+export const calculateTimeAgo = (
+  time: string | number | Date | null,
+  locale: string = getDateDisplayLocale()
+): string => {
   if (!time) return "";
   // Parse the time to check if it is valid
   const parsedTime = typeof time === "string" || typeof time === "number" ? parseISO(String(time)) : time;
   // return if undefined
-  if (!parsedTime) return ""; // Return empty string for invalid dates
+  if (!parsedTime || !isValid(parsedTime)) return ""; // Return empty string for invalid dates
   // Format the time in the form of amount of time passed since the event happened
-  const distance = formatDistanceToNow(parsedTime, { addSuffix: true });
+  const distance = formatDistanceToNow(parsedTime, { addSuffix: true, locale: getDateFnsLocale(locale) });
   return distance;
 };
 
-export function calculateTimeAgoShort(date: string | number | Date | null): string {
+export function calculateTimeAgoShort(
+  date: string | number | Date | null,
+  locale: string = getDateDisplayLocale()
+): string {
   if (!date) {
     return "";
   }
 
   const parsedDate = typeof date === "string" ? parseISO(date) : new Date(date);
+  if (!isValid(parsedDate)) return "";
+  const isChinese = isChineseDateLocale(locale);
   const now = new Date();
   const diffInSeconds = (now.getTime() - parsedDate.getTime()) / 1000;
 
   if (diffInSeconds < 60) {
-    return `${Math.floor(diffInSeconds)}s`;
+    return `${Math.floor(diffInSeconds)}${isChinese ? "秒" : "s"}`;
   }
 
   const diffInMinutes = diffInSeconds / 60;
   if (diffInMinutes < 60) {
-    return `${Math.floor(diffInMinutes)}m`;
+    return `${Math.floor(diffInMinutes)}${isChinese ? "分钟" : "m"}`;
   }
 
   const diffInHours = diffInMinutes / 60;
   if (diffInHours < 24) {
-    return `${Math.floor(diffInHours)}h`;
+    return `${Math.floor(diffInHours)}${isChinese ? "小时" : "h"}`;
   }
 
   const diffInDays = diffInHours / 24;
   if (diffInDays < 30) {
-    return `${Math.floor(diffInDays)}d`;
+    return `${Math.floor(diffInDays)}${isChinese ? "天" : "d"}`;
   }
 
   const diffInMonths = diffInDays / 30;
   if (diffInMonths < 12) {
-    return `${Math.floor(diffInMonths)}mo`;
+    return `${Math.floor(diffInMonths)}${isChinese ? "个月" : "mo"}`;
   }
 
   const diffInYears = diffInMonths / 12;
-  return `${Math.floor(diffInYears)}y`;
+  return `${Math.floor(diffInYears)}${isChinese ? "年" : "y"}`;
 }
 
 // Date Validation Helpers
@@ -364,10 +421,14 @@ export const convertMinutesToHoursAndMinutes = (mins: number): { hours: number; 
  * @returns { string } 0h 0m
  * @example convertMinutesToHoursAndMinutes(150) // Output: 2h 10m
  */
-export const convertMinutesToHoursMinutesString = (totalMinutes: number): string => {
+export const convertMinutesToHoursMinutesString = (
+  totalMinutes: number,
+  locale: string = getDateDisplayLocale()
+): string => {
   const { hours, minutes } = convertMinutesToHoursAndMinutes(totalMinutes);
+  const isChinese = isChineseDateLocale(locale);
 
-  return `${hours ? `${hours}h ` : ``}${minutes ? `${minutes}m ` : ``}`;
+  return `${hours ? `${hours}${isChinese ? "小时" : "h"} ` : ``}${minutes ? `${minutes}${isChinese ? "分钟" : "m"} ` : ``}`;
 };
 
 /**
@@ -491,8 +552,18 @@ export const checkDateCriteria = (dateToCheck: Date | null, filterDate: Date, ty
  */
 export const formatDateRange = (
   parsedStartDate: Date | null | undefined,
-  parsedEndDate: Date | null | undefined
+  parsedEndDate: Date | null | undefined,
+  locale: string = getDateDisplayLocale()
 ): string => {
+  if (isChineseDateLocale(locale)) {
+    const start = parsedStartDate && isValid(parsedStartDate) ? parsedStartDate : undefined;
+    const end = parsedEndDate && isValid(parsedEndDate) ? parsedEndDate : undefined;
+    if (!start && !end) return "";
+    if (!start || !end) return formatDateForDisplay((start ?? end)!, "MMM dd, yyyy", locale);
+    const sameYear = start.getFullYear() === end.getFullYear();
+    const endToken = sameYear ? (start.getMonth() === end.getMonth() ? "d日" : "M月d日") : "yyyy年M月d日";
+    return `${formatDateForDisplay(start, "MMM dd, yyyy", locale)} - ${formatDateForDisplay(end, endToken, locale)}`;
+  }
   // If no dates are provided
   if (!parsedStartDate && !parsedEndDate) {
     return "";
@@ -548,16 +619,17 @@ export const formatDateRange = (
  * @example formatDuration(45) // "45 sec"
  * @example formatDuration(0.1223094) // "122.31 ms"
  */
-export const formatDuration = (seconds: number | undefined | null): string => {
+export const formatDuration = (seconds: number | undefined | null, locale: string = getDateDisplayLocale()): string => {
+  const isChinese = isChineseDateLocale(locale);
   // Return "N/A" if seconds is not a valid number
   if (seconds == null || typeof seconds !== "number" || !Number.isFinite(seconds) || seconds < 0) {
-    return "N/A";
+    return isChinese ? "暂无" : "N/A";
   }
 
   // If less than 1 second, show in ms (2 decimal places)
   if (seconds > 0 && seconds < 1) {
     const ms = seconds * 1000;
-    return `${ms.toFixed(2)} ms`;
+    return `${ms.toFixed(2)} ${isChinese ? "毫秒" : "ms"}`;
   }
 
   // Round to nearest second
@@ -572,15 +644,15 @@ export const formatDuration = (seconds: number | undefined | null): string => {
   const parts: string[] = [];
 
   if (hours > 0) {
-    parts.push(`${hours} hr`);
+    parts.push(`${hours} ${isChinese ? "小时" : "hr"}`);
   }
 
   if (minutes > 0) {
-    parts.push(`${minutes} min`);
+    parts.push(`${minutes} ${isChinese ? "分钟" : "min"}`);
   }
 
   if (remainingSeconds > 0 || parts.length === 0) {
-    parts.push(`${remainingSeconds} sec`);
+    parts.push(`${remainingSeconds} ${isChinese ? "秒" : "sec"}`);
   }
 
   return parts.join(" ");

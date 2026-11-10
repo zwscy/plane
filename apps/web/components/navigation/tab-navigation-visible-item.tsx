@@ -64,7 +64,7 @@ export function TabNavigationVisibleItem({
                 onHide(item.key);
               }}
               icon={<Icon icon={UnpinOutline} />}
-              label="Hide in more menu"
+              label={t("common.ui.hide_in_more_menu")}
             />
           </ContextMenuContent>
         </ContextMenu>

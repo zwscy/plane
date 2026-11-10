@@ -5,6 +5,7 @@
  */
 
 import type { ReactNode } from "react";
+import { useTranslation } from "@plane/i18n";
 import { HierarchyOutline } from "@makeplane/propel/icons";
 // plane imports
 import { ActivityTimelineItem, ActivityTimelineTimestamp } from "@plane/blocks/activity";
@@ -24,6 +25,7 @@ type TIssueActivityBlockComponent = {
 };
 
 export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent) {
+  const { currentLocale } = useTranslation();
   const { icon, activityId, ends, children, customUserName } = props;
   // hooks
   const {
@@ -46,10 +48,10 @@ export function IssueActivityBlockComponent(props: TIssueActivityBlockComponent)
       }
       timestamp={
         <ActivityTimelineTimestamp
-          tooltip={`${renderFormattedDate(activity.created_at)}, ${renderFormattedTime(activity.created_at)}`}
+          tooltip={`${renderFormattedDate(activity.created_at, undefined, currentLocale)}, ${renderFormattedTime(activity.created_at, undefined, currentLocale)}`}
           disableTooltip={isMobile}
         >
-          {calculateTimeAgo(activity.created_at)}
+          {calculateTimeAgo(activity.created_at, currentLocale)}
         </ActivityTimelineTimestamp>
       }
     >

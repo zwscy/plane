@@ -20,8 +20,10 @@ import { useProject } from "@/hooks/store/use-project";
 // plane web imports
 import { CommonProjectBreadcrumbs } from "@/components/breadcrumbs/common";
 import { useProjectCrumbProps } from "@/components/breadcrumbs/use-project-crumb-props";
+import { useTranslation } from "@plane/i18n";
 
 export const WorkItemDetailsHeader = observer(function WorkItemDetailsHeader() {
+  const { t } = useTranslation();
   // router
   const { workspaceSlug, workItem } = useParams();
   // store hooks
@@ -49,7 +51,7 @@ export const WorkItemDetailsHeader = observer(function WorkItemDetailsHeader() {
           <Breadcrumbs.Item
             component={
               <BreadcrumbLink
-                label="Work Items"
+                label={t("work_items")}
                 href={`/${workspaceSlug}/projects/${projectId}/issues/`}
                 icon={<WorkItemsOutline className="h-4 w-4 text-tertiary" />}
               />

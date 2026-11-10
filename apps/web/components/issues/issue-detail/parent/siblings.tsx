@@ -12,6 +12,7 @@ import type { TIssue } from "@plane/types";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 // types
 import { IssueParentSiblingItem } from "./sibling-item";
+import { useTranslation } from "@plane/i18n";
 
 export type TIssueParentSiblings = {
   workspaceSlug: string;
@@ -20,6 +21,7 @@ export type TIssueParentSiblings = {
 };
 
 export const IssueParentSiblings = observer(function IssueParentSiblings(props: TIssueParentSiblings) {
+  const { t } = useTranslation();
   const { workspaceSlug, currentIssue, parentIssue } = props;
   // hooks
   const {
@@ -42,7 +44,7 @@ export const IssueParentSiblings = observer(function IssueParentSiblings(props: 
     <div className="my-1">
       {isLoading ? (
         <div className="flex items-center gap-2 px-1 py-1 text-left text-caption-sm-regular whitespace-nowrap text-secondary">
-          Loading
+          {t("loading")}
         </div>
       ) : subIssueIds && subIssueIds.length > 0 ? (
         subIssueIds.map(
@@ -53,7 +55,7 @@ export const IssueParentSiblings = observer(function IssueParentSiblings(props: 
         )
       ) : (
         <div className="flex items-center gap-2 px-1 py-1 text-left text-caption-sm-regular whitespace-nowrap text-secondary">
-          No sibling work items
+          {t("common.ui.no_sibling_work_items")}
         </div>
       )}
     </div>

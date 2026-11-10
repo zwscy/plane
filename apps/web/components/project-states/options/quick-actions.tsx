@@ -61,7 +61,7 @@ export const StateQuickActions = observer(function StateQuickActions(props: TSta
       const errorStatus = error as { status: number; data: { error: string } };
       setToast({
         type: "error",
-        title: "Error!",
+        title: t("toast.error"),
         message:
           errorStatus.status === 400
             ? "This state contains some work items within it, please move them to some other state to delete this state."
@@ -79,11 +79,14 @@ export const StateQuickActions = observer(function StateQuickActions(props: TSta
         handleSubmit={handleDeleteState}
         isSubmitting={isDeleting}
         isOpen={isDeleteModalOpen}
-        title="Delete State"
+        title={t("common.ui.delete_state")}
         content={
           <>
-            Are you sure you want to delete state- <span className="font-medium text-primary">{state?.name}</span>? All
-            of the data related to the state will be permanently removed. This action cannot be undone.
+            {t("common.ui.are_you_sure_you_want_to_delete_state")}{" "}
+            <span className="font-medium text-primary">{state?.name}</span>
+            {t(
+              "common.ui.all_of_the_data_related_to_the_state_will_be_permanently_removed_this_action_cannot_be_undone"
+            )}
           </>
         }
       />

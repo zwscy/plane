@@ -140,7 +140,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
       ]);
       setToast({
         type: "success",
-        title: "Success",
+        title: t("success"),
         message: "Profile setup completed!",
       });
       // For Invited Users, they will skip all other steps and finish onboarding.
@@ -150,7 +150,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
     } catch {
       setToast({
         type: "error",
-        title: "Error",
+        title: t("error"),
         message: "Profile setup failed. Please try again!",
       });
     }
@@ -175,7 +175,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
     } catch {
       setToast({
         type: "error",
-        title: "Error",
+        title: t("error"),
         message: "User details update failed. Please try again!",
       });
     }
@@ -193,7 +193,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
       ]);
       setToast({
         type: "success",
-        title: "Success",
+        title: t("success"),
         message: "Profile setup completed!",
       });
       // For Invited Users, they will skip all other steps and finish onboarding.
@@ -203,7 +203,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
     } catch {
       setToast({
         type: "error",
-        title: "Error",
+        title: t("error"),
         message: "Profile setup failed. Please try again!",
       });
     }
@@ -278,7 +278,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                         </div>
                       </div>
                       <div className="pt-1 text-body-xs-medium text-accent-secondary hover:text-tertiary">
-                        Choose image
+                        {t("common.ui.choose_image")}
                       </div>
                     </div>
                   ) : (
@@ -299,7 +299,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     className="text-body-xs-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                     htmlFor="first_name"
                   >
-                    First name
+                    {t("first_name")}
                   </label>
                   <Controller
                     control={control}
@@ -340,7 +340,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                     className="text-body-xs-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                     htmlFor="last_name"
                   >
-                    Last name
+                    {t("last_name")}
                   </label>
                   <Controller
                     control={control}
@@ -400,11 +400,11 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                               value={value}
                               onChange={onChange}
                               ref={ref}
-                              placeholder="New password..."
+                              placeholder={t("auth.common.password.new_password.label")}
                               onFocus={() => setIsPasswordInputFocused(true)}
                               onBlur={() => setIsPasswordInputFocused(false)}
                               autoComplete="new-password"
-                              aria-label="New password..."
+                              aria-label={t("auth.common.password.new_password.label")}
                             />
                             <button
                               type="button"
@@ -483,7 +483,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   className="text-body-xs-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                   htmlFor="role"
                 >
-                  What role are you working on? Choose one.
+                  {t("common.ui.what_role_are_you_working_on_choose_one")}
                 </label>
                 <Controller
                   control={control}
@@ -518,7 +518,7 @@ export const ProfileSetup = observer(function ProfileSetup(props: Props) {
                   className="text-body-xs-medium text-tertiary after:ml-0.5 after:text-danger-primary after:content-['*']"
                   htmlFor="use_case"
                 >
-                  What is your domain expertise? Choose one or more.
+                  {t("common.ui.what_is_your_domain_expertise_choose_one_or_more")}
                 </label>
                 <Controller
                   control={control}

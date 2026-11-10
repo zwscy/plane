@@ -95,12 +95,12 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
       await updateEntity(workspaceSlug.toString(), entityDetails.project_id, entityDetails.id, formData).catch(() => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: `${isEpic ? "Epic" : "Work item"} could not be updated. Please try again.`,
         });
       });
     },
-    [entityDetails, isEpic, updateEntity, workspaceSlug]
+    [entityDetails, isEpic, updateEntity, workspaceSlug, t]
   );
 
   const handleUpdateAssignee = useCallback(
@@ -140,7 +140,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [createEntitySubscription, entityDetails, isSubscribed, removeEntitySubscription, workspaceSlug]);
+  }, [createEntitySubscription, entityDetails, isSubscribed, removeEntitySubscription, workspaceSlug, t]);
 
   const handleDeleteWorkItem = useCallback(() => {
     toggleDeleteIssueModal(true);
@@ -162,7 +162,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityDetails?.sequence_id, projectDetails?.identifier]);
+  }, [entityDetails?.sequence_id, projectDetails?.identifier, t]);
 
   const copyWorkItemTitleToClipboard = useCallback(() => {
     copyTextToClipboard(entityDetails?.name ?? "")
@@ -179,7 +179,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entityDetails?.name]);
+  }, [entityDetails?.name, t]);
 
   const copyWorkItemUrlToClipboard = useCallback(() => {
     const url = new URL(window.location.href);
@@ -197,7 +197,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         });
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [t]);
 
   return [
     {
@@ -325,7 +325,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         } catch {
           setToast({
             type: "error",
-            title: "Error!",
+            title: t("toast.error"),
             message: `${entityDetails.is_epic ? "Epic" : "Work item"} could not be updated. Please try again.`,
           });
         }
@@ -357,7 +357,7 @@ export const usePowerKWorkItemContextBasedCommands = (): TPowerKCommandConfig[] 
         } catch {
           setToast({
             type: "error",
-            title: "Error!",
+            title: t("toast.error"),
             message: `${entityDetails.is_epic ? "Epic" : "Work item"} could not be updated. Please try again.`,
           });
         }

@@ -15,12 +15,14 @@ import { cn, getFileURL } from "@plane/utils";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   id: string;
 };
 
 export const EditorUserMention = observer(function EditorUserMention(props: Props) {
+  const { t } = useTranslation();
   const { id } = props;
   // router
   const { projectId } = useParams();
@@ -40,7 +42,7 @@ export const EditorUserMention = observer(function EditorUserMention(props: Prop
   if (!userDetails) {
     return (
       <div className="not-prose inline rounded-sm bg-layer-1 px-1 py-0.5 text-tertiary no-underline">
-        @suspended user
+        {t("common.ui.suspended_user")}
       </div>
     );
   }

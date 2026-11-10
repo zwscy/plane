@@ -29,5 +29,12 @@ export const FilterAccess = observer(function FilterAccess(props: Props) {
     icon: <ProjectNetworkIcon iconKey={access.iconKey} />,
   }));
 
-  return <FilterSubmenu label="Access" options={options} appliedFilters={appliedFilters} onToggle={handleUpdate} />;
+  return (
+    <FilterSubmenu
+      label={t("common.ui.access")}
+      options={options}
+      appliedFilters={appliedFilters}
+      onToggle={handleUpdate}
+    />
+  );
 });

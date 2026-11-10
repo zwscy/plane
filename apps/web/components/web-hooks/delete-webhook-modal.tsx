@@ -12,6 +12,7 @@ import { setToast } from "@plane/blocks/toast";
 // hooks
 import { useWebhook } from "@/hooks/store/use-webhook";
 import { useAppRouter } from "@/hooks/use-app-router";
+import { useTranslation } from "@plane/i18n";
 
 interface IDeleteWebhook {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface IDeleteWebhook {
 }
 
 export function DeleteWebhookModal(props: IDeleteWebhook) {
+  const { t } = useTranslation();
   const { isOpen, onClose, webhookId: webhookIdProp } = props;
   // states
   const [isDeleting, setIsDeleting] = useState(false);
@@ -45,14 +47,14 @@ export function DeleteWebhookModal(props: IDeleteWebhook) {
       router.replace(`/${workspaceSlug}/settings/webhooks/`);
       setToast({
         type: "success",
-        title: "Success!",
-        message: "Webhook deleted successfully.",
+        title: t("toast.success"),
+        message: t("common.ui.webhook_deleted_successfully"),
       });
     } catch (_error) {
       setToast({
         type: "error",
-        title: "Error!",
-        message: "Webhook could not be deleted. Please try again.",
+        title: t("toast.error"),
+        message: t("common.ui.webhook_could_not_be_deleted_please_try_again"),
       });
     }
     setIsDeleting(false);
@@ -64,11 +66,12 @@ export function DeleteWebhookModal(props: IDeleteWebhook) {
       handleSubmit={handleDelete}
       isSubmitting={isDeleting}
       isOpen={isOpen}
-      title="Delete webhook"
+      title={t("common.ui.delete_webhook")}
       content={
         <>
-          Are you sure you want to delete this webhook? Future events will not be delivered to this webhook. This action
-          cannot be undone.
+          {t(
+            "common.ui.are_you_sure_you_want_to_delete_this_webhook_future_events_will_not_be_delivered_to_this_webhook_this_action_c"
+          )}
         </>
       }
     />

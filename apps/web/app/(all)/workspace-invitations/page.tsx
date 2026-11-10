@@ -24,12 +24,14 @@ import { useAppRouter } from "@/hooks/use-app-router";
 // wrappers
 import { AuthenticationWrapper } from "@/lib/wrappers/authentication-wrapper";
 import { WorkspaceService } from "@/services/workspace.service";
+import { useTranslation } from "@plane/i18n";
 // services
 
 // service initialization
 const workspaceService = new WorkspaceService();
 
 function WorkspaceInvitationPage() {
+  const { t } = useTranslation();
   // router
   const router = useAppRouter();
   // query params
@@ -86,17 +88,19 @@ function WorkspaceInvitationPage() {
               align="center"
               assetKey="invalid-link"
               assetClassName="size-40"
-              title="INVITATION NOT FOUND"
+              title={t("common.ui.invitation_not_found")}
             />
           ) : (
             <EmptyStateDetailed
               align="center"
               assetKey="inbox"
               title={`You have been invited to ${invitationDetail.workspace.name}`}
-              description="Your workspace is where you'll create projects, collaborate on your work items, and organize different streams of work in your Plane account."
+              description={t(
+                "common.ui.your_workspace_is_where_you_ll_create_projects_collaborate_on_your_work_items_and_organize_different_streams_o"
+              )}
               actions={[
-                { label: "Accept", variant: "primary", onClick: handleAccept },
-                { label: "Ignore", variant: "secondary", onClick: handleReject },
+                { label: t("inbox_issue.actions.accept"), variant: "primary", onClick: handleAccept },
+                { label: t("common.ui.ignore"), variant: "secondary", onClick: handleReject },
               ]}
             />
           )
@@ -106,13 +110,15 @@ function WorkspaceInvitationPage() {
               align="center"
               assetKey="project"
               title={`You are already a member of ${invitationDetail.workspace.name}`}
-              description="Your workspace is where you'll create projects, collaborate on your work items, and organize different streams of work in your Plane account."
+              description={t(
+                "common.ui.your_workspace_is_where_you_ll_create_projects_collaborate_on_your_work_items_and_organize_different_streams_o"
+              )}
               customButton={
                 <Button
                   variant="primary"
                   size="lg"
                   stretch="auto"
-                  label="Continue to home"
+                  label={t("common.ui.continue_to_home")}
                   nativeButton={false}
                   render={<Link href="/" />}
                 />
@@ -122,8 +128,10 @@ function WorkspaceInvitationPage() {
             <EmptyStateDetailed
               align="center"
               assetKey="invalid-link"
-              title="This invitation link is not active anymore."
-              description="Your workspace is where you'll create projects, collaborate on your work items, and organize different streams of work in your Plane account."
+              title={t("common.ui.this_invitation_link_is_not_active_anymore")}
+              description={t(
+                "common.ui.your_workspace_is_where_you_ll_create_projects_collaborate_on_your_work_items_and_organize_different_streams_o"
+              )}
               customButton={
                 <div className="flex flex-col items-center gap-4">
                   <Button
@@ -140,20 +148,20 @@ function WorkspaceInvitationPage() {
                       size="md"
                       href="https://github.com/makeplane"
                       external
-                      label="Star us on GitHub"
+                      label={t("home.star_us_on_github")}
                     />
                     <AnchorButton
                       variant="secondary"
                       size="md"
                       href="https://forum.plane.so"
                       external
-                      label="Join our community of active creators"
+                      label={t("common.ui.join_our_community_of_active_creators")}
                     />
                     <AnchorButton
                       variant="secondary"
                       size="md"
                       render={<Link href="/" />}
-                      label="Or start from an empty project"
+                      label={t("common.ui.or_start_from_an_empty_project")}
                     />
                   </div>
                 </div>

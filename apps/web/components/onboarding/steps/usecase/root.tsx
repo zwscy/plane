@@ -19,6 +19,15 @@ import { useUserProfile } from "@/hooks/store/user";
 // local imports
 import { CommonOnboardingHeader } from "../common";
 import type { TProfileSetupFormValues } from "../profile/root";
+import { useTranslation } from "@plane/i18n";
+
+const USE_CASE_LABELS: Record<string, string> = {
+  "Plan and track product roadmaps": "common.ui.use_case_roadmaps",
+  "Manage engineering sprints": "common.ui.use_case_sprints",
+  "Coordinate cross-functional projects": "common.ui.use_case_cross_functional",
+  "Replace our current tool": "common.ui.use_case_replace_tool",
+  "Just exploring": "common.ui.use_case_exploring",
+};
 
 type Props = {
   handleStepChange: (step: EOnboardingSteps, skipInvites?: boolean) => void;
@@ -29,6 +38,7 @@ const defaultValues = {
 };
 
 export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepChange }: Props) {
+  const { t } = useTranslation();
   // store hooks
   const { data: profile, updateUserProfile } = useUserProfile();
   // form info
@@ -53,13 +63,13 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
       [await updateUserProfile(profileUpdatePayload)];
       setToast({
         type: "success",
-        title: "Success",
+        title: t("success"),
         message: "Profile setup completed!",
       });
     } catch {
       setToast({
         type: "error",
-        title: "Error",
+        title: t("error"),
         message: "Profile setup failed. Please try again!",
       });
     }
@@ -83,11 +93,14 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-10">
       {/* Header */}
-      <CommonOnboardingHeader title="What brings you to Plane?" description="Tell us your goals and team size." />
+      <CommonOnboardingHeader
+        title={t("common.ui.what_brings_you_to_plane")}
+        description={t("common.ui.tell_us_your_goals_and_team_size")}
+      />
 
       {/* Use Case Selection */}
       <fieldset className="flex min-w-0 flex-col gap-3">
-        <legend className="mb-3 text-body-sm-semibold text-placeholder">Select one or more</legend>
+        <legend className="mb-3 text-body-sm-semibold text-placeholder">{t("common.ui.select_one_or_more")}</legend>
 
         <Controller
           control={control}
@@ -144,7 +157,7 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
                         "text-primary": !isSelected,
                       })}
                     >
-                      {useCase}
+                      {t(USE_CASE_LABELS[useCase])}
                     </span>
                   </button>
                 );
@@ -157,8 +170,15 @@ export const UseCaseSetupStep = observer(function UseCaseSetupStep({ handleStepC
 
       {/* Action Buttons */}
       <div className="space-y-3">
-        <Button variant="primary" type="submit" stretch="full" size="lg" disabled={isButtonDisabled} label="Continue" />
-        <Button variant="ghost" onClick={handleSkip} stretch="full" size="lg" label="Skip" />
+        <Button
+          variant="primary"
+          type="submit"
+          stretch="full"
+          size="lg"
+          disabled={isButtonDisabled}
+          label={t("common.continue")}
+        />
+        <Button variant="ghost" onClick={handleSkip} stretch="full" size="lg" label={t("common.ui.skip")} />
       </div>
     </form>
   );

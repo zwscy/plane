@@ -30,6 +30,7 @@ import { getAssetIdFromUrl, getFileURL, checkURLValidity } from "@plane/utils";
 import { useWorkspace } from "@/hooks/store/use-workspace";
 // services
 import { FileService } from "@/services/file.service";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   handleRemove: () => Promise<void>;
@@ -43,6 +44,7 @@ type Props = {
 const fileService = new FileService();
 
 export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadModal(props: Props) {
+  const { t } = useTranslation();
   const { handleRemove, isOpen, onClose, onSuccess, value } = props;
   // states
   const [image, setImage] = useState<File | null>(null);
@@ -89,7 +91,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
       console.log("error", error);
       setToast({
         type: "error",
-        title: "Error",
+        title: t("error"),
         message: error.error || "Something went wrong",
       });
     } finally {
@@ -127,7 +129,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
         <DialogMain>
           <DialogHeader>
             <DialogHeading>
-              <DialogTitle>Upload image</DialogTitle>
+              <DialogTitle>{t("common.ui.upload_image")}</DialogTitle>
             </DialogHeading>
           </DialogHeader>
           <DialogBody tabIndex={0}>
@@ -145,7 +147,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                     {image !== null || (value && value !== "") ? (
                       <>
                         <div className="absolute top-2 right-2 z-40">
-                          <Button type="button" variant="secondary" size="xs" stretch="auto" label="Edit" />
+                          <Button type="button" variant="secondary" size="xs" stretch="auto" label={t("edit")} />
                         </div>
                         <img
                           src={image ? URL.createObjectURL(image) : value ? getFileURL(value) : ""}
@@ -173,7 +175,9 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
                   </p>
                 )}
               </div>
-              <p className="text-body-xs-regular text-secondary">File formats supported- .jpeg, .jpg, .png, .webp</p>
+              <p className="text-body-xs-regular text-secondary">
+                {t("common.ui.file_formats_supported_jpeg_jpg_png_webp")}
+              </p>
             </div>
           </DialogBody>
         </DialogMain>
@@ -189,7 +193,7 @@ export const WorkspaceImageUploadModal = observer(function WorkspaceImageUploadM
               loading={isRemoving}
             />
           </DialogInfo>
-          <Button variant="secondary" size="md" stretch="auto" label="Cancel" onClick={handleClose} />
+          <Button variant="secondary" size="md" stretch="auto" label={t("cancel")} onClick={handleClose} />
           <Button
             variant="primary"
             size="md"

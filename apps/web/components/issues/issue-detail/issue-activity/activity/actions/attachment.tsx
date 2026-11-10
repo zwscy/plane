@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import { AttachOutline } from "@makeplane/propel/icons";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -14,6 +15,7 @@ import { IssueActivityBlockComponent, IssueLink } from "./";
 type TIssueAttachmentActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
 export const IssueAttachmentActivity = observer(function IssueAttachmentActivity(props: TIssueAttachmentActivity) {
+  const { t } = useTranslation();
   const { activityId, showIssue = true, ends } = props;
   // hooks
   const {
@@ -30,8 +32,13 @@ export const IssueAttachmentActivity = observer(function IssueAttachmentActivity
       ends={ends}
     >
       <>
-        {activity.verb === "created" ? `uploaded a new attachment` : `removed an attachment`}
-        {showIssue && (activity.verb === "created" ? ` to ` : ` from `)}
+        {activity.verb === "created"
+          ? t("common.ui.activity_uploaded_a_new_attachment")
+          : t("common.ui.activity_removed_an_attachment")}
+        {showIssue &&
+          (activity.verb === "created"
+            ? " " + t("common.ui.activity_to") + " "
+            : " " + t("common.ui.activity_from") + " ")}
         {showIssue && <IssueLink activityId={activityId} />}.
       </>
     </IssueActivityBlockComponent>

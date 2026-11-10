@@ -21,6 +21,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { CycleService } from "@/services/cycle.service";
 // local imports
 import { CycleForm } from "./form";
+import { useTranslation } from "@plane/i18n";
 
 type CycleModalProps = {
   isOpen: boolean;
@@ -34,6 +35,7 @@ type CycleModalProps = {
 const cycleService = new CycleService();
 
 export function CycleCreateUpdateModal(props: CycleModalProps) {
+  const { t } = useTranslation();
   const { isOpen, handleClose, data, workspaceSlug, projectId } = props;
   // states
   const [activeProject, setActiveProject] = useState<string | null>(null);
@@ -62,14 +64,14 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
 
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Cycle created successfully.",
+          title: t("toast.success"),
+          message: t("common.ui.cycle_created_successfully"),
         });
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err?.detail ?? "Error in creating cycle. Please try again.",
         });
       });
@@ -83,14 +85,14 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
       .then((_res) => {
         setToast({
           type: "success",
-          title: "Success!",
-          message: "Cycle updated successfully.",
+          title: t("toast.success"),
+          message: t("project_cycles.action.update.success.description"),
         });
       })
       .catch((err) => {
         setToast({
           type: "error",
-          title: "Error!",
+          title: t("toast.error"),
           message: err?.detail ?? "Error in updating cycle. Please try again.",
         });
       });
@@ -151,8 +153,10 @@ export function CycleCreateUpdateModal(props: CycleModalProps) {
     } else
       setToast({
         type: "error",
-        title: "Error!",
-        message: "You already have a cycle on the given dates, if you want to create a draft cycle, remove the dates.",
+        title: t("toast.error"),
+        message: t(
+          "common.ui.you_already_have_a_cycle_on_the_given_dates_if_you_want_to_create_a_draft_cycle_remove_the_dates"
+        ),
       });
   };
 

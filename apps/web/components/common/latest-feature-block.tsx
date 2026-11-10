@@ -10,8 +10,10 @@ import { useTheme } from "next-themes";
 import { ThoughtsOutline } from "@makeplane/propel/icons";
 // images
 import latestFeatures from "@/app/assets/onboarding/onboarding-pages.webp?url";
+import { useTranslation } from "@plane/i18n";
 
 export function LatestFeatureBlock() {
+  const { t } = useTranslation();
   const { resolvedTheme } = useTheme();
 
   return (
@@ -19,9 +21,11 @@ export function LatestFeatureBlock() {
       <div className="mx-auto mt-16 flex rounded-[3.5px] border border-subtle bg-surface-1 py-2 sm:w-96">
         <ThoughtsOutline className="mx-3 mr-2 h-7 w-7" />
         <p className="text-left text-body-xs-regular text-primary">
-          Pages gets a facelift! Write anything and use Galileo to help you start.{" "}
+          {t("common.ui.latest_pages_feature")}{" "}
           <Link href="https://plane.so/changelog" target="_blank" rel="noopener noreferrer">
-            <span className="text-body-xs-medium underline hover:cursor-pointer">Learn more</span>
+            <span className="text-body-xs-medium underline hover:cursor-pointer">
+              {t("wiki.upgrade_flow.learn_more_button.text")}
+            </span>
           </Link>
         </p>
       </div>

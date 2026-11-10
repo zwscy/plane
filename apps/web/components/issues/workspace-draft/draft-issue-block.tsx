@@ -26,6 +26,7 @@ import { CreateUpdateIssueModal } from "../issue-modal/modal";
 import { WorkspaceDraftIssueDeleteIssueModal } from "./delete-modal";
 import { DraftIssueProperties } from "./draft-issue-properties";
 import { WorkspaceDraftIssueQuickActions } from "./quick-action";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   workspaceSlug: string;
@@ -33,6 +34,7 @@ type Props = {
 };
 
 export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
+  const { t } = useTranslation();
   // props
   const { workspaceSlug, issueId } = props;
   // states
@@ -68,7 +70,7 @@ export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
   const MENU_ITEMS: TContextMenuItem[] = [
     {
       key: "edit",
-      title: "edit",
+      title: t("edit"),
       icon: EditOutline,
       action: () => {
         setIssueToEdit(issue);
@@ -77,7 +79,7 @@ export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
     },
     {
       key: "make-a-copy",
-      title: "make_a_copy",
+      title: t("make_a_copy"),
       icon: CopyOutline,
       action: () => {
         setCreateUpdateIssueModal(true);
@@ -85,7 +87,7 @@ export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
     },
     {
       key: "move-to-issues",
-      title: "move_to_project",
+      title: t("move_to_project"),
       icon: SquareStackOutline,
       action: () => {
         setMoveToIssue(true);
@@ -95,7 +97,7 @@ export const DraftIssueBlock = observer(function DraftIssueBlock(props: Props) {
     },
     {
       key: "delete",
-      title: "delete",
+      title: t("delete"),
       icon: DeleteOutline,
       action: () => {
         setDeleteIssueModal(true);

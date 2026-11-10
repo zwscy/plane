@@ -11,6 +11,7 @@ import { EViewAccess } from "@plane/types";
 // components
 import { FilterCreatedDate } from "@/components/common/filters/created-at";
 import { FilterCreatedBy } from "@/components/common/filters/created-by";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   filters: TViewFilters;
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export const ViewFiltersSelection = observer(function ViewFiltersSelection(props: Props) {
+  const { t } = useTranslation();
   const { filters, handleFiltersUpdate, memberIds } = props;
 
   // handles filter update
@@ -48,7 +50,7 @@ export const ViewFiltersSelection = observer(function ViewFiltersSelection(props
   return (
     <>
       <MenuCheckboxItem
-        label="Favorites"
+        label={t("favorites")}
         checked={!!filters.filters?.favorites}
         onCheckedChange={(checked) =>
           handleFiltersUpdate("filters", {

@@ -33,6 +33,7 @@ import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 import { calculateIdentifierWidth } from "../utils";
 import type { TRenderQuickActions } from "./list-view-types";
+import { useTranslation } from "@plane/i18n";
 
 interface IssueBlockProps {
   issueId: string;
@@ -54,6 +55,7 @@ interface IssueBlockProps {
 }
 
 export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
+  const { t } = useTranslation();
   const {
     issuesMap,
     issueId,
@@ -197,7 +199,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
           if (!isDraggingAllowed) {
             setToast({
               type: "warning",
-              title: "Cannot move work item",
+              title: t("common.ui.cannot_move_work_item"),
               message: !canEditIssueProperties
                 ? "You are not allowed to move this work item"
                 : "Drag and drop is disabled for the current grouping",
@@ -211,7 +213,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
               {/* select checkbox */}
               {projectId && canSelectIssues && !isEpic && (
                 <Tooltip
-                  label="Only work items within the current project can be selected."
+                  label={t("common.ui.only_work_items_within_the_current_project_can_be_selected")}
                   layout="stacked"
                   disabled={issue.project_id === projectId}
                 >

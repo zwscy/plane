@@ -9,6 +9,7 @@ import React from "react";
 import { AreaChart } from "@plane/blocks/charts/area-chart";
 import type { TChartData, TModuleCompletionChartDistribution } from "@plane/types";
 import { renderFormattedDateWithoutYear } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   distribution: TModuleCompletionChartDistribution;
@@ -18,6 +19,7 @@ type Props = {
 };
 
 function ProgressChart({ distribution, totalIssues, className = "", plotTitle = "work items" }: Props) {
+  const { t } = useTranslation();
   const chartData: TChartData<string, string>[] = Object.keys(distribution ?? []).map((key, index) => ({
     name: renderFormattedDateWithoutYear(key),
     current: distribution[key] ?? 0,
@@ -56,8 +58,8 @@ function ProgressChart({ distribution, totalIssues, className = "", plotTitle = 
             },
           },
         ]}
-        xAxis={{ key: "name", label: "Date" }}
-        yAxis={{ key: "current", label: "Completion" }}
+        xAxis={{ key: "name", label: t("date") }}
+        yAxis={{ key: "current", label: t("common.completion") }}
         margin={{ bottom: 30 }}
         className="h-[370px] w-full"
         legend={{

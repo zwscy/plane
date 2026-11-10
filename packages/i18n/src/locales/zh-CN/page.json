@@ -98,8 +98,8 @@
         "workspace_to_project": "搜索项目",
         "project_to_all": "搜索项目和团队空间",
         "project_to_project": "搜索项目",
-        "project_to_all_with_wiki": "搜索 Wiki 集合、项目和团队空间",
-        "project_to_project_with_wiki": "搜索 Wiki 集合和项目"
+        "project_to_all_with_wiki": "搜索知识库集合、项目和团队空间",
+        "project_to_project_with_wiki": "搜索知识库集合和项目"
       },
       "toasts": {
         "success": {
@@ -111,8 +111,8 @@
           "message": "无法移动页面。请稍后重试。"
         },
         "collection_error": {
-          "title": "已移动到 Wiki",
-          "message": "页面已移动到 Wiki，但无法添加到所选集合中。它会保留在 General 中。"
+          "title": "已移动到知识库",
+          "message": "页面已移动到知识库，但无法添加到所选集合中。它会保留在“常规”集合中。"
         }
       }
     },

@@ -18,6 +18,7 @@ import { TOOLBAR_ITEMS } from "@plane/editor";
 import type { TSticky } from "@plane/types";
 // local imports
 import { ColorPalette } from "./color-palette";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   executeCommand: (item: ToolbarMenuItem) => void;
@@ -33,6 +34,7 @@ const toolbarItems = TOOLBAR_ITEMS.sticky;
 const preserveEditorFocus = (e: React.MouseEvent) => e.preventDefault();
 
 export function StickyEditorToolbar(props: Props) {
+  const { t } = useTranslation();
   const { executeCommand, editorRef, handleColorChange, handleDelete } = props;
 
   // State to manage active states of toolbar items
@@ -67,14 +69,14 @@ export function StickyEditorToolbar(props: Props) {
     <TooltipProvider>
       <div className="flex h-full w-full items-center justify-between">
         <div className="-ml-2.5 flex items-center">
-          <Toolbar size="sm" elevation="flat" aria-label="Formatting toolbar">
+          <Toolbar size="sm" elevation="flat" aria-label={t("common.ui.formatting_toolbar")}>
             {/* color palette */}
             <Popover open={showColorPalette} onOpenChange={setShowColorPalette}>
-              <Tooltip label="Background color">
+              <Tooltip label={t("background_color")}>
                 <PopoverTrigger
                   render={
                     <ToolbarButton
-                      aria-label="Background color"
+                      aria-label={t("background_color")}
                       icon={<Icon icon={PaletteOutline} />}
                       onMouseDown={preserveEditorFocus}
                     />
@@ -108,7 +110,7 @@ export function StickyEditorToolbar(props: Props) {
           <IconButton
             variant="ghost"
             size="sm"
-            aria-label="Delete"
+            aria-label={t("delete")}
             icon={<Icon icon={DeleteOutline} />}
             onClick={handleDelete}
           />

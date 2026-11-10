@@ -33,7 +33,7 @@ export function SidebarStatusSelect({ control, submitChanges, watch }: Props) {
     <div className="flex flex-wrap items-center py-2">
       <div className="flex items-center gap-x-2 text-body-xs-regular sm:basis-1/2">
         <StateOutline className="h-4 w-4 flex-shrink-0" />
-        <p>Status</p>
+        <p>{t("common.status")}</p>
       </div>
       <div className="sm:basis-1/2">
         <Controller

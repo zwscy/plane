@@ -32,6 +32,7 @@ import { WorkspaceService } from "@/services/workspace.service";
 // services
 import { ProjectPageService, ProjectPageVersionService } from "@/services/page";
 import type { Route } from "./+types/page";
+import { useTranslation } from "@plane/i18n";
 const workspaceService = new WorkspaceService();
 const projectPageService = new ProjectPageService();
 const projectPageVersionService = new ProjectPageVersionService();
@@ -39,6 +40,7 @@ const projectPageVersionService = new ProjectPageVersionService();
 const storeType = EPageStoreType.PROJECT;
 
 function PageDetailsPage({ params }: Route.ComponentProps) {
+  const { t } = useTranslation();
   // router
   const router = useAppRouter();
   const { workspaceSlug, projectId, pageId } = params;
@@ -160,17 +162,15 @@ function PageDetailsPage({ params }: Route.ComponentProps) {
   if (pageDetailsError || !canCurrentUserAccessPage)
     return (
       <div className="flex h-full w-full flex-col items-center justify-center">
-        <h3 className="text-center text-body-md-semibold">Page not found</h3>
-        <p className="mt-3 text-center text-body-xs-regular text-secondary">
-          The page you are trying to access doesn{"'"}t exist or you don{"'"}t have permission to view it.
-        </p>
+        <h3 className="text-center text-body-md-semibold">{t("common.ui.page_not_found")}</h3>
+        <p className="mt-3 text-center text-body-xs-regular text-secondary">{t("common.ui.not_a_page_member")}</p>
         <Button
           variant="secondary"
           size="sm"
           stretch="auto"
           render={<Link href={`/${workspaceSlug}/projects/${projectId}/pages`} className="mt-5" />}
         >
-          View other Pages
+          {t("common.ui.view_other_pages")}
         </Button>
       </div>
     );

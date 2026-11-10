@@ -73,7 +73,7 @@ export const ProfileActivity = observer(function ProfileActivity() {
                       <ActivityMessage activity={activity} showIssue />
                     ) : (
                       <span>
-                        created <IssueLink activity={activity} />
+                        {t("created")} <IssueLink activity={activity} />
                       </span>
                     )}{" "}
                     <span className="text-caption-sm-regular whitespace-nowrap text-secondary">

@@ -6,6 +6,7 @@
 
 import React from "react";
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 // types
 import type { TIssue } from "@plane/types";
 // helpers
@@ -17,11 +18,12 @@ type Props = {
 };
 
 export const SpreadsheetCreatedOnColumn = observer(function SpreadsheetCreatedOnColumn(props: Props) {
+  const { currentLocale } = useTranslation();
   const { issue } = props;
 
   return (
     <Row className="flex h-11 w-full items-center border-b-[0.5px] border-subtle group-[.selected-issue-row]:bg-accent-primary/5 hover:bg-layer-transparent-hover group-[.selected-issue-row]:hover:bg-accent-primary/10">
-      {renderFormattedDate(issue.created_at)}
+      {renderFormattedDate(issue.created_at, undefined, currentLocale)}
     </Row>
   );
 });

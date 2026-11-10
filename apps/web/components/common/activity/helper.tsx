@@ -77,17 +77,45 @@ export const iconsMap: ActivityIconMap = {
   intake_view: IntakeOutline,
 };
 
-export const messages = (activity: TProjectActivity): { message: string | ReactNode; customUserName?: string } => {
+export const messages = (
+  activity: TProjectActivity,
+  t: (key: string) => string,
+  currentLocale: string
+): { message: string | ReactNode; customUserName?: string } => {
   const activityType = activity.field;
   const newValue = activity.new_value;
   const oldValue = activity.old_value;
   const verb = activity.verb;
   const workspaceDetail = store.workspaceRoot.getWorkspaceById(activity.workspace);
 
+  const verbKeys: Record<string, string> = {
+    created: "common.ui.activity_created",
+    updated: "common.ui.activity_updated",
+    deleted: "common.ui.activity_deleted",
+    added: "common.ui.activity_added",
+    removed: "common.ui.activity_removed",
+    enabled: "common.ui.activity_enabled",
+    disabled: "common.ui.activity_disabled",
+  };
+  const translatedVerb = currentLocale === "zh-CN" && verbKeys[verb] ? t(verbKeys[verb]) : verb;
+  const viewNames: Record<string, string> = {
+    module_view: "common.module",
+    cycle_view: "common.cycle",
+    issue_views_view: "sidebar.views",
+    page_view: "common.page",
+    intake_view: "sidebar.intake",
+  };
+  const priority =
+    currentLocale === "zh-CN" &&
+    newValue &&
+    ["urgent", "high", "medium", "low", "none"].includes(newValue.toLowerCase())
+      ? t(newValue.toLowerCase() === "none" ? "none" : `issue.priority.${newValue.toLowerCase()}`)
+      : newValue;
+
   const getBooleanActionText = (value: string | undefined) => {
-    if (value === "true") return "enabled";
-    if (value === "false") return "disabled";
-    return verb;
+    if (value === "true") return t("common.ui.activity_enabled");
+    if (value === "false") return t("common.ui.activity_disabled");
+    return translatedVerb;
   };
 
   switch (activityType) {
@@ -95,26 +123,33 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
       return {
         message: (
           <>
-            set the priority to <span className="font-medium text-primary">{newValue || "none"}</span>
+            {t("common.ui.activity_set_the_priority_to") + " "}
+            <span className="font-medium text-primary">{priority || t("common.ui.activity_none")}</span>
           </>
         ),
       };
     case "archived_at":
       return {
-        message: newValue === "restore" ? "restored the project" : "archived the project",
+        message:
+          newValue === "restore"
+            ? t("common.ui.activity_restored_the_project")
+            : t("common.ui.activity_archived_the_project"),
         customUserName: newValue === "archive" ? "Plane" : undefined,
       };
     case "name":
       return {
         message: (
           <>
-            renamed the project to <span className="font-medium text-primary">{newValue}</span>
+            {t("common.ui.activity_renamed_the_project_to") + " "}
+            <span className="font-medium text-primary">{newValue}</span>
           </>
         ),
       };
     case "description":
       return {
-        message: newValue ? "updated the project description" : "removed the project description",
+        message: newValue
+          ? t("common.ui.activity_updated_the_project_description")
+          : t("common.ui.activity_removed_the_project_description"),
       };
     case "start_date":
       return {
@@ -122,10 +157,11 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
           <>
             {newValue ? (
               <>
-                set the start date to <span className="font-medium text-primary">{newValue}</span>
+                {t("common.ui.activity_set_the_start_date_to") + " "}
+                <span className="font-medium text-primary">{newValue}</span>
               </>
             ) : (
-              "removed the start date"
+              t("common.ui.activity_removed_the_start_date")
             )}
           </>
         ),
@@ -136,10 +172,11 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
           <>
             {newValue ? (
               <>
-                set the target date to <span className="font-medium text-primary">{newValue}</span>
+                {t("common.ui.activity_set_the_target_date_to") + " "}
+                <span className="font-medium text-primary">{newValue}</span>
               </>
             ) : (
-              "removed the target date"
+              t("common.ui.activity_removed_the_target_date")
             )}
           </>
         ),
@@ -148,7 +185,8 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
       return {
         message: (
           <>
-            set the state to <span className="font-medium text-primary">{newValue || "none"}</span>
+            {t("common.ui.activity_set_the_state_to") + " "}
+            <span className="font-medium text-primary">{newValue || t("common.ui.activity_none")}</span>
           </>
         ),
       };
@@ -158,11 +196,12 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
           <>
             {newValue ? (
               <>
-                set the estimate point to <span className="font-medium text-primary">{newValue}</span>
+                {t("common.ui.activity_set_the_estimate_point_to") + " "}
+                <span className="font-medium text-primary">{newValue}</span>
               </>
             ) : (
               <>
-                removed the estimate point
+                {t("common.ui.activity_removed_the_estimate_point")}
                 {oldValue && (
                   <>
                     {" "}
@@ -179,7 +218,9 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
         message: (
           <>
             <span>
-              {verb} this project {verb === "removed" ? "from" : "to"} the cycle{" "}
+              {translatedVerb} {t("common.ui.activity_this_project")}{" "}
+              {verb === "removed" ? t("common.ui.activity_from") : t("common.ui.activity_to")}{" "}
+              {t("common.ui.activity_the_cycle")}{" "}
             </span>
             {verb !== "removed" ? (
               <a
@@ -191,7 +232,9 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
                 {activity.new_value}
               </a>
             ) : (
-              <span className="font-medium text-primary">{activity.old_value || "Unknown cycle"}</span>
+              <span className="font-medium text-primary">
+                {activity.old_value || t("common.ui.activity_unknown_cycle")}
+              </span>
             )}
           </>
         ),
@@ -201,10 +244,12 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
         message: (
           <>
             <span>
-              {verb} this project {verb === "removed" ? "from" : "to"} the module{" "}
+              {translatedVerb} {t("common.ui.activity_this_project")}{" "}
+              {verb === "removed" ? t("common.ui.activity_from") : t("common.ui.activity_to")}{" "}
+              {t("common.ui.activity_the_module")}{" "}
             </span>
             <span className="font-medium text-primary">
-              {verb === "removed" ? oldValue : newValue || "Unknown module"}
+              {verb === "removed" ? oldValue : newValue || t("common.ui.activity_unknown_module")}
             </span>
           </>
         ),
@@ -213,33 +258,49 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
       return {
         message: (
           <>
-            {verb} the label{" "}
-            <span className="font-medium text-primary">{newValue || oldValue || "Untitled label"}</span>
+            {translatedVerb} {" " + t("common.ui.activity_the_label")}{" "}
+            <span className="font-medium text-primary">
+              {newValue || oldValue || t("common.ui.activity_untitled_label")}
+            </span>
           </>
         ),
       };
     case "inbox":
       return {
-        message: <>{newValue ? "enabled" : "disabled"} inbox</>,
+        message: (
+          <>
+            {newValue ? t("common.ui.activity_enabled") : t("common.ui.activity_disabled")}{" "}
+            {" " + t("common.ui.activity_inbox")}
+          </>
+        ),
       };
     case "page":
       return {
         message: (
           <>
-            {newValue ? "created" : "removed"} the project page{" "}
-            <span className="font-medium text-primary">{newValue || oldValue || "Untitled page"}</span>
+            {newValue ? t("common.ui.activity_created") : t("common.ui.activity_removed")}{" "}
+            {" " + t("common.ui.activity_the_project_page")}{" "}
+            <span className="font-medium text-primary">
+              {newValue || oldValue || t("common.ui.activity_untitled_page")}
+            </span>
           </>
         ),
       };
     case "network":
       return {
-        message: <>{newValue ? "enabled" : "disabled"} network access</>,
+        message: (
+          <>
+            {newValue ? t("common.ui.activity_enabled") : t("common.ui.activity_disabled")}{" "}
+            {" " + t("common.ui.activity_network_access")}
+          </>
+        ),
       };
     case "identifier":
       return {
         message: (
           <>
-            updated project identifier to <span className="font-medium text-primary">{newValue || "none"}</span>
+            {t("common.ui.activity_updated_project_identifier_to") + " "}
+            <span className="font-medium text-primary">{newValue || t("common.ui.activity_none")}</span>
           </>
         ),
       };
@@ -247,7 +308,8 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
       return {
         message: (
           <>
-            changed project timezone to <span className="font-medium text-primary">{newValue || "default"}</span>
+            {t("common.ui.activity_changed_project_timezone_to") + " "}
+            <span className="font-medium text-primary">{newValue || t("common.ui.activity_default")}</span>
           </>
         ),
       };
@@ -259,33 +321,60 @@ export const messages = (activity: TProjectActivity): { message: string | ReactN
       return {
         message: (
           <>
-            {getBooleanActionText(newValue)} {activityType.replace(/_view$/, "").replace(/_/g, " ")} view
+            {getBooleanActionText(newValue)}{" "}
+            {currentLocale === "zh-CN"
+              ? t(viewNames[activityType])
+              : activityType.replace(/_view$/, "").replace(/_/g, " ")}{" "}
+            {" " + t("common.ui.activity_view")}
           </>
         ),
       };
     case "is_project_updates_enabled":
       return {
-        message: <>{getBooleanActionText(newValue)} project updates</>,
+        message: (
+          <>
+            {getBooleanActionText(newValue)} {" " + t("common.ui.activity_project_updates")}
+          </>
+        ),
       };
     case "is_epic_enabled":
       return {
-        message: <>{getBooleanActionText(newValue)} epics</>,
+        message: (
+          <>
+            {getBooleanActionText(newValue)} {" " + t("common.ui.activity_epics")}
+          </>
+        ),
       };
     case "is_workflow_enabled":
       return {
-        message: <>{getBooleanActionText(newValue)} custom workflow</>,
+        message: (
+          <>
+            {getBooleanActionText(newValue)} {" " + t("common.ui.activity_custom_workflow")}
+          </>
+        ),
       };
     case "is_time_tracking_enabled":
       return {
-        message: <>{getBooleanActionText(newValue)} time tracking</>,
+        message: (
+          <>
+            {getBooleanActionText(newValue)} {" " + t("common.ui.activity_time_tracking")}
+          </>
+        ),
       };
     case "is_issue_type_enabled":
       return {
-        message: <>{getBooleanActionText(newValue)} work item types</>,
+        message: (
+          <>
+            {getBooleanActionText(newValue)} {" " + t("common.ui.activity_work_item_types")}
+          </>
+        ),
       };
     default:
       return {
-        message: `${verb} ${activityType?.replace(/_/g, " ")} `,
+        message:
+          currentLocale === "zh-CN"
+            ? t("common.ui.activity_updated_project_settings")
+            : `${verb} ${activityType?.replace(/_/g, " ")} `,
       };
   }
 };

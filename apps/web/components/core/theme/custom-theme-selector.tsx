@@ -80,7 +80,7 @@ export const CustomThemeSelector = observer(function CustomThemeSelector() {
       setToast({
         type: "success",
         title: t("success"),
-        message: "Reloading to apply changes...",
+        message: t("common.ui.reloading_to_apply_changes"),
       });
       // reload the page after showing the toast
       setTimeout(() => {

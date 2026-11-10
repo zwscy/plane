@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import { ArchiveOutline, RefreshOutline } from "@makeplane/propel/icons";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -15,6 +16,7 @@ import { IssueActivityBlockComponent } from "./";
 type TIssueArchivedAtActivity = { activityId: string; ends: "top" | "bottom" | undefined };
 
 export const IssueArchivedAtActivity = observer(function IssueArchivedAtActivity(props: TIssueArchivedAtActivity) {
+  const { t } = useTranslation();
   const { activityId, ends } = props;
   // hooks
   const {
@@ -38,7 +40,10 @@ export const IssueArchivedAtActivity = observer(function IssueArchivedAtActivity
       ends={ends}
       customUserName={activity.new_value === "archive" ? "Plane" : undefined}
     >
-      {activity.new_value === "restore" ? "restored the work item" : "archived the work item"}.
+      {activity.new_value === "restore"
+        ? t("common.ui.activity_restored_the_work_item")
+        : t("common.ui.activity_archived_the_work_item")}
+      .
     </IssueActivityBlockComponent>
   );
 });

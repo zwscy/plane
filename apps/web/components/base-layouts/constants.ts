@@ -11,16 +11,16 @@ export const BASE_LAYOUTS: IBaseLayoutConfig[] = [
   {
     key: "list",
     icon: ListOutline,
-    label: "List Layout",
+    label: "issue.layouts.title.list",
   },
   {
     key: "kanban",
     icon: BoardOutline,
-    label: "Board Layout",
+    label: "issue.layouts.title.kanban",
   },
   {
     key: "gantt",
     icon: TimelineOutline,
-    label: "Gantt Layout",
+    label: "issue.layouts.title.gantt",
   },
 ];

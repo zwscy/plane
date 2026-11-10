@@ -13,6 +13,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { IState } from "@plane/types";
 // hooks
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { useTranslation } from "@plane/i18n";
 
 type TStateDeleteModal = {
   isOpen: boolean;
@@ -21,6 +22,7 @@ type TStateDeleteModal = {
 };
 
 export const StateDeleteModal = observer(function StateDeleteModal(props: TStateDeleteModal) {
+  const { t } = useTranslation();
   const { isOpen, onClose, data } = props;
   // states
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
@@ -45,15 +47,16 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
       if ((err as { status?: number })?.status === 400)
         setToast({
           type: "error",
-          title: "Error!",
-          message:
-            "This state contains some work items within it, please move them to some other state to delete this state.",
+          title: t("toast.error"),
+          message: t(
+            "common.ui.this_state_contains_some_work_items_within_it_please_move_them_to_some_other_state_to_delete_this_state"
+          ),
         });
       else
         setToast({
           type: "error",
-          title: "Error!",
-          message: "State could not be deleted. Please try again.",
+          title: t("toast.error"),
+          message: t("common.ui.state_could_not_be_deleted_please_try_again"),
         });
     } finally {
       setIsDeleteLoading(false);
@@ -66,11 +69,12 @@ export const StateDeleteModal = observer(function StateDeleteModal(props: TState
       handleSubmit={handleDeletion}
       isSubmitting={isDeleteLoading}
       isOpen={isOpen}
-      title="Delete State"
+      title={t("common.ui.delete_state")}
       content={
         <>
-          Are you sure you want to delete state- <span className="font-medium text-primary">{data?.name}</span>? All of
-          the data related to the state will be permanently removed. This action cannot be undone.
+          {t("common.ui.are_you_sure_you_want_to_delete_state")}{" "}
+          <span className="font-medium text-primary">{data?.name}</span>
+          {t("common.ui.all_of_the_data_related_to_the_state_will_be_permanently_removed_this_action_cannot_be_undone")}
         </>
       }
     />

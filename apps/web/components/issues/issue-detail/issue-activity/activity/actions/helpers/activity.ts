@@ -6,24 +6,29 @@
 
 import type { TIssueActivity } from "@plane/types";
 
-export const getRelationActivityContent = (activity: TIssueActivity | undefined): string | undefined => {
+export const getRelationActivityContent = (
+  activity: TIssueActivity | undefined,
+  t: (key: string) => string
+): string | undefined => {
   if (!activity) return;
 
   switch (activity.field) {
     case "blocking":
       return activity.old_value === ""
-        ? `marked this work item is blocking work item `
-        : `removed the blocking work item `;
+        ? t("common.ui.activity_marked_this_work_item_is_blocking_work_item") + " "
+        : t("common.ui.activity_removed_the_blocking_work_item") + " ";
     case "blocked_by":
       return activity.old_value === ""
-        ? `marked this work item is being blocked by `
-        : `removed this work item being blocked by work item `;
+        ? t("common.ui.activity_marked_this_work_item_is_being_blocked_by") + " "
+        : t("common.ui.activity_removed_this_work_item_being_blocked_by_work_item") + " ";
     case "duplicate":
       return activity.old_value === ""
-        ? `marked this work item as duplicate of `
-        : `removed this work item as a duplicate of `;
+        ? t("common.ui.activity_marked_this_work_item_as_duplicate_of") + " "
+        : t("common.ui.activity_removed_this_work_item_as_a_duplicate_of") + " ";
     case "relates_to":
-      return activity.old_value === "" ? `marked that this work item relates to ` : `removed the relation from `;
+      return activity.old_value === ""
+        ? t("common.ui.activity_marked_that_this_work_item_relates_to") + " "
+        : t("common.ui.activity_removed_the_relation_from") + " ";
   }
 
   return;

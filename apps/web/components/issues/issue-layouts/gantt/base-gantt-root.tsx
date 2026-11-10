@@ -102,10 +102,10 @@ export const BaseGanttRoot = observer(function BaseGanttRoot(props: IBaseGanttRo
         setToast({
           type: "error",
           title: t("toast.error"),
-          message: "Error while updating work item dates, Please try again Later",
+          message: t("common.ui.update_work_item_dates_failed"),
         });
       }),
-    [issues, projectId, workspaceSlug]
+    [issues, projectId, workspaceSlug, t]
   );
 
   const quickAdd =

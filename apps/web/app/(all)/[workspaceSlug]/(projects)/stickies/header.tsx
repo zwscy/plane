@@ -17,8 +17,10 @@ import { StickySearch } from "@/components/stickies/modal/search";
 import { useStickyOperations } from "@/components/stickies/sticky/use-operations";
 // hooks
 import { useSticky } from "@/hooks/use-stickies";
+import { useTranslation } from "@plane/i18n";
 
 export const WorkspaceStickyHeader = observer(function WorkspaceStickyHeader() {
+  const { t } = useTranslation();
   const { workspaceSlug } = useParams();
   // hooks
   const { creatingSticky, toggleShowNewSticky } = useSticky();
@@ -32,7 +34,10 @@ export const WorkspaceStickyHeader = observer(function WorkspaceStickyHeader() {
             <Breadcrumbs>
               <Breadcrumbs.Item
                 component={
-                  <BreadcrumbLink label="Stickies" icon={<MultipleStickyOutline className="size-4 text-tertiary" />} />
+                  <BreadcrumbLink
+                    label={t("sidebar.stickies")}
+                    icon={<MultipleStickyOutline className="size-4 text-tertiary" />}
+                  />
                 }
               />
             </Breadcrumbs>
@@ -45,7 +50,7 @@ export const WorkspaceStickyHeader = observer(function WorkspaceStickyHeader() {
             variant="primary"
             size="md"
             stretch="auto"
-            label="Add sticky"
+            label={t("stickies.add")}
             onClick={() => {
               toggleShowNewSticky(true);
               stickyOperations.create();

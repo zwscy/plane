@@ -85,7 +85,8 @@ export function EstimateCreateStageOne(props: TEstimateCreateStageOne) {
               <p className="text-body-sm-medium">{t("project_settings.estimates.create.custom")}</p>
               <p className="text-caption-sm-regular text-tertiary">
                 {/* TODO: Translate here */}
-                Add your own <span className="lowercase">{currentEstimateSystem.name}</span> from scratch.
+                {t("common.ui.add_your_own")} <span className="lowercase">{currentEstimateSystem.name}</span>{" "}
+                {t("common.ui.from_scratch")}
               </p>
             </button>
           </div>

@@ -45,14 +45,14 @@ export const CustomThemeDownloadConfigButton = observer(function CustomThemeDown
       setToast({
         type: "success",
         title: t("success"),
-        message: "Theme configuration downloaded successfully.",
+        message: t("common.ui.theme_configuration_downloaded_successfully"),
       });
     } catch (error) {
       console.error("Failed to download config:", error);
       setToast({
         type: "error",
         title: t("error"),
-        message: "Failed to download theme configuration.",
+        message: t("common.ui.failed_to_download_theme_configuration"),
       });
     }
   };
@@ -63,7 +63,7 @@ export const CustomThemeDownloadConfigButton = observer(function CustomThemeDown
       size="md"
       stretch="auto"
       type="button"
-      label="Download config"
+      label={t("common.ui.download_config")}
       onClick={handleDownloadConfig}
     />
   );

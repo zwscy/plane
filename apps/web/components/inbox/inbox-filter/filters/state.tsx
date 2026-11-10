@@ -12,12 +12,14 @@ import type { IState } from "@plane/types";
 import { FilterSubmenu } from "@/components/common/filters/filter-submenu";
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
+import { useTranslation } from "@plane/i18n";
 
 type Props = {
   states: IState[] | undefined;
 };
 
 export const FilterState = observer(function FilterState(props: Props) {
+  const { t } = useTranslation();
   const { states } = props;
   // hooks
   const { inboxFilters, handleInboxIssueFilters } = useProjectInbox();
@@ -36,6 +38,12 @@ export const FilterState = observer(function FilterState(props: Props) {
     );
 
   return (
-    <FilterSubmenu label="State" options={options} appliedFilters={filterValue} onToggle={handleToggle} searchable />
+    <FilterSubmenu
+      label={t("common.state")}
+      options={options}
+      appliedFilters={filterValue}
+      onToggle={handleToggle}
+      searchable
+    />
   );
 });

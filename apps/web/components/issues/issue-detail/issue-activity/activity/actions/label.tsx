@@ -5,6 +5,7 @@
  */
 
 import { observer } from "mobx-react";
+import { useTranslation } from "@plane/i18n";
 import { LabelsOutline } from "@makeplane/propel/icons";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -15,6 +16,7 @@ import { IssueActivityBlockComponent, IssueLink, LabelActivityChip } from "./";
 type TIssueLabelActivity = { activityId: string; showIssue?: boolean; ends: "top" | "bottom" | undefined };
 
 export const IssueLabelActivity = observer(function IssueLabelActivity(props: TIssueLabelActivity) {
+  const { t } = useTranslation();
   const { activityId, showIssue = true, ends } = props;
   // hooks
   const {
@@ -34,12 +36,17 @@ export const IssueLabelActivity = observer(function IssueLabelActivity(props: TI
       ends={ends}
     >
       <>
-        {activity.old_value === "" ? `added a new label ` : `removed the label `}
+        {activity.old_value === ""
+          ? t("common.ui.activity_added_a_new_label") + " "
+          : t("common.ui.activity_removed_the_label") + " "}
         <LabelActivityChip
           name={activity.old_value === "" ? activity.new_value : activity.old_value}
           color={activity.old_value === "" ? newLabelColor : oldLabelColor}
         />
-        {showIssue && (activity.old_value === "" ? ` to ` : ` from `)}
+        {showIssue &&
+          (activity.old_value === ""
+            ? " " + t("common.ui.activity_to") + " "
+            : " " + t("common.ui.activity_from") + " ")}
         {showIssue && <IssueLink activityId={activityId} />}
       </>
     </IssueActivityBlockComponent>

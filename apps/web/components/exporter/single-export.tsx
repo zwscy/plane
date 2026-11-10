@@ -10,6 +10,7 @@ import { Button } from "@makeplane/propel/components/button";
 import type { IExportData } from "@plane/types";
 // helpers
 import { getDate, renderFormattedDate } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
 // types
 
 type Props = {
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export function SingleExport({ service, refreshing }: Props) {
+  const { t } = useTranslation();
   const provider = service.provider;
 
   const [isLoading] = useState(false);
@@ -36,7 +38,7 @@ export function SingleExport({ service, refreshing }: Props) {
       <div>
         <h4 className="flex items-center gap-2 text-body-xs-regular">
           <span>
-            Export to{" "}
+            {t("workspace_settings.settings.exports.modal.title")}{" "}
             <span className="font-medium">
               {provider === "csv" ? "CSV" : provider === "xlsx" ? "Excel" : provider === "json" ? "JSON" : ""}
             </span>{" "}
@@ -59,7 +61,9 @@ export function SingleExport({ service, refreshing }: Props) {
         </h4>
         <div className="mt-2 flex items-center gap-2 text-caption-sm-regular text-secondary">
           <span>{renderFormattedDate(service.created_at)}</span>|
-          <span>Exported by {service?.initiated_by_detail?.display_name}</span>
+          <span>
+            {t("common.ui.exported_by")} {service?.initiated_by_detail?.display_name}
+          </span>
         </div>
       </div>
       {checkExpiry(service.created_at) ? (
@@ -82,7 +86,9 @@ export function SingleExport({ service, refreshing }: Props) {
           )}
         </>
       ) : (
-        <div className="text-caption-sm-regular text-danger-primary">Expired</div>
+        <div className="text-caption-sm-regular text-danger-primary">
+          {t("workspace_settings.settings.api_tokens.expired")}
+        </div>
       )}
     </div>
   );

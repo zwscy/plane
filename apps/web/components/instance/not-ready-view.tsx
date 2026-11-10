@@ -11,8 +11,10 @@ import GradientBgLogo from "@/app/assets/auth/gradient-bg-logo.webp?url";
 import DefaultLayout from "@/layouts/default-layout";
 import { PlaneLockup } from "@plane/blocks/icons";
 import { Button } from "@makeplane/propel/components/button";
+import { useTranslation } from "@plane/i18n";
 
 export function InstanceNotReady() {
+  const { t } = useTranslation();
   return (
     <DefaultLayout>
       <div className="relative z-10 flex h-screen w-screen overflow-hidden">
@@ -50,8 +52,8 @@ export function InstanceNotReady() {
                 size="lg"
                 stretch="full"
                 nativeButton={false}
-                render={<a href={GOD_MODE_URL}>Get started</a>}
-                label="Get started"
+                render={<a href={GOD_MODE_URL}>{t("common.get_started")}</a>}
+                label={t("common.get_started")}
               />
             </div>
           </div>

@@ -17,6 +17,7 @@ import { cn } from "@plane/utils";
 // helpers
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useMember } from "@/hooks/store/use-member";
+import { useTranslation } from "@plane/i18n";
 // types
 
 export type TIssueReaction = {
@@ -29,6 +30,7 @@ export type TIssueReaction = {
 };
 
 export const IssueReaction = observer(function IssueReaction(props: TIssueReaction) {
+  const { t } = useTranslation();
   const { workspaceSlug, projectId, issueId, currentUser, disabled = false, className = "" } = props;
   // state
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -50,15 +52,15 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
           if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing fields");
           await createReaction(workspaceSlug, projectId, issueId, reaction);
           setToast({
-            title: "Success!",
+            title: t("toast.success"),
             type: "success",
-            message: "Reaction created successfully",
+            message: t("common.ui.reaction_created_successfully"),
           });
         } catch (_error) {
           setToast({
-            title: "Error!",
+            title: t("toast.error"),
             type: "error",
-            message: "Reaction creation failed",
+            message: t("common.ui.reaction_creation_failed"),
           });
         }
       },
@@ -67,15 +69,15 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
           if (!workspaceSlug || !projectId || !issueId || !currentUser?.id) throw new Error("Missing fields");
           await removeReaction(workspaceSlug, projectId, issueId, reaction, currentUser.id);
           setToast({
-            title: "Success!",
+            title: t("toast.success"),
             type: "success",
-            message: "Reaction removed successfully",
+            message: t("common.ui.reaction_removed_successfully"),
           });
         } catch (_error) {
           setToast({
-            title: "Error!",
+            title: t("toast.error"),
             type: "error",
-            message: "Reaction remove failed",
+            message: t("common.ui.reaction_remove_failed"),
           });
         }
       },
@@ -84,7 +86,7 @@ export const IssueReaction = observer(function IssueReaction(props: TIssueReacti
         else await issueReactionOperations.create(reaction);
       },
     }),
-    [workspaceSlug, projectId, issueId, currentUser, createReaction, removeReaction, userReactions]
+    [workspaceSlug, projectId, issueId, currentUser, createReaction, removeReaction, userReactions, t]
   );
 
   const getReactionUsers = (reaction: string): string[] => {

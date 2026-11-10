@@ -11,6 +11,7 @@ import { Icon } from "@makeplane/propel/components/icon";
 import { DownloadOutline } from "@makeplane/propel/icons";
 import type { IExportData } from "@plane/types";
 import { getDate, getFileURL, renderFormattedDate } from "@plane/utils";
+import { useTranslation } from "@plane/i18n";
 
 type RowData = IExportData;
 const checkExpiry = (inputDateString: string) => {
@@ -21,10 +22,11 @@ const checkExpiry = (inputDateString: string) => {
   return expiryDate > currentDate;
 };
 export const useExportColumns = () => {
+  const { t } = useTranslation();
   const columns = [
     {
       key: "Exported By",
-      content: "Exported By",
+      content: t("common.ui.exported_by"),
       tdRender: (rowData: RowData) => {
         const { avatar_url, display_name, email } = rowData.initiated_by_detail;
         return (
@@ -42,18 +44,22 @@ export const useExportColumns = () => {
     },
     {
       key: "Exported On",
-      content: "Exported On",
+      content: t("common.ui.exported_on"),
       tdRender: (rowData: RowData) => <span>{renderFormattedDate(rowData.created_at)}</span>,
     },
 
     {
       key: "Exported projects",
-      content: "Exported projects",
-      tdRender: (rowData: RowData) => <div className="text-body-xs-regular">{rowData.project.length} project(s)</div>,
+      content: t("common.ui.exported_projects"),
+      tdRender: (rowData: RowData) => (
+        <div className="text-body-xs-regular">
+          {rowData.project.length} {t("common.ui.project_s")}
+        </div>
+      ),
     },
     {
       key: "Format",
-      content: "Format",
+      content: t("workspace_settings.settings.exports.format"),
       tdRender: (rowData: RowData) => (
         <span className="text-body-xs-regular">
           {rowData.provider === "csv"
@@ -68,7 +74,7 @@ export const useExportColumns = () => {
     },
     {
       key: "Status",
-      content: "Status",
+      content: t("common.status"),
       tdRender: (rowData: RowData) => (
         <Badge
           size="sm"
@@ -90,7 +96,7 @@ export const useExportColumns = () => {
     },
     {
       key: "Download",
-      content: "Download",
+      content: t("page_navigation_pane.tabs.assets.download_button"),
       tdRender: (rowData: RowData) =>
         checkExpiry(rowData.created_at) ? (
           <>
@@ -103,7 +109,7 @@ export const useExportColumns = () => {
                   href={rowData?.url}
                   rel="noopener noreferrer"
                   icon={<Icon icon={DownloadOutline} />}
-                  label="Download"
+                  label={t("page_navigation_pane.tabs.assets.download_button")}
                 />
               </div>
             ) : (
@@ -111,7 +117,9 @@ export const useExportColumns = () => {
             )}
           </>
         ) : (
-          <div className="text-caption-sm-regular text-danger-primary">Expired</div>
+          <div className="text-caption-sm-regular text-danger-primary">
+            {t("workspace_settings.settings.api_tokens.expired")}
+          </div>
         ),
     },
   ];

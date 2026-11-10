@@ -16,6 +16,7 @@ import { Button } from "@makeplane/propel/components/button";
 import { usePageOperations } from "@/hooks/use-page-operations";
 // store
 import type { TPageInstance } from "@/store/pages/base-page";
+import { useTranslation } from "@plane/i18n";
 
 // Define our lock display states, renaming "icon-only" to "neutral"
 type LockDisplayState = "neutral" | "locked" | "unlocked";
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export const PageLockControl = observer(function PageLockControl({ page }: Props) {
+  const { t } = useTranslation();
   // Initial state: if locked, then "locked", otherwise default to "neutral"
   const [displayState, setDisplayState] = useState<LockDisplayState>(page.is_locked ? "locked" : "neutral");
   // derived values
@@ -81,14 +83,14 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
   return (
     <>
       {displayState === "neutral" && (
-        <Tooltip label="Lock" side="bottom">
+        <Tooltip label={t("power_k.contextual_actions.page.lock")} side="bottom">
           <IconButton
             type="button"
             onClick={toggleLock}
             variant="ghost"
             size="md"
             showTooltip={false}
-            aria-label="Lock"
+            aria-label={t("power_k.contextual_actions.page.lock")}
             icon={<Icon icon={LockedOutline} />}
           />
         </Tooltip>
@@ -96,14 +98,14 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
 
       {displayState === "locked" && (
         // a click unlocks here, so the tooltip names the action
-        <Tooltip label="Unlock" side="bottom">
+        <Tooltip label={t("power_k.contextual_actions.page.unlock")} side="bottom">
           <Button
             variant="secondary"
             size="md"
             stretch="auto"
             onClick={toggleLock}
             icon={<Icon icon={LockedOutline} />}
-            label="Locked"
+            label={t("common.locked")}
           />
         </Tooltip>
       )}
@@ -115,7 +117,7 @@ export const PageLockControl = observer(function PageLockControl({ page }: Props
           stretch="auto"
           disabled
           icon={<Icon icon={UnlockedOutline} />}
-          label="Unlocked"
+          label={t("common.ui.unlocked")}
         />
       )}
     </>
