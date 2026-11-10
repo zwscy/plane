@@ -20,6 +20,10 @@ type Props<T> = {
   id?: string;
   allowExternalDrop?: boolean;
   onExternalAdd?: (externalData: any, targetItem: T, position: "top" | "bottom") => void;
+  /** Restrict drag initiation to this descendant; absent means the whole row. */
+  dragHandleSelector?: string;
+  /** Opt into a separate native drag image, constrained to the source row's width. */
+  renderDragPreview?: (item: T) => React.ReactNode;
 };
 
 const moveItem = <T,>(
@@ -73,6 +77,8 @@ export function Sortable<T>({
   id,
   allowExternalDrop,
   onExternalAdd,
+  dragHandleSelector,
+  renderDragPreview,
 }: Props<T>) {
   // Identifies this Sortable instance so `Draggable`'s `canDrop` can reject items dragged in from another list.
   const instanceId = useId();
@@ -120,6 +126,8 @@ export function Sortable<T>({
           key={keyExtractor(enhancedData[index], index)}
           data={enhancedData[index]}
           className={containerClassName}
+          dragHandleSelector={dragHandleSelector}
+          renderDragPreview={renderDragPreview ? () => renderDragPreview(item) : undefined}
           allowExternalDrop={allowExternalDrop}
           onExternalDrop={(externalData, position) => {
             if (onExternalAdd) {

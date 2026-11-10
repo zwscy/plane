@@ -6,9 +6,13 @@
 
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { pointerOutsideOfPreview } from "@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview";
+import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { isEqual } from "lodash-es";
 import React, { useEffect, useEffectEvent, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { DropIndicator } from "../drop-indicator";
 import { cn } from "@plane/utils";
 
@@ -18,9 +22,19 @@ type Props = {
   className?: string;
   allowExternalDrop?: boolean;
   onExternalDrop?: (externalData: Record<string | symbol, unknown>, position: "top" | "bottom") => void;
+  dragHandleSelector?: string;
+  renderDragPreview?: () => React.ReactNode;
 };
 
-function Draggable({ children, data, className, allowExternalDrop, onExternalDrop }: Props) {
+function Draggable({
+  children,
+  data,
+  className,
+  allowExternalDrop,
+  onExternalDrop,
+  dragHandleSelector,
+  renderDragPreview,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<boolean>(false); // NEW
   const [isDraggedOver, setIsDraggedOver] = useState(false);
@@ -32,17 +46,36 @@ function Draggable({ children, data, className, allowExternalDrop, onExternalDro
     (externalData: Record<string | symbol, unknown>, position: "top" | "bottom") =>
       onExternalDrop?.(externalData, position)
   );
+  const getDragPreview = useEffectEvent(() => renderDragPreview?.());
+  const hasDragPreview = !!renderDragPreview;
 
   useEffect(() => {
     const el = ref.current;
 
     if (el) {
+      const dragHandle = dragHandleSelector ? el.querySelector<HTMLElement>(dragHandleSelector) : undefined;
+      if (dragHandleSelector && !dragHandle) return;
       return combine(
         draggable({
           element: el,
+          dragHandle: dragHandle ?? undefined,
           onDragStart: () => setDragging(true), // NEW
           onDrop: () => setDragging(false), // NEW
           getInitialData: () => data,
+          onGenerateDragPreview: hasDragPreview
+            ? ({ nativeSetDragImage }) => {
+                const width = el.getBoundingClientRect().width;
+                setCustomNativeDragPreview({
+                  nativeSetDragImage,
+                  getOffset: pointerOutsideOfPreview({ x: "8px", y: "8px" }),
+                  render: ({ container }) => {
+                    const root = createRoot(container);
+                    flushSync(() => root.render(<div style={{ width }}>{getDragPreview()}</div>));
+                    return () => root.unmount();
+                  },
+                });
+              }
+            : undefined,
         }),
         dropTargetForElements({
           element: el,
@@ -81,7 +114,7 @@ function Draggable({ children, data, className, allowExternalDrop, onExternalDro
         })
       );
     }
-  }, [data, allowExternalDrop]);
+  }, [data, allowExternalDrop, dragHandleSelector, hasDragPreview]);
 
   return (
     <div ref={ref} className={cn(dragging && "opacity-25", className)}>

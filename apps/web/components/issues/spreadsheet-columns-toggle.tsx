@@ -10,7 +10,13 @@ import { observer } from "mobx-react";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
 import { InputField } from "@makeplane/propel/components/input-field";
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
-import { ChevronDownOutline, ChevronUpOutline, PreferencesOutline, SearchOutline } from "@makeplane/propel/icons";
+import {
+  ChevronDownOutline,
+  ChevronUpOutline,
+  GripOutline,
+  PreferencesOutline,
+  SearchOutline,
+} from "@makeplane/propel/icons";
 import { DragHandle, Sortable } from "@plane/blocks/common";
 import { SPREADSHEET_PROPERTY_DETAILS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
@@ -119,7 +125,9 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
   );
   const renderShownOption = (option: TColumnOption, index: number) => (
     <div data-column-key={option.key} className="flex min-h-9 items-center gap-1 rounded-md bg-accent-subtle px-1">
-      <DragHandle disabled={orderDisabled} />
+      <span data-column-drag-handle>
+        <DragHandle disabled={orderDisabled} />
+      </span>
       {renderCheckbox(option)}
       <button
         type="button"
@@ -191,6 +199,16 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
                 ) : (
                   <Sortable
                     data={shownOptions}
+                    dragHandleSelector="[data-column-drag-handle] button"
+                    renderDragPreview={(option) => (
+                      <div className="flex h-9 items-center gap-2 overflow-hidden rounded-md border border-subtle bg-surface-1 px-2 text-body-xs-regular text-primary">
+                        <GripOutline className="size-3.5 shrink-0 text-secondary" aria-hidden="true" />
+                        {option.icon && (
+                          <SpreadSheetPropertyIcon iconKey={option.icon} className="size-4 shrink-0 text-secondary" />
+                        )}
+                        <span className="truncate">{option.label}</span>
+                      </div>
+                    )}
                     keyExtractor={(option) => option.key}
                     onChange={(nextOptions) => handleOrderChange(nextOptions.map((option) => option.key))}
                     render={renderShownOption}

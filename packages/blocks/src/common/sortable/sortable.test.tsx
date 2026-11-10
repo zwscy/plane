@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Sortable } from "./sortable";
 
@@ -18,18 +18,37 @@ type TMonitorArgs = {
 };
 
 // Records what `Sortable` and its `Draggable`s register on the element adapter, so the tests can drive the monitor.
-const adapter = vi.hoisted(() => ({ monitors: [] as TMonitorArgs[], draggableCount: 0 }));
+type TDraggableArgs = {
+  element: HTMLElement;
+  dragHandle?: HTMLElement;
+  onGenerateDragPreview?: (args: { nativeSetDragImage: (element: HTMLElement, x: number, y: number) => void }) => void;
+};
+type TPreviewArgs = {
+  nativeSetDragImage: unknown;
+  render: (args: { container: HTMLElement }) => void | (() => void);
+};
+const adapter = vi.hoisted(() => ({
+  monitors: [] as TMonitorArgs[],
+  draggables: [] as TDraggableArgs[],
+  draggableCount: 0,
+  previews: [] as TPreviewArgs[],
+}));
 
 vi.mock("@atlaskit/pragmatic-drag-and-drop/element/adapter", () => ({
   monitorForElements: (args: TMonitorArgs) => {
     adapter.monitors.push(args);
     return () => undefined;
   },
-  draggable: () => {
+  draggable: (args: TDraggableArgs) => {
+    adapter.draggables.push(args);
     adapter.draggableCount += 1;
     return () => undefined;
   },
   dropTargetForElements: () => () => undefined,
+}));
+
+vi.mock("@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview", () => ({
+  setCustomNativeDragPreview: (args: TPreviewArgs) => adapter.previews.push(args),
 }));
 
 type TItem = { key: string; label: string };
@@ -58,13 +77,70 @@ const renderList = (onChange = vi.fn()) => {
 describe("Sortable", () => {
   beforeEach(() => {
     adapter.monitors = [];
+    adapter.draggables = [];
     adapter.draggableCount = 0;
+    adapter.previews = [];
   });
 
   it("registers one draggable per row and a drop monitor", () => {
     renderList();
     expect(adapter.draggableCount).toBe(items.length);
     expect(adapter.monitors.length).toBeGreaterThan(0);
+  });
+
+  it("keeps default native previews and whole-row dragging for existing callers", () => {
+    renderList();
+    expect(adapter.draggables[0].dragHandle).toBeUndefined();
+    expect(adapter.draggables[0].onGenerateDragPreview).toBeUndefined();
+  });
+
+  it("binds an opted-in handle and snapshots only the field preview at the source width", () => {
+    render(
+      <section>
+        <h2>Column settings</h2>
+        <input placeholder="Search fields" />
+        <Sortable
+          data={items}
+          keyExtractor={(item) => item.key}
+          onChange={vi.fn()}
+          dragHandleSelector="[data-field-drag-handle]"
+          renderDragPreview={(item) => <div style={{ height: 36 }}>{item.label}</div>}
+          render={(item) => (
+            <div>
+              <button type="button" data-field-drag-handle aria-label={`Drag ${item.label}`} />
+              <span>{item.label}</span>
+              <button type="button">Move up</button>
+            </div>
+          )}
+        />
+      </section>
+    );
+    const registration = adapter.draggables[0];
+    expect(registration.dragHandle).toBe(screen.getByRole("button", { name: "Drag A" }));
+    expect(registration.onGenerateDragPreview).toBeTypeOf("function");
+    vi.spyOn(registration.element, "getBoundingClientRect").mockReturnValue({ width: 320, height: 40 } as DOMRect);
+    const nativeSetDragImage = vi.fn();
+    registration.onGenerateDragPreview?.({ nativeSetDragImage });
+    expect(adapter.previews).toHaveLength(1);
+    expect(adapter.previews[0].nativeSetDragImage).toBe(nativeSetDragImage);
+    const container = document.createElement("div");
+    document.body.append(container);
+    let cleanup: void | (() => void) = undefined;
+    act(() => {
+      cleanup = adapter.previews[0].render({ container });
+    });
+    try {
+      expect(container.textContent).toBe("A");
+      expect((container.firstElementChild as HTMLElement).style.width).toBe("320px");
+      expect(container.querySelector<HTMLElement>("[style*=height]")?.style.height).toBe("36px");
+      expect(container.querySelector("input,button")).toBeNull();
+      expect(container.textContent).not.toContain("Column settings");
+      expect(container.textContent).not.toContain("Search fields");
+      expect(container.textContent).not.toContain("Move up");
+    } finally {
+      act(() => cleanup?.());
+      container.remove();
+    }
   });
 
   it("only monitors drags that started in its own list", () => {
