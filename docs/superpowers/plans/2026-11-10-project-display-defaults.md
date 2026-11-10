@@ -1,5 +1,7 @@
 # Project display defaults Implementation Plan
 
+> The original implementation record below is retained. Its existing-row migration policy is superseded by the confirmed 2026-11-11 addendum at the end of this document.
+
 > **For agentic workers:** Use subagent-driven-development for the independent backend and frontend tasks, then review their integration.
 
 **Goal:** Share administrator-managed project display defaults while retaining independent personal overrides and filters.
@@ -74,3 +76,11 @@
 - [ ] Commit and push the feature branch; package verified revisions and update local runtime.
 - [ ] Back up dev2, run the migration in a separate API container, update only Plane components that need this change, verify data/services and retain three successful backups.
 - [ ] Report deployed revisions, evidence and any remaining limitations without implying a push alone is deployment.
+
+## 2026-11-11 confirmed migration policy (supersedes the original existing-row policy)
+
+- Back up the existing configuration before changing it. Keep any already configured project default; initialize an unset project default from the confirmed current administrator's display configuration before running the new migration. Administrator selection and seeding are deployment steps, not part of the data migration.
+- Keep already applied `0127` unchanged. New data migration `0128_project_display_defaults_follow_all` sets `use_project_default=True` once for every existing property row, including soft-deleted rows. Preserve all raw JSON, personal filters/preferences, project defaults, and timestamps.
+- Later personal overrides retain the existing request behavior. Ordinary requests, restarts, and later administrator default updates do not repeat the migration or reset those overrides.
+- Verify `0127` → `0128` with MigrationExecutor against mixed flags, populated/empty JSON, soft-deleted rows, unchanged project defaults, and a later personal override. Run migration tests explicitly with `--migrations`, separately from the ordinary `--nomigrations` contract suite.
+- Reversing `0128` is a no-op because prior flags cannot be inferred safely. Restore the pre-upgrade backup when exact previous follow/personal states are required.
