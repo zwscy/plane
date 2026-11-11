@@ -20,7 +20,8 @@ import {
 import { DragHandle, Sortable } from "@plane/blocks/common";
 import { SPREADSHEET_PROPERTY_DETAILS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
-import type { IIssueDisplayProperties } from "@plane/types";
+import type { IIssueDisplayProperties, TCustomFieldIcon, TCustomFieldType } from "@plane/types";
+import { CustomFieldTypeIcon } from "@/components/issues/custom-fields/type-icon";
 import { getVisibleCustomFields } from "@/helpers/custom-field-views";
 import {
   getOrderedSpreadsheetColumnKeys,
@@ -36,6 +37,8 @@ type TColumnOption = {
   key: string;
   label: string;
   icon: string | undefined;
+  customFieldType?: TCustomFieldType;
+  customFieldIcon?: TCustomFieldIcon | null;
 };
 
 type Props = {
@@ -46,6 +49,17 @@ type Props = {
   isEstimateEnabled: boolean;
   isEpic?: boolean;
 };
+
+const renderOptionIcon = (option: TColumnOption) =>
+  option.customFieldType ? (
+    <CustomFieldTypeIcon
+      type={option.customFieldType}
+      icon={option.customFieldIcon}
+      className="size-4 shrink-0 text-secondary"
+    />
+  ) : option.icon ? (
+    <SpreadSheetPropertyIcon iconKey={option.icon} className="size-4 shrink-0 text-secondary" />
+  ) : undefined;
 
 export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsToggle(props: Props) {
   const { columns, displayProperties, handleDisplayPropertiesUpdate, isEstimateEnabled, isEpic = false } = props;
@@ -70,7 +84,13 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
       return { key, label, icon: details?.icon };
     });
   options.push(
-    ...customFields.map((field) => ({ key: `custom_fields__${field.id}`, label: field.name, icon: undefined }))
+    ...customFields.map((field) => ({
+      key: `custom_fields__${field.id}`,
+      label: field.name,
+      icon: undefined,
+      customFieldType: field.field_type,
+      customFieldIcon: field.icon,
+    }))
   );
   const columnKeys = getOrderedSpreadsheetColumnKeys(
     options.map((option) => option.key),
@@ -118,11 +138,7 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
         onCheckedChange={(checked) => handleVisibilityChange(option.key, checked)}
         label={option.label}
         stretch="full"
-        icon={
-          option.icon ? (
-            <SpreadSheetPropertyIcon iconKey={option.icon} className="size-4 shrink-0 text-secondary" />
-          ) : undefined
-        }
+        icon={renderOptionIcon(option)}
       />
     </div>
   );
@@ -206,9 +222,7 @@ export const SpreadsheetColumnsToggle = observer(function SpreadsheetColumnsTogg
                     renderDragPreview={(option) => (
                       <div className="flex h-9 items-center gap-2 overflow-hidden rounded-md border border-subtle bg-surface-1 px-2 text-body-xs-regular text-primary">
                         <GripOutline className="size-3.5 shrink-0 text-secondary" aria-hidden="true" />
-                        {option.icon && (
-                          <SpreadSheetPropertyIcon iconKey={option.icon} className="size-4 shrink-0 text-secondary" />
-                        )}
+                        {renderOptionIcon(option)}
                         <span className="truncate">{option.label}</span>
                       </div>
                     )}

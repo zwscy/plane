@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 
 from plane.app.serializers import IssueCreateSerializer
 from plane.api.serializers.issue import IssueSerializer as PublicIssueSerializer
-from plane.db.models import Issue, Project, ProjectMember, State, Label
+from plane.db.models import Issue, Project, ProjectCustomField, ProjectMember, State, Label, WorkspaceMember
 from plane.utils.order_queryset import order_issue_queryset
 
 pytestmark = [pytest.mark.contract, pytest.mark.django_db]
@@ -66,6 +66,133 @@ def test_definition_permissions_and_scope(setup_fields, workspace, create_user):
         ).status_code
         == 404
     )
+
+
+def test_icon_create_read_update_omission_and_reset_persist(setup_fields):
+    client, _, url = setup_fields
+    default = create_field(setup_fields)
+    assert default["icon"] is None
+    assert create_field(setup_fields, icon=None)["icon"] is None
+    icon = {"name": "Clock", "color": "#6d7b8a"}
+    field = create_field(setup_fields, icon=icon)
+    assert field["icon"] == icon
+    stored = ProjectCustomField.objects.get(pk=field["id"])
+    assert stored.icon == icon
+    assert next(row for row in client.get(url).data if row["id"] == field["id"])["icon"] == icon
+    detail = url + field["id"] + "/"
+    renamed = client.patch(detail, {"name": "业务字段"}, format="json")
+    assert renamed.status_code == 200, renamed.data
+    assert renamed.data["icon"] == icon
+    stored.refresh_from_db()
+    assert stored.icon == icon
+    changed = client.patch(detail, {"icon": {"name": "CheckSquare", "color": "#ABCDEF"}}, format="json")
+    assert changed.status_code == 200, changed.data
+    assert changed.data["icon"] == {"name": "CheckSquare", "color": "#abcdef"}
+    stored.refresh_from_db()
+    assert stored.icon == {"name": "CheckSquare", "color": "#abcdef"}
+    reset = client.patch(detail, {"icon": None}, format="json")
+    assert reset.status_code == 200, reset.data
+    assert reset.data["icon"] is None
+    stored.refresh_from_db()
+    assert stored.icon is None
+
+
+@pytest.mark.parametrize("name", ["A", "List", "Clock2", "FutureIcon" + "A" * 54])
+def test_icon_identifiers_allow_catalogue_changes_and_length_boundary(setup_fields, name):
+    icon = {"name": name, "color": "#123abc"}
+    field = create_field(setup_fields, icon=icon)
+    assert field["icon"] == icon
+    assert ProjectCustomField.objects.get(pk=field["id"]).icon == icon
+
+
+@pytest.mark.parametrize(
+    "icon",
+    [
+        True,
+        False,
+        [],
+        "Clock",
+        1,
+        {},
+        {"name": "Clock"},
+        {"color": "#123abc"},
+        {"name": "Clock", "color": "#123abc", "url": "https://example.test/icon.svg"},
+        *[
+            {"name": name, "color": "#123abc"}
+            for name in [
+                None,
+                True,
+                1,
+                [],
+                {},
+                "",
+                "1Clock",
+                "Clock-2",
+                " Clock",
+                "Clock\n",
+                "A" * 65,
+                "时钟",
+                "https://example.test/icon",
+                "icons/Clock",
+                "<svg>",
+            ]
+        ],
+        *[
+            {"name": "Clock", "color": color}
+            for color in [None, True, 1, [], {}, "", "123abc", "#abc", "#123abcff", "#123abg", "#123abc\n"]
+        ],
+    ],
+)
+def test_icon_rejects_malformed_create_and_patch_without_changing_saved_value(setup_fields, icon):
+    client, _, url = setup_fields
+    created = client.post(url, {"name": "Invalid", "field_type": "text", "icon": icon}, format="json")
+    assert created.status_code == 400, created.data
+    assert "icon" in created.data
+    assert not ProjectCustomField.objects.filter(name="Invalid").exists()
+    original = {"name": "Clock", "color": "#6d7b8a"}
+    field = create_field(setup_fields, icon=original)
+    updated = client.patch(url + field["id"] + "/", {"icon": icon}, format="json")
+    assert updated.status_code == 400, updated.data
+    assert "icon" in updated.data
+    assert ProjectCustomField.objects.get(pk=field["id"]).icon == original
+
+
+def test_icon_changes_are_independent_of_stored_value_type_lock(setup_fields):
+    client, project, url = setup_fields
+    field = create_field(setup_fields, "integer")
+    serializer = issue_serializer(project, {"name": "Zero", "custom_fields": {field["id"]: 0}})
+    assert serializer.is_valid(), serializer.errors
+    issue = serializer.save()
+    detail = url + field["id"] + "/"
+    icon = {"name": "Clock", "color": "#6d7b8a"}
+    response = client.patch(detail, {"icon": icon}, format="json")
+    assert response.status_code == 200, response.data
+    assert response.data["icon"] == icon
+    assert response.data["is_type_locked"] is True
+    assert client.patch(detail, {"field_type": "text"}, format="json").status_code == 400
+    assert client.patch(detail, {"icon": None}, format="json").status_code == 200
+    issue.refresh_from_db()
+    assert issue.custom_fields == {field["id"]: 0}
+
+
+def test_icon_member_read_admin_write_and_cross_project_scope(setup_fields, workspace, create_user):
+    client, project, url = setup_fields
+    icon = {"name": "Clock", "color": "#6d7b8a"}
+    field = create_field(setup_fields, icon=icon)
+    ProjectMember.objects.filter(project=project, member=create_user).update(role=15)
+    WorkspaceMember.objects.filter(workspace=workspace, member=create_user).update(role=15)
+    read = client.get(url)
+    assert read.status_code == 200, read.data
+    assert read.data[0]["icon"] == icon
+    assert client.post(url, {"name": "Forbidden", "field_type": "text", "icon": icon}, format="json").status_code == 403
+    assert client.patch(url + field["id"] + "/", {"icon": None}, format="json").status_code == 403
+    other = Project.objects.create(name="Other", identifier="OTHERICON", workspace=workspace)
+    ProjectMember.objects.create(project=other, workspace=workspace, member=create_user, role=20)
+    response = client.patch(
+        url.replace(str(project.id), str(other.id)) + field["id"] + "/", {"icon": None}, format="json"
+    )
+    assert response.status_code == 404, response.data
+    assert ProjectCustomField.objects.get(pk=field["id"]).icon == icon
 
 
 @pytest.mark.parametrize("public", [False, True])

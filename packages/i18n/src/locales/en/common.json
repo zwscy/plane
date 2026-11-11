@@ -14,6 +14,9 @@
   "success": "Success",
   "warning": "Warning",
   "info": "Info",
+  "color_picker": {
+    "contrast_adjustment": "Colors will be adjusted to ensure sufficient contrast."
+  },
   "close": "Close",
   "yes": "Yes",
   "no": "No",

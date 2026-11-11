@@ -34,6 +34,7 @@ test("values render readable names and preserve historical inactive choices", ()
   ];
   assert.equal(formatCustomFieldValue(false, choices), "否");
   assert.equal(formatCustomFieldValue(0, choices), "0");
+  assert.equal(formatCustomFieldValue(1.5), "1.5");
   assert.equal(formatCustomFieldValue(["one", "two"], choices), "第一项、第二项");
   assert.equal(formatCustomFieldValue("missing", choices), "已失效的选项");
   assert.equal(formatCustomFieldValue(null), "未设置");

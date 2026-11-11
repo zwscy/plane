@@ -8,10 +8,12 @@ import { useState } from "react";
 import { observer } from "mobx-react";
 import { Button } from "@makeplane/propel/components/button";
 import { CUSTOM_FIELD_TYPE_LABELS } from "@plane/constants";
+import { EmojiPicker } from "@plane/blocks/emoji-icon-picker";
 import { setToast } from "@plane/blocks/toast";
 import type { TProjectCustomField, TProjectCustomFieldInput, TCustomFieldType } from "@plane/types";
 import { projectCustomFieldService, useProjectCustomFields } from "@/hooks/use-project-custom-fields";
 import { moveCustomFieldOption } from "@/components/issues/custom-fields/helpers";
+import { CustomFieldTypeIcon } from "@/components/issues/custom-fields/type-icon";
 
 const inputClass =
   "w-full rounded-md border border-subtle bg-layer-1 px-3 py-2 text-body-sm-regular text-primary disabled:opacity-60";
@@ -19,6 +21,7 @@ const emptyField = (sortOrder: number): TProjectCustomFieldInput => ({
   name: "",
   description: "",
   field_type: "text",
+  icon: null,
   options: [],
   is_active: true,
   sort_order: sortOrder,
@@ -36,6 +39,7 @@ export const ProjectCustomFieldsSettings = observer(function ProjectCustomFields
   const [draft, setDraft] = useState<TProjectCustomFieldInput>();
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const perform = async (operation: () => Promise<unknown>) => {
     setBusy(true);
     setFormError("");
@@ -56,12 +60,14 @@ export const ProjectCustomFieldsSettings = observer(function ProjectCustomFields
   const startEdit = (field: TProjectCustomField | null) => {
     setEditing(field);
     setFormError("");
+    setIconPickerOpen(false);
     setDraft(
       field
         ? {
             name: field.name,
             description: field.description,
             field_type: field.field_type,
+            icon: field.icon ?? null,
             options: field.options.map((option) => ({ ...option })),
             is_active: field.is_active,
             sort_order: field.sort_order,
@@ -137,12 +143,50 @@ export const ProjectCustomFieldsSettings = observer(function ProjectCustomFields
                 : projectCustomFieldService.create(workspaceSlug, projectId, payload)
             );
             if (saved) {
+              setIconPickerOpen(false);
               setDraft(undefined);
               setEditing(undefined);
             }
           }}
         >
           <h2 className="text-body-md-semibold">{editing ? "编辑字段" : "新建字段"}</h2>
+          <div role="group" aria-label="字段图标" className="space-y-1">
+            <p className="text-body-sm-medium">字段图标</p>
+            <div className="flex items-center gap-2">
+              <EmojiPicker
+                isOpen={iconPickerOpen}
+                handleToggle={setIconPickerOpen}
+                disabled={busy}
+                defaultOpen="icon"
+                showEmojiTab={false}
+                iconType="lucide"
+                searchPlaceholder="搜索图标"
+                defaultIconColor={draft.icon?.color ?? "#6d7b8a"}
+                buttonClassName="flex items-center gap-2 rounded-md border border-subtle px-3 py-2 text-body-sm-regular text-primary disabled:opacity-60"
+                label={
+                  <>
+                    <CustomFieldTypeIcon type={draft.field_type} icon={draft.icon} className="size-4 text-secondary" />
+                    <span>选择图标</span>
+                  </>
+                }
+                onChange={(selection) => {
+                  if (selection.type === "icon") setDraft({ ...draft, icon: selection.value });
+                }}
+              />
+              <Button
+                stretch="auto"
+                variant="ghost"
+                size="sm"
+                label="恢复默认图标"
+                disabled={busy || !draft.icon}
+                onClick={() => {
+                  setDraft({ ...draft, icon: null });
+                  setIconPickerOpen(false);
+                }}
+              />
+            </div>
+            <p className="text-caption-sm-regular text-tertiary">未选择时使用字段类型图标。</p>
+          </div>
           <label className="block space-y-1">
             <span className="text-body-sm-medium">字段名称</span>
             <input
@@ -282,6 +326,7 @@ export const ProjectCustomFieldsSettings = observer(function ProjectCustomFields
                 setDraft(undefined);
                 setEditing(undefined);
                 setFormError("");
+                setIconPickerOpen(false);
               }}
             />
           </div>
@@ -297,8 +342,15 @@ export const ProjectCustomFieldsSettings = observer(function ProjectCustomFields
         {fields.map((field, index) => (
           <div key={field.id} className="flex flex-wrap items-center gap-2 py-4">
             <div className="min-w-0 flex-1">
-              <p className="text-body-sm-medium break-words">
-                {field.name} {!field.is_active && <span className="text-tertiary">（已停用）</span>}
+              <p className="flex items-center gap-2 text-body-sm-medium break-words">
+                <CustomFieldTypeIcon
+                  type={field.field_type}
+                  icon={field.icon}
+                  className="size-4 shrink-0 text-secondary"
+                />
+                <span>
+                  {field.name} {!field.is_active && <span className="text-tertiary">（已停用）</span>}
+                </span>
               </p>
               <p className="text-caption-sm-regular text-tertiary">
                 {CUSTOM_FIELD_TYPE_LABELS[field.field_type]}

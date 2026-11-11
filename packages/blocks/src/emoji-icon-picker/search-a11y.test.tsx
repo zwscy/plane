@@ -5,7 +5,8 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { initPromise, setLanguage } from "@plane/i18n";
 import { EmojiRoot } from "./emoji/emoji";
 import { IconRoot } from "./icon/icon-root";
 
@@ -29,5 +30,23 @@ describe("emoji/icon picker search fields", () => {
   it("names the emoji tab search with the translated label", () => {
     render(<EmojiRoot onChange={vi.fn()} />);
     expect(screen.getByRole("searchbox", { name: "Search" }).getAttribute("aria-label")).toBe("Search");
+  });
+});
+
+describe("icon picker contrast hint translations", () => {
+  afterEach(async () => {
+    await setLanguage("en");
+  });
+
+  it.each([
+    ["en", "Colors will be adjusted to ensure sufficient contrast."],
+    ["zh-CN", "颜色会自动调整，以确保足够的对比度。"],
+    ["zh-TW", "顏色會自動調整，以確保足夠的對比度。"],
+  ] as const)("resolves the actual %s runtime namespace", async (language, expected) => {
+    await initPromise;
+    await setLanguage(language);
+    render(<IconRoot defaultColor="#6d7b8a" onChange={vi.fn()} iconType="lucide" />);
+    expect(screen.getByText(expected)).toBeDefined();
+    expect(screen.queryByText("common.color_picker.contrast_adjustment")).toBeNull();
   });
 });

@@ -14,6 +14,9 @@
   "success": "成功",
   "warning": "警告",
   "info": "信息",
+  "color_picker": {
+    "contrast_adjustment": "颜色会自动调整，以确保足够的对比度。"
+  },
   "close": "关闭",
   "yes": "是",
   "no": "否",

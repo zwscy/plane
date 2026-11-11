@@ -23,6 +23,7 @@ export type TCustomFieldType =
   | "estimate";
 
 export type TCustomFieldValue = string | number | boolean | string[] | null;
+export type TCustomFieldIcon = { name: string; color: string };
 export type TCustomFieldOption = { id: string; name: string; is_active: boolean };
 export type TProjectCustomField = {
   id: string;
@@ -30,6 +31,7 @@ export type TProjectCustomField = {
   name: string;
   description: string;
   field_type: TCustomFieldType;
+  icon?: TCustomFieldIcon | null;
   options: TCustomFieldOption[];
   sort_order: number;
   is_active: boolean;
@@ -37,5 +39,5 @@ export type TProjectCustomField = {
 };
 export type TProjectCustomFieldInput = Pick<
   TProjectCustomField,
-  "name" | "description" | "field_type" | "options" | "sort_order" | "is_active"
+  "name" | "description" | "field_type" | "icon" | "options" | "sort_order" | "is_active"
 >;

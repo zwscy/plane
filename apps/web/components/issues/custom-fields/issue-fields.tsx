@@ -10,6 +10,7 @@ import { setToast } from "@plane/blocks/toast";
 import type { TCustomFieldValue } from "@plane/types";
 import { useProjectCustomFields } from "@/hooks/use-project-custom-fields";
 import { CustomFieldEditor } from "./editor";
+import { CustomFieldTypeIcon } from "./type-icon";
 
 type Props = {
   workspaceSlug: string;
@@ -42,6 +43,11 @@ export const IssueCustomFields = observer(function IssueCustomFields({
       {activeFields.map((field) => (
         <div key={field.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,2fr)] items-start gap-2">
           <span className="py-1.5 text-body-xs-medium break-words" title={field.description}>
+            <CustomFieldTypeIcon
+              type={field.field_type}
+              icon={field.icon}
+              className="mr-1.5 inline-block size-4 align-text-bottom text-secondary"
+            />
             {field.name}
           </span>
           <CustomFieldEditor

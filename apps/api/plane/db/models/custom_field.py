@@ -27,6 +27,7 @@ class ProjectCustomField(ProjectBaseModel):
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
+    icon = models.JSONField(blank=True, default=None, null=True)
     field_type = models.CharField(max_length=32, choices=[(value, value) for value in FIELD_TYPES])
     options = models.JSONField(default=list, blank=True)
     sort_order = models.FloatField(default=65535)

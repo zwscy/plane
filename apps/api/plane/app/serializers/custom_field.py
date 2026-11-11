@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 
 import math
+import re
 
 from rest_framework import serializers
 
@@ -20,6 +21,7 @@ class ProjectCustomFieldSerializer(serializers.ModelSerializer):
             "project_id",
             "name",
             "description",
+            "icon",
             "field_type",
             "options",
             "sort_order",
@@ -32,6 +34,18 @@ class ProjectCustomFieldSerializer(serializers.ModelSerializer):
 
     def get_is_type_locked(self, instance):
         return is_type_locked(instance)
+
+    def validate_icon(self, value):
+        if value is None:
+            return None
+        if not isinstance(value, dict) or set(value) != {"name", "color"}:
+            raise serializers.ValidationError("Expected an icon with name and color.")
+        name, color = value["name"], value["color"]
+        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9]{0,63}", name):
+            raise serializers.ValidationError("Icon names must be identifiers of 1 to 64 ASCII characters.")
+        if not isinstance(color, str) or not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
+            raise serializers.ValidationError("Icon colors must be six-digit hex values.")
+        return {"name": name, "color": color.lower()}
 
     def validate_sort_order(self, value):
         if not math.isfinite(value):
