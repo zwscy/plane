@@ -122,6 +122,8 @@ function load(file, overrides = {}) {
       if (name === "./project-filter-model") return load("project-filter-model.ts");
       if (name.endsWith("/issue.service")) return { IssueService: MockIssueService };
       if (name === "@makeplane/propel/icons") return new Proxy({}, { get: () => PlaceholderIcon });
+      if (name === "@makeplane/propel/components/icon")
+        return { Icon: ({ icon: Glyph }) => React.createElement(Glyph) };
       if (name === "@base-ui/react/select") return { Select: { Trigger: MockSelectTrigger } };
       if (name === "@makeplane/propel/components/select")
         return {
@@ -138,7 +140,13 @@ function load(file, overrides = {}) {
           PopoverTrigger: ({ children, render }) =>
             React.cloneElement(render ?? React.createElement("button"), {}, children),
         };
-      if (name.endsWith("/button"))
+      if (name === "@makeplane/propel/elements/button")
+        return {
+          Button: ({ render, children, variant: _variant, size: _size, stretch: _stretch, ...props }) =>
+            React.cloneElement(typeof render === "function" ? render(props) : render, props, children),
+          ButtonLabel: ({ children }) => React.createElement("span", null, children),
+        };
+      if (name === "@makeplane/propel/components/button")
         return {
           Button: ({ label, onClick, disabled }) => React.createElement("button", { onClick, disabled }, label),
         };

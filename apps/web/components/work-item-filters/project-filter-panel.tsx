@@ -9,8 +9,10 @@ import { observer } from "mobx-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { Button } from "@makeplane/propel/components/button";
 import { Checkbox } from "@makeplane/propel/components/checkbox";
+import { Icon as ButtonIcon } from "@makeplane/propel/components/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "@makeplane/propel/components/popover";
 import { Select, SelectContent, SelectItem, SelectList } from "@makeplane/propel/components/select";
+import { Button as ButtonElement, ButtonLabel } from "@makeplane/propel/elements/button";
 import {
   AddOutline,
   ArrowCollapseOutline,
@@ -567,18 +569,27 @@ export const ProjectFilterPopover = observer(function ProjectFilterPopover(props
       <PopoverTrigger
         disabled={disabled || applying}
         render={
-          <button
+          <ButtonElement
+            variant="secondary"
+            size="md"
+            stretch="auto"
             type="button"
             aria-label={summaryTrigger ? "编辑筛选" : `筛选（${active.count} 个条件）`}
-            className={cn(
-              "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-subtle px-2 text-body-xs-regular text-secondary hover:bg-layer-transparent-hover focus-visible:ring-2 focus-visible:ring-accent-strong disabled:opacity-50",
-              active.count > 0 && "border-accent-strong bg-accent-subtle text-accent-primary"
+            render={(renderProps) => (
+              <button
+                {...renderProps}
+                className={cn(
+                  renderProps.className,
+                  active.count > 0 &&
+                    "border-accent-strong bg-accent-subtle text-accent-primary hover:bg-accent-subtle-hover active:bg-accent-subtle-active"
+                )}
+              />
             )}
           />
         }
       >
-        <FilterOutline className="size-4" aria-hidden="true" />
-        <span>{summaryTrigger ? "编辑筛选" : "筛选"}</span>
+        <ButtonIcon icon={FilterOutline} />
+        <ButtonLabel>{summaryTrigger ? "编辑筛选" : "筛选"}</ButtonLabel>
         {!summaryTrigger && active.count > 0 && (
           <span className="rounded bg-accent-subtle-hover px-1 text-caption-md-medium">{active.count}</span>
         )}
