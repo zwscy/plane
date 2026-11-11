@@ -61,6 +61,7 @@ export interface IModuleIssuesFilter extends IBaseIssueFilterStore {
 export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModuleIssuesFilter {
   // observables
   filters: { [moduleId: string]: IIssueFilters } = {};
+  private richFilterWrites: Record<string, Promise<unknown> | undefined> = {};
   // root store
   rootIssueStore: IIssueRootStore;
   // services
@@ -188,7 +189,17 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
     moduleId,
     filters
   ) => {
+    const previousWrite = this.richFilterWrites[moduleId];
+    const pending = (previousWrite ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(() =>
+        this.issueFilterService.patchModuleIssueFilters(workspaceSlug, projectId, moduleId, {
+          rich_filters: filters,
+        })
+      );
+    this.richFilterWrites[moduleId] = pending;
     try {
+      await pending;
       runInAction(() => {
         set(this.filters, [moduleId, "richFilters"], filters);
       });
@@ -199,12 +210,11 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
         "mutation",
         moduleId
       );
-      await this.issueFilterService.patchModuleIssueFilters(workspaceSlug, projectId, moduleId, {
-        rich_filters: filters,
-      });
     } catch (error) {
       console.log("error while updating rich filters", error);
       throw error;
+    } finally {
+      if (this.richFilterWrites[moduleId] === pending) delete this.richFilterWrites[moduleId];
     }
   };
 

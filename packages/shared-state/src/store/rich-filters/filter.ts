@@ -5,7 +5,7 @@
  */
 
 import { cloneDeep, isEqual } from "lodash-es";
-import { action, computed, makeObservable, observable, toJS } from "mobx";
+import { action, computed, makeObservable, observable, runInAction, toJS } from "mobx";
 import { computedFn } from "mobx-utils";
 import { v4 as uuidv4 } from "uuid";
 // plane imports
@@ -74,9 +74,10 @@ export interface IFilterInstance<P extends TFilterProperty, E extends TExternalF
   id: string;
   initialFilterExpression: TFilterExpression<P> | null;
   expression: TFilterExpression<P> | null;
+  isApplying: boolean;
   adapter: IFilterAdapter<P, E>;
   configManager: IFilterConfigManager<P>;
-  onExpressionChange?: (expression: E) => void;
+  onExpressionChange?: (expression: E) => void | Promise<void>;
   // computed
   hasActiveFilters: boolean;
   hasChanges: boolean;
@@ -95,6 +96,7 @@ export interface IFilterInstance<P extends TFilterProperty, E extends TExternalF
   toggleVisibility: (isVisible?: boolean) => void;
   // filter expression actions
   resetExpression: (externalExpression: E, shouldResetInitialExpression?: boolean) => void;
+  applyExpression: (externalExpression: E, beforeApply?: () => Promise<void>) => Promise<void>;
   // filter condition
   findConditionsByPropertyAndOperator: (
     property: P,
@@ -134,7 +136,7 @@ type TFilterParams<P extends TFilterProperty, E extends TExternalFilter> = {
   adapter: IFilterAdapter<P, E>;
   options?: Partial<TFilterOptions<E>>;
   initialExpression?: E;
-  onExpressionChange?: (expression: E) => void;
+  onExpressionChange?: (expression: E) => void | Promise<void>;
 };
 
 export class FilterInstance<P extends TFilterProperty, E extends TExternalFilter> implements IFilterInstance<P, E> {
@@ -142,10 +144,11 @@ export class FilterInstance<P extends TFilterProperty, E extends TExternalFilter
   id: string;
   initialFilterExpression: TFilterExpression<P> | null;
   expression: TFilterExpression<P> | null;
+  isApplying = false;
   expressionOptions: TExpressionOptions<E>;
   adapter: IFilterAdapter<P, E>;
   configManager: IFilterConfigManager<P>;
-  onExpressionChange?: (expression: E) => void;
+  onExpressionChange?: (expression: E) => void | Promise<void>;
 
   // helper instance
   private helper: IFilterInstanceHelper<P, E>;
@@ -172,6 +175,7 @@ export class FilterInstance<P extends TFilterProperty, E extends TExternalFilter
       id: observable,
       initialFilterExpression: observable,
       expression: observable,
+      isApplying: observable,
       expressionOptions: observable.struct,
       adapter: observable,
       configManager: observable,
@@ -191,6 +195,7 @@ export class FilterInstance<P extends TFilterProperty, E extends TExternalFilter
       canUpdateView: computed,
       // actions
       resetExpression: action,
+      applyExpression: action,
       findConditionsByPropertyAndOperator: action,
       findFirstConditionByPropertyAndOperator: action,
       addCondition: action,
@@ -334,6 +339,35 @@ export class FilterInstance<P extends TFilterProperty, E extends TExternalFilter
       this._notifyExpressionChange();
     }
   );
+
+  /** Serializes validation and persistence, restoring the draft if persistence fails. */
+  applyExpression: IFilterInstance<P, E>["applyExpression"] = action(async (externalExpression, beforeApply) => {
+    if (this.isApplying) throw new Error("Filter application already in progress");
+    this.isApplying = true;
+    try {
+      await beforeApply?.();
+      const nextExpression = this.helper.initializeExpression(externalExpression);
+      if (externalExpression && Object.keys(externalExpression).length > 0 && !nextExpression) {
+        throw new Error("Invalid filter expression");
+      }
+      const previousExpression = this.expression;
+      runInAction(() => {
+        this.expression = nextExpression;
+      });
+      try {
+        await this.onExpressionChange?.(this._getExternalExpression());
+      } catch (error) {
+        runInAction(() => {
+          this.expression = previousExpression;
+        });
+        throw error;
+      }
+    } finally {
+      runInAction(() => {
+        this.isApplying = false;
+      });
+    }
+  });
 
   /**
    * Finds all conditions by property and operator.

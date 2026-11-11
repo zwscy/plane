@@ -17,10 +17,26 @@ import type {
   TWorkItemFilterExpressionData,
   TWorkItemFilterProperty,
 } from "@plane/types";
-import { LOGICAL_OPERATOR, MULTI_VALUE_OPERATORS, WORK_ITEM_FILTER_PROPERTY_KEYS } from "@plane/types";
-import { createConditionNode, createAndGroupNode, isAndGroupNode, isConditionNode } from "@plane/utils";
+import {
+  CORE_OPERATORS,
+  EQUALITY_OPERATOR,
+  EXTENDED_OPERATORS,
+  LOGICAL_OPERATOR,
+  MULTI_VALUE_OPERATORS,
+  WORK_ITEM_FILTER_PROPERTY_KEYS,
+} from "@plane/types";
+import {
+  createConditionNode,
+  createAndGroupNode,
+  createOrGroupNode,
+  createNotGroupNode,
+  isConditionNode,
+  isNotGroupNode,
+} from "@plane/utils";
 // local imports
 import { FilterAdapter } from "../rich-filters/adapter";
+
+const supportedOperators = new Set<string>(Object.values({ ...CORE_OPERATORS, ...EXTENDED_OPERATORS }));
 
 class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWorkItemFilterExpression> {
   /**
@@ -47,7 +63,7 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
   private _convertExpressionToInternal(
     expression: TWorkItemFilterExpressionData
   ): TFilterExpression<TWorkItemFilterProperty> {
-    if (!expression || isEmpty(expression)) {
+    if (!expression || typeof expression !== "object" || Array.isArray(expression) || isEmpty(expression)) {
       throw new Error("Invalid expression: empty or null data");
     }
 
@@ -69,16 +85,26 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
     // It's a logical group - check which type
     const expressionKeys = Object.keys(expression);
 
-    if (LOGICAL_OPERATOR.AND in expression) {
-      const andExpression = expression as { [LOGICAL_OPERATOR.AND]: TWorkItemFilterExpressionData[] };
-      const andConditions = andExpression[LOGICAL_OPERATOR.AND];
+    if (expressionKeys.length !== 1) {
+      throw new Error("Logical groups must have exactly one operator");
+    }
 
-      if (!Array.isArray(andConditions) || andConditions.length === 0) {
-        throw new Error("AND group must contain at least one condition");
+    if (LOGICAL_OPERATOR.NOT in expression) {
+      return createNotGroupNode(this._convertExpressionToInternal(expression[LOGICAL_OPERATOR.NOT]));
+    }
+
+    if (LOGICAL_OPERATOR.AND in expression || LOGICAL_OPERATOR.OR in expression) {
+      const logicalOperator = LOGICAL_OPERATOR.AND in expression ? LOGICAL_OPERATOR.AND : LOGICAL_OPERATOR.OR;
+      const conditions = LOGICAL_OPERATOR.AND in expression ? expression.and : expression.or;
+
+      if (!Array.isArray(conditions) || conditions.length === 0) {
+        throw new Error("AND/OR groups must contain at least one condition");
       }
 
-      const convertedConditions = andConditions.map((item) => this._convertExpressionToInternal(item));
-      return createAndGroupNode(convertedConditions);
+      const convertedConditions = conditions.map((item) => this._convertExpressionToInternal(item));
+      return logicalOperator === LOGICAL_OPERATOR.AND
+        ? createAndGroupNode(convertedConditions)
+        : createOrGroupNode(convertedConditions);
     }
 
     throw new Error(`Invalid expression: unknown structure with keys [${expressionKeys.join(", ")}]`);
@@ -89,7 +115,7 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
    * @param internalFilter - The internal filter expression
    * @returns External filter expression
    */
-  toExternal(internalFilter: TFilterExpression<TWorkItemFilterProperty>): TWorkItemFilterExpression {
+  toExternal(internalFilter: TFilterExpression<TWorkItemFilterProperty> | null): TWorkItemFilterExpression {
     if (!internalFilter) {
       return {};
     }
@@ -116,13 +142,15 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
 
     // It's a group node
 
-    if (isAndGroupNode(expression)) {
+    if (isNotGroupNode(expression)) {
       return {
-        [LOGICAL_OPERATOR.AND]: expression.children.map((child) => this._convertExpressionToExternal(child)),
-      } as TWorkItemFilterExpressionData;
+        [LOGICAL_OPERATOR.NOT]: this._convertExpressionToExternal(expression.child),
+      };
     }
 
-    throw new Error(`Unknown group node type for expression`);
+    return {
+      [expression.logicalOperator]: expression.children.map((child) => this._convertExpressionToExternal(child)),
+    } as TWorkItemFilterExpressionData;
   }
 
   /**
@@ -137,7 +165,9 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
     if (keys.length === 0) return false;
 
     // Check if any key contains logical operators (would indicate it's a group)
-    const hasLogicalOperators = keys.some((key) => key === LOGICAL_OPERATOR.AND);
+    const hasLogicalOperators = keys.some((key) =>
+      Object.values(LOGICAL_OPERATOR).some((operator) => operator === key)
+    );
     if (hasLogicalOperators) return false;
 
     // All keys must match the work item filter condition key pattern
@@ -151,6 +181,7 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
    */
   private _isValidWorkItemFilterConditionKey = (key: string): key is TWorkItemFilterConditionKey => {
     if (typeof key !== "string" || key.length === 0) return false;
+    if (this._isWorkItemFilterProperty(key)) return true;
 
     // Find the last occurrence of '__' to separate property from operator
     const lastDoubleUnderscoreIndex = key.lastIndexOf("__");
@@ -166,13 +197,17 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
     const operator = key.substring(lastDoubleUnderscoreIndex + 2);
 
     // Validate property is in allowed list
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!WORK_ITEM_FILTER_PROPERTY_KEYS.includes(property as any) && !property.startsWith("customproperty_")) {
-      return false;
-    }
+    if (!this._isWorkItemFilterProperty(property)) return false;
 
-    // Validate operator is not empty
-    return operator.length > 0;
+    return supportedOperators.has(operator);
+  };
+
+  private _isWorkItemFilterProperty = (property: string): property is TWorkItemFilterProperty => {
+    if (WORK_ITEM_FILTER_PROPERTY_KEYS.some((propertyKey) => propertyKey === property)) return true;
+    const prefix = ["customproperty_", "custom_fields__"].find((value) => property.startsWith(value));
+    if (!prefix) return false;
+    const customPropertyId = property.slice(prefix.length);
+    return customPropertyId.length > 0 && !customPropertyId.includes("__");
   };
 
   /**
@@ -195,6 +230,10 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
       return null;
     }
 
+    if (this._isWorkItemFilterProperty(key)) {
+      return [key, EQUALITY_OPERATOR.EXACT, data[key]];
+    }
+
     // Find the last occurrence of '__' to separate property from operator
     const lastDoubleUnderscoreIndex = key.lastIndexOf("__");
     const property = key.substring(0, lastDoubleUnderscoreIndex);
@@ -213,7 +252,7 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
    * @param value - The string value to parse
    * @returns Parsed value as string or array of strings
    */
-  private _parseFilterValue = (value: TFilterValue): SingleOrArray<TFilterValue> => {
+  private _parseFilterValue = (value: SingleOrArray<TFilterValue>): SingleOrArray<TFilterValue> => {
     if (!value) return value;
 
     if (typeof value !== "string") return value;
@@ -250,11 +289,8 @@ class WorkItemFiltersAdapter extends FilterAdapter<TWorkItemFilterProperty, TWor
   ): TWorkItemFilterConditionData => {
     const conditionKey = `${property}__${operator}`;
 
-    // Convert value to string format
-    const stringValue = Array.isArray(value) ? value.join(",") : value;
-
     return {
-      [conditionKey]: stringValue,
+      [conditionKey]: value,
     } as TWorkItemFilterConditionData;
   };
 }

@@ -24,7 +24,7 @@ type TGetOrCreateFilterParams = {
   entityType: EIssuesStoreType;
   expressionOptions?: TExpressionOptions<TWorkItemFilterExpression>;
   initialExpression?: TWorkItemFilterExpression;
-  onExpressionChange?: (expression: TWorkItemFilterExpression) => void;
+  onExpressionChange?: (expression: TWorkItemFilterExpression) => void | Promise<void>;
 };
 
 export interface IWorkItemFilterStore {

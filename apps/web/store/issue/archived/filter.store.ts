@@ -171,11 +171,6 @@ export class ArchivedIssuesFilter extends IssueFilterHelperStore implements IArc
     filters
   ) => {
     try {
-      runInAction(() => {
-        set(this.filters, [projectId, "richFilters"], filters);
-      });
-
-      this.rootIssueStore.archivedIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
       this.handleIssuesLocalFilters.set(
         EIssuesStoreType.ARCHIVED,
         EIssueFilterType.FILTERS,
@@ -186,6 +181,10 @@ export class ArchivedIssuesFilter extends IssueFilterHelperStore implements IArc
           rich_filters: filters,
         }
       );
+      runInAction(() => {
+        set(this.filters, [projectId, "richFilters"], filters);
+      });
+      this.rootIssueStore.archivedIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
     } catch (error) {
       console.log("error while updating rich filters", error);
       throw error;

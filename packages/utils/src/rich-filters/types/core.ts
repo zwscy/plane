@@ -10,6 +10,8 @@ import type {
   TFilterExpression,
   TFilterFieldType,
   TFilterGroupNode,
+  TFilterOrGroupNode,
+  TFilterNotGroupNode,
   TFilterProperty,
   TFilterValue,
 } from "@plane/types";
@@ -41,6 +43,13 @@ export const isAndGroupNode = <P extends TFilterProperty>(
   group: TFilterGroupNode<P>
 ): group is TFilterAndGroupNode<P> => group.logicalOperator === LOGICAL_OPERATOR.AND;
 
+export const isOrGroupNode = <P extends TFilterProperty>(group: TFilterGroupNode<P>): group is TFilterOrGroupNode<P> =>
+  group.logicalOperator === LOGICAL_OPERATOR.OR;
+
+export const isNotGroupNode = <P extends TFilterProperty>(
+  group: TFilterGroupNode<P>
+): group is TFilterNotGroupNode<P> => group.logicalOperator === LOGICAL_OPERATOR.NOT;
+
 /**
  * Type guard to check if a group node has children property
  * @param group - The group node to check
@@ -48,7 +57,7 @@ export const isAndGroupNode = <P extends TFilterProperty>(
  */
 export const hasChildrenProperty = <P extends TFilterProperty>(
   group: TFilterGroupNode<P>
-): group is TFilterAndGroupNode<P> => {
+): group is TFilterAndGroupNode<P> | TFilterOrGroupNode<P> => {
   const groupWithChildren = group as { children?: unknown };
   return "children" in group && Array.isArray(groupWithChildren.children);
 };

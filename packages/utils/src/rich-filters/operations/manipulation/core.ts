@@ -13,9 +13,9 @@ import type {
   TFilterValue,
 } from "@plane/types";
 // local imports
-import { createAndGroupNode } from "../../factories/nodes/core";
+import { createAndGroupNode, createOrGroupNode } from "../../factories/nodes/core";
 import { getGroupChildren } from "../../types";
-import { isAndGroupNode, isConditionNode, isGroupNode } from "../../types/core";
+import { isAndGroupNode, isConditionNode, isGroupNode, isOrGroupNode } from "../../types/core";
 import { shouldUnwrapGroup } from "../../validators/shared";
 import { transformExpressionTree } from "../transformation/core";
 
@@ -49,6 +49,18 @@ export const addAndCondition = <P extends TFilterProperty>(
   // Throw error for unexpected expression type
   console.error("Invalid expression type", expression);
   return expression;
+};
+
+export const addOrCondition = <P extends TFilterProperty>(
+  expression: TFilterExpression<P> | null,
+  condition: TFilterExpression<P>
+): TFilterExpression<P> => {
+  if (!expression) return condition;
+  if (isGroupNode(expression) && isOrGroupNode(expression)) {
+    expression.children.push(condition);
+    return expression;
+  }
+  return createOrGroupNode([expression, condition]);
 };
 
 /**

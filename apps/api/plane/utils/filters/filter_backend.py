@@ -15,6 +15,8 @@ from rest_framework import filters
 from rest_framework.exceptions import ValidationError as DRFValidationError
 
 from plane.utils.exception_logger import log_exception
+from plane.utils.filters.filterset import IssueFilterSet
+from plane.utils.filters.typed_issue_filters import TypedIssueFilters
 
 
 class ComplexFilterBackend(filters.BaseFilterBackend):
@@ -60,7 +62,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
         """
         try:
             if isinstance(raw_filter, str):
-                return json.loads(raw_filter)
+                raw_filter = json.loads(raw_filter)
             if isinstance(raw_filter, dict):
                 return raw_filter
             raise DRFValidationError(
@@ -81,6 +83,13 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
         """Process a JSON filter structure using Q object composition."""
         if not filter_data:
             return queryset
+
+        filterset_class = getattr(view, "filterset_class", None)
+        self.typed_filters = (
+            TypedIssueFilters(queryset, getattr(view, "kwargs", {}).get("project_id"))
+            if filterset_class and issubclass(filterset_class, IssueFilterSet)
+            else None
+        )
 
         # Validate structure and depth before field allowlist checks
         max_depth = self._get_max_depth(view)
@@ -118,7 +127,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
             # Field keys must match FilterSet filter names (including any lookups)
             # Example: 'sequence_id__gte' should be declared in base_filters
             # Special-case __range: require the '<base>__range' filter itself
-            if field not in allowed_fields:
+            if field not in allowed_fields and not (self.typed_filters and self.typed_filters.supports_key(field)):
                 raise DRFValidationError(
                     {
                         "message": f"Filtering on field '{field}' is not allowed",
@@ -175,6 +184,10 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
         """
         if not isinstance(node, dict):
             return None
+
+        # Structure validation accepts case-insensitive logical operators.
+        # Evaluate the same normalized keys so accepted groups cannot be ignored.
+        node = {key.lower() if key.lower() in ("and", "or", "not") else key: value for key, value in node.items()}
 
         # 'or' combination - OR of child Q objects
         if "or" in node:
@@ -257,9 +270,19 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
         # Apply preprocessing hook
         processed_conditions = self._preprocess_leaf_conditions(leaf_conditions, view, queryset)
 
+        typed_q = Q()
+        legacy_conditions = {}
+        for key, value in processed_conditions.items():
+            if self.typed_filters and self.typed_filters.supports_key(key):
+                typed_q &= self.typed_filters.build(key, value)
+            else:
+                legacy_conditions[key] = value
+        if not legacy_conditions:
+            return typed_q
+
         # Build a QueryDict from the leaf conditions
         qd = QueryDict(mutable=True)
-        for key, value in processed_conditions.items():
+        for key, value in legacy_conditions.items():
             # Default serialization to string; QueryDict expects strings
             if isinstance(value, list):
                 # Repeat key for list values (e.g., __in)
@@ -293,7 +316,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
                 }
             )
 
-        return fs.build_combined_q()
+        return typed_q & fs.build_combined_q()
 
     def _get_max_depth(self, view):
         """Return the maximum allowed nesting depth for complex filters.

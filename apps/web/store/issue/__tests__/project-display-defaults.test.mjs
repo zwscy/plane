@@ -17,7 +17,7 @@ const webRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const require = createRequire(resolve(webRoot, "package.json"));
 const ts = require("typescript");
 const { EIssueFilterType } = require("@plane/constants");
-const { autorun } = require("mobx");
+const { autorun, runInAction } = require("mobx");
 const modules = new Map();
 function HTTPService() {}
 function load(file) {
@@ -29,6 +29,7 @@ function load(file) {
   }).outputText;
   const dependency = (specifier) => {
     if (specifier === "@/services/project") return { ProjectService: HTTPService };
+    if (specifier === "@/services/issue_filter.service") return { IssueFiltersService: HTTPService };
     if (specifier === "@/lib/local-storage") return { storage: { get: () => null } };
     if (specifier === "@/helpers/custom-field-views") return fieldViews;
     if (specifier.startsWith(".")) {
@@ -41,6 +42,9 @@ function load(file) {
   return module.exports;
 }
 const { ProjectIssuesFilter } = load(resolve(webRoot, "store/issue/project/filter.store.ts"));
+const { CycleIssuesFilter } = load(resolve(webRoot, "store/issue/cycle/filter.store.ts"));
+const { ModuleIssuesFilter } = load(resolve(webRoot, "store/issue/module/filter.store.ts"));
+const { ArchivedIssuesFilter } = load(resolve(webRoot, "store/issue/archived/filter.store.ts"));
 const config = {
   display_properties: {
     state: true,
@@ -390,7 +394,7 @@ test("rich-filter writes serialize separately and preserve the latest saved inte
   const first = store.updateFilterExpression("workspace", "first", firstRich);
   const second = store.updateFilterExpression("workspace", "first", newestRich);
   assert.equal(payloads.length, 1);
-  assert.deepEqual(store.getIssueFilters("first").richFilters, newestRich);
+  assert.deepEqual(store.getIssueFilters("first").richFilters, rich);
   network.resolve();
   await Promise.all([first, second]);
   assert.deepEqual(payloads, [firstRich, newestRich]);
@@ -484,4 +488,131 @@ test("a failed queued write does not block the next independent display change",
   assert.equal(store.getIssueFilters("first").displayProperties.state, true);
   assert.equal(store.getIssueFilters("first").displayProperties.due_date, true);
   assert.equal(store.getDisplayConfigPending("first"), false);
+});
+
+function richFilterFixture(scope) {
+  const queries = [];
+  const id = scope === "cycle" ? "cycle" : scope === "module" ? "module" : "first";
+  const root = { projectId: "first", cycleId: "cycle", moduleId: "module" };
+  const Store = {
+    project: ProjectIssuesFilter,
+    cycle: CycleIssuesFilter,
+    module: ModuleIssuesFilter,
+    archived: ArchivedIssuesFilter,
+  }[scope];
+  const store = new Store(root);
+  runInAction(() => {
+    store.filters[id] = {
+      richFilters: rich,
+      displayFilters: response().display_filters,
+      displayProperties: config.display_properties,
+      kanbanFilters: { group_by: [], sub_group_by: [] },
+    };
+  });
+  root[`${scope}Issues`] = { fetchIssuesWithExistingPagination: () => queries.push(store.getAppliedFilters(id)) };
+  const service = scope === "project" ? store.projectService : store.issueFilterService;
+  const method = {
+    project: "updateProjectUserProperties",
+    cycle: "patchCycleIssueFilters",
+    module: "patchModuleIssueFilters",
+  }[scope];
+  const update = (expression) =>
+    scope === "cycle" || scope === "module"
+      ? store.updateFilterExpression("workspace", "first", id, expression)
+      : store.updateFilterExpression("workspace", id, expression);
+  return { store, queries, id, service, method, update };
+}
+
+for (const scope of ["project", "cycle", "module"]) {
+  test(`${scope} rich-filter persistence failure leaves params and fetched list unchanged`, async () => {
+    const { store, queries, id, service, method, update } = richFilterFixture(scope);
+    const originalParams = store.getAppliedFilters(id);
+    const offline = new Error("preference persistence failed");
+    service[method] = async () => {
+      throw offline;
+    };
+    await assert.rejects(update({ priority__exact: "high" }), offline);
+    assert.deepEqual(store.getIssueFilters(id).richFilters, rich);
+    assert.deepEqual(store.getAppliedFilters(id), originalParams);
+    assert.deepEqual(queries, []);
+  });
+
+  test(`${scope} fetches only after preferences persist, using the newly saved rich filter`, async () => {
+    const { store, queries, id, service, method, update } = richFilterFixture(scope);
+    const network = deferred();
+    const nextRich = { or: [{ priority__exact: "high" }, { name__icontains: "release" }] };
+    service[method] = async () => network.promise;
+    const pending = update(nextRich);
+    assert.deepEqual(store.getIssueFilters(id).richFilters, rich);
+    assert.deepEqual(queries, []);
+    network.resolve(response({ rich_filters: nextRich }));
+    await pending;
+    assert.deepEqual(store.getIssueFilters(id).richFilters, nextRich);
+    assert.equal(queries.length, 1);
+    assert.equal(queries[0].filters, JSON.stringify(nextRich));
+  });
+}
+
+for (const scope of ["cycle", "module"]) {
+  test(`${scope} serializes rich writes so the last successful preference and query agree`, async () => {
+    const { store, queries, id, service, method, update } = richFilterFixture(scope);
+    const network = deferred();
+    const started = deferred();
+    const firstRich = { priority__exact: "low" };
+    const latestRich = { priority__exact: "high" };
+    const payloads = [];
+    service[method] = async (...args) => {
+      const payload = args.at(-1);
+      payloads.push(payload.rich_filters);
+      if (payloads.length === 1) {
+        started.resolve();
+        await network.promise;
+      }
+      return response({ rich_filters: payload.rich_filters });
+    };
+    const first = update(firstRich);
+    const second = update(latestRich);
+    await started.promise;
+    assert.deepEqual(payloads, [firstRich]);
+    assert.deepEqual(store.getIssueFilters(id).richFilters, rich);
+    network.resolve();
+    await Promise.all([first, second]);
+    assert.deepEqual(payloads, [firstRich, latestRich]);
+    assert.deepEqual(store.getIssueFilters(id).richFilters, latestRich);
+    assert.equal(queries.at(-1).filters, JSON.stringify(latestRich));
+  });
+}
+
+test("project skips stale rich responses and fetches only the latest saved intent", async () => {
+  const { store, queries, service, method, update } = richFilterFixture("project");
+  const firstNetwork = deferred();
+  const secondNetwork = deferred();
+  let calls = 0;
+  const firstRich = { priority__exact: "low" };
+  const latestRich = { priority__exact: "high" };
+  service[method] = async () => (++calls === 1 ? firstNetwork.promise : secondNetwork.promise);
+  const first = update(firstRich);
+  const second = update(latestRich);
+  firstNetwork.resolve(response({ rich_filters: firstRich }));
+  await first;
+  assert.deepEqual(store.getIssueFilters("first").richFilters, rich);
+  assert.deepEqual(queries, []);
+  secondNetwork.resolve(response({ rich_filters: latestRich }));
+  await second;
+  assert.deepEqual(store.getIssueFilters("first").richFilters, latestRich);
+  assert.deepEqual(
+    queries.map((params) => params.filters),
+    [JSON.stringify(latestRich)]
+  );
+});
+
+test("archived local persistence failure does not apply or fetch a draft rich filter", async () => {
+  const { store, queries, update } = richFilterFixture("archived");
+  const unavailable = new Error("local preferences unavailable");
+  store.handleIssuesLocalFilters.set = () => {
+    throw unavailable;
+  };
+  await assert.rejects(update({ priority__exact: "high" }), unavailable);
+  assert.deepEqual(store.getIssueFilters("first").richFilters, rich);
+  assert.deepEqual(queries, []);
 });

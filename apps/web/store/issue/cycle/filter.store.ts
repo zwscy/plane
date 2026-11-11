@@ -61,6 +61,7 @@ export interface ICycleIssuesFilter extends IBaseIssueFilterStore {
 export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleIssuesFilter {
   // observables
   filters: { [cycleId: string]: IIssueFilters } = {};
+  private richFilterWrites: Record<string, Promise<unknown> | undefined> = {};
   // root store
   rootIssueStore: IIssueRootStore;
   // services
@@ -188,18 +189,27 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
     cycleId,
     filters
   ) => {
+    const previousWrite = this.richFilterWrites[cycleId];
+    const pending = (previousWrite ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(() =>
+        this.issueFilterService.patchCycleIssueFilters(workspaceSlug, projectId, cycleId, {
+          rich_filters: filters,
+        })
+      );
+    this.richFilterWrites[cycleId] = pending;
     try {
+      await pending;
       runInAction(() => {
         set(this.filters, [cycleId, "richFilters"], filters);
       });
 
       this.rootIssueStore.cycleIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation", cycleId);
-      await this.issueFilterService.patchCycleIssueFilters(workspaceSlug, projectId, cycleId, {
-        rich_filters: filters,
-      });
     } catch (error) {
       console.log("error while updating rich filters", error);
       throw error;
+    } finally {
+      if (this.richFilterWrites[cycleId] === pending) delete this.richFilterWrites[cycleId];
     }
   };
 

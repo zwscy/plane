@@ -5,7 +5,13 @@
  */
 
 // plane imports
-import type { TFilterExpression, TFilterGroupNode, TFilterProperty } from "@plane/types";
+import type {
+  TFilterAndGroupNode,
+  TFilterExpression,
+  TFilterGroupNode,
+  TFilterOrGroupNode,
+  TFilterProperty,
+} from "@plane/types";
 // local imports
 import { isConditionNode, isGroupNode } from "../../types/core";
 import { getGroupChildren } from "../../types/shared";
@@ -52,7 +58,7 @@ const createGroupTransformResult = <P extends TFilterProperty>(
  * Handles child collection, null filtering, and empty group removal.
  */
 export const transformGroupWithChildren = <P extends TFilterProperty>(
-  group: TFilterGroupNode<P>,
+  group: TFilterAndGroupNode<P> | TFilterOrGroupNode<P>,
   transformFn: TTreeTransformFn<P>
 ): TTreeTransformResult<P> => {
   const children = getGroupChildren(group);
@@ -77,11 +83,19 @@ export const transformGroupWithChildren = <P extends TFilterProperty>(
     return { expression: null, shouldNotify };
   }
 
+  // Saving a valid expression must preserve its existing group structure.
+  if (
+    transformedChildren.length === children.length &&
+    transformedChildren.every((child, index) => child === children[index])
+  ) {
+    return { expression: group, shouldNotify };
+  }
+
   // Create updated group with transformed children - type-safe without casting
   const updatedGroup: TFilterGroupNode<P> = {
     ...group,
     children: transformedChildren,
-  } as TFilterGroupNode<P>;
+  };
 
   return createGroupTransformResult(updatedGroup, shouldNotify);
 };

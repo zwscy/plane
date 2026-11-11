@@ -4,6 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import type { TCoreFilterFieldConfigs } from "../field-types/core";
+import type { TExtendedSupportedOperators } from "../operators/extended";
+
 // ----------------------------- EXACT Operator -----------------------------
 export type TExtendedExactOperatorConfigs = never;
 
@@ -14,4 +17,6 @@ export type TExtendedInOperatorConfigs = never;
 export type TExtendedRangeOperatorConfigs = never;
 
 // ----------------------------- Extended Operator Specific Configs -----------------------------
-export type TExtendedOperatorSpecificConfigs = unknown;
+export type TExtendedOperatorSpecificConfigs = {
+  [K in TExtendedSupportedOperators]: TCoreFilterFieldConfigs;
+};

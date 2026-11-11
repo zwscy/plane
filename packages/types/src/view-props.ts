@@ -6,8 +6,8 @@
 
 import type { IProjectMemberNavigationPreferences } from "./project";
 import type { TIssue } from "./issues/issue";
-import type { LOGICAL_OPERATOR, TSupportedOperators } from "./rich-filters";
-import type { CompleteOrEmpty } from "./utils";
+import type { LOGICAL_OPERATOR, TFilterValue, TSupportedOperators } from "./rich-filters";
+import type { CompleteOrEmpty, SingleOrArray } from "./utils";
 
 export type TIssueLayouts = "list" | "kanban" | "calendar" | "spreadsheet" | "gantt_chart";
 
@@ -97,6 +97,8 @@ export type TCalendarLayouts = "month" | "week";
  * Keys for the work item filter properties
  */
 export const WORK_ITEM_FILTER_PROPERTY_KEYS = [
+  "name",
+  "estimate_point",
   "state_group",
   "priority",
   "start_date",
@@ -113,19 +115,32 @@ export const WORK_ITEM_FILTER_PROPERTY_KEYS = [
   "created_at",
   "updated_at",
 ] as const;
-export type TWorkItemFilterProperty = (typeof WORK_ITEM_FILTER_PROPERTY_KEYS)[number];
+export type TWorkItemFilterProperty =
+  | (typeof WORK_ITEM_FILTER_PROPERTY_KEYS)[number]
+  | `custom_fields__${string}`
+  | `customproperty_${string}`;
 
-export type TWorkItemFilterConditionKey = `${TWorkItemFilterProperty}__${TSupportedOperators}`;
+export type TWorkItemFilterConditionKey =
+  | TWorkItemFilterProperty
+  | `${TWorkItemFilterProperty}__${TSupportedOperators}`;
 
 export type TWorkItemFilterConditionData = Partial<{
-  [K in TWorkItemFilterConditionKey]: string | boolean | number;
+  [K in TWorkItemFilterConditionKey]: SingleOrArray<TFilterValue>;
 }>;
 
 export type TWorkItemFilterAndGroup = {
-  [LOGICAL_OPERATOR.AND]: TWorkItemFilterConditionData[];
+  [LOGICAL_OPERATOR.AND]: TWorkItemFilterExpressionData[];
 };
 
-export type TWorkItemFilterGroup = TWorkItemFilterAndGroup;
+export type TWorkItemFilterOrGroup = {
+  [LOGICAL_OPERATOR.OR]: TWorkItemFilterExpressionData[];
+};
+
+export type TWorkItemFilterNotGroup = {
+  [LOGICAL_OPERATOR.NOT]: TWorkItemFilterExpressionData;
+};
+
+export type TWorkItemFilterGroup = TWorkItemFilterAndGroup | TWorkItemFilterOrGroup | TWorkItemFilterNotGroup;
 
 export type TWorkItemFilterExpressionData = TWorkItemFilterConditionData | TWorkItemFilterGroup;
 

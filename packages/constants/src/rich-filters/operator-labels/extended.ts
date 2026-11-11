@@ -9,12 +9,25 @@ import type { TExtendedSupportedOperators } from "@plane/types";
 /**
  * Extended operator labels
  */
-export const EXTENDED_OPERATOR_LABELS_MAP: Record<TExtendedSupportedOperators, string> = {} as const;
+export const EXTENDED_OPERATOR_LABELS_MAP: Record<TExtendedSupportedOperators, string> = {
+  not_exact: "is not",
+  not_in: "is none of",
+  icontains: "contains",
+  not_icontains: "does not contain",
+  gt: "greater than",
+  gte: "greater than or equal to",
+  lt: "less than",
+  lte: "less than or equal to",
+  not_range: "not between",
+  is_empty: "is empty",
+  is_not_empty: "is not empty",
+  contains_all: "contains all of",
+} as const;
 
 /**
  * Extended date-specific operator labels
  */
-export const EXTENDED_DATE_OPERATOR_LABELS_MAP: Record<TExtendedSupportedOperators, string> = {} as const;
+export const EXTENDED_DATE_OPERATOR_LABELS_MAP: Record<never, string> = {} as const;
 
 /**
  * Negated operator labels for all operators

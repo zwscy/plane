@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from "uuid";
 // plane imports
 import type {
   TFilterAndGroupNode,
+  TFilterOrGroupNode,
+  TFilterNotGroupNode,
   TFilterConditionNode,
   TFilterConditionPayload,
   TFilterExpression,
@@ -41,4 +43,18 @@ export const createAndGroupNode = <P extends TFilterProperty>(
   type: FILTER_NODE_TYPE.GROUP,
   logicalOperator: LOGICAL_OPERATOR.AND,
   children: nodes,
+});
+
+export const createOrGroupNode = <P extends TFilterProperty>(nodes: TFilterExpression<P>[]): TFilterOrGroupNode<P> => ({
+  id: uuidv4(),
+  type: FILTER_NODE_TYPE.GROUP,
+  logicalOperator: LOGICAL_OPERATOR.OR,
+  children: nodes,
+});
+
+export const createNotGroupNode = <P extends TFilterProperty>(child: TFilterExpression<P>): TFilterNotGroupNode<P> => ({
+  id: uuidv4(),
+  type: FILTER_NODE_TYPE.GROUP,
+  logicalOperator: LOGICAL_OPERATOR.NOT,
+  child,
 });

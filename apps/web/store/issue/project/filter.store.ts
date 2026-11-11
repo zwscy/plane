@@ -298,27 +298,18 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     projectId,
     filters
   ) => {
-    const previousRichFilters = toJS(this.filters[projectId]?.richFilters);
     const requestId = (this.richFilterRequestIds[projectId] ?? 0) + 1;
     this.richFilterRequestIds[projectId] = requestId;
     try {
-      runInAction(() => {
-        set(this.filters, [projectId, "richFilters"], filters);
-      });
-
-      this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
       const response = await this.enqueueWrite(this.richFilterWrites, projectId, () =>
         this.projectService.updateProjectUserProperties(workspaceSlug, projectId, { rich_filters: filters })
       );
-      if (requestId === this.richFilterRequestIds[projectId])
-        runInAction(() => {
-          set(this.filters, [projectId, "richFilters"], response.rich_filters);
-        });
+      if (requestId !== this.richFilterRequestIds[projectId]) return;
+      runInAction(() => {
+        set(this.filters, [projectId, "richFilters"], response.rich_filters);
+      });
+      this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
     } catch (error) {
-      if (requestId === this.richFilterRequestIds[projectId])
-        runInAction(() => {
-          set(this.filters, [projectId, "richFilters"], previousRichFilters);
-        });
       console.log("error while updating rich filters", error);
       throw error;
     }
