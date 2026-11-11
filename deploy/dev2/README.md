@@ -2,6 +2,23 @@
 
 本目录部署新建的 `plane-dev2` 项目。应用源码使用已合并、已测试的版本；不要导入本地体验账号、项目或测试数据。反向代理与证书由使用者配置。
 
+## 主线与部署来源
+
+本 Fork 的默认主分支和部署来源统一为 `master`。功能在 `codex/*` 分支开发，验证后合入 `master`；已有 `preview` 和历史功能分支保留，不再作为 dev2 的部署来源。
+
+每次准备发布前，在干净的构建仓库更新主线：
+
+```bash
+git fetch origin master
+git switch master
+git pull --ff-only origin master
+git rev-parse HEAD
+```
+
+`build.sh` 要求当前分支为 `master`、没有未提交或非忽略的未跟踪文件、存在 `origin/master` 且与当前提交一致。脚本不会代为切分支或联网更新引用，必须先执行上述同步步骤。个人运行配置及构建产物应保存在已忽略的本机目录中。
+
+选择并记录该次已测试的完整提交号，再构建对应的 Docker 镜像。推送或合并 GitHub 代码不会更新 dev2；仍须完成备份、加载指定镜像、迁移、重建相关容器，以及核对实际运行版本。部署使用固定提交和镜像版本，便于核查和回退。
+
 ## 数据库与资源
 
 优先核实宝塔 PostgreSQL 是否已经可用。2026-11-10 只读核查发现宝塔没有安装或登记 PgSQL；宿主 PostgreSQL 18.6 与 Dify PostgreSQL 属于其他环境。因此本次按授权备选方案运行 Plane 专属 PostgreSQL 15 容器，保留它们的运行状态和配置。

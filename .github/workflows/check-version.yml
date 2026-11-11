@@ -7,6 +7,8 @@ on:
 
 jobs:
   check-version:
+    # This is an upstream release gate; the fork uses master for routine integration.
+    if: github.repository == 'makeplane/plane'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

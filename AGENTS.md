@@ -22,6 +22,12 @@
 - **Testing**: All features require unit tests, use existing test framework per package
 - **Components**: Primitives come from the published `@makeplane/propel` npm package (`@makeplane/propel/components/*`, `elements/*`, `icons`); composite/Plane-specific components live in `@plane/blocks` (`packages/blocks`, subpath imports only, e.g. `@plane/blocks/toast`)
 
+## Branches and deployment
+
+- `master` is this fork's default integration and deployment branch. Develop changes on `codex/*` branches, verify them, and merge approved work into `master`. Follow any task-specific local acceptance and delivery gates.
+- `dev2` is a deployment environment, not a Git branch. Build its images from a clean, pushed `master` checkout after refreshing `origin/master`; record the exact commit and image identities.
+- A GitHub push does not deploy dev2. Report commits, pushes, local updates and remote deployments separately, and verify the running remote version before claiming a deployment is complete.
+
 ## Backend dependencies (uv)
 
 `apps/api` dependencies are managed with [uv](https://docs.astral.sh/uv/): declared in `apps/api/pyproject.toml`, pinned in `apps/api/uv.lock` (commit both). Groups: `dev` and `test` (installed by default; they use `psycopg-binary`), `production` (gunicorn + the source-built `psycopg-c`; production image and migration-check only). Lint config lives in `apps/api/ruff.toml`.

@@ -5,6 +5,24 @@ set -euo pipefail
 repo_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)
 cd -- "$repo_root"
 source_revision=$(git rev-parse HEAD)
+source_branch=$(git symbolic-ref --quiet --short HEAD || true)
+if [[ "$source_branch" != master ]]; then
+  echo "dev2 builds must run from the master branch. Fetch origin and switch to master before building." >&2
+  exit 1
+fi
+worktree_status=$(git status --porcelain --untracked-files=all)
+if [[ -n "$worktree_status" ]]; then
+  echo "Working tree must be clean before building dev2 images." >&2
+  exit 1
+fi
+if ! remote_revision=$(git rev-parse --verify 'refs/remotes/origin/master^{commit}' 2>/dev/null); then
+  echo "Missing origin/master. Run git fetch origin master before building." >&2
+  exit 1
+fi
+if [[ "$source_revision" != "$remote_revision" ]]; then
+  echo "HEAD must match origin/master. Fetch origin and update master before building." >&2
+  exit 1
+fi
 web_revision=${PLANE_DEV2_WEB_SOURCE_REVISION:-}
 admin_revision=${PLANE_DEV2_ADMIN_SOURCE_REVISION:-}
 
