@@ -14,14 +14,12 @@ import { observer } from "mobx-react";
 import { useOutsideClickDetector } from "@plane/hooks";
 // types
 import type { IIssueDisplayProperties, TIssue, TIssueMap } from "@plane/types";
-import { EIssueServiceType } from "@plane/types";
 // components
 import { DropIndicator } from "@plane/blocks/common";
 import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { ListLoaderItemRow } from "@/components/ui/loader/layouts/list-layout-loader";
 // hooks
-import { useOrderedSubIssues } from "@/hooks/use-ordered-sub-issues";
-import { useIssueDetail } from "@/hooks/store/use-issue-detail";
+import { useIssueTreeRow } from "@/hooks/use-project-filtered-tree";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // types
@@ -71,17 +69,19 @@ export const IssueBlockRoot = observer(function IssueBlockRootRenderer(props: Pr
     isEpic = false,
   } = props;
   // states
-  const [isExpanded, setExpanded] = useState<boolean>(false);
   const [instruction, setInstruction] = useState<"DRAG_OVER" | "DRAG_BELOW" | undefined>(undefined);
   const [isCurrentBlockDragging, setIsCurrentBlockDragging] = useState(false);
   // ref
   const issueBlockRef = useRef<HTMLDivElement | null>(null);
   // hooks
   const { isMobile } = usePlatformOS();
-  // store hooks
-  const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
-
-  useOrderedSubIssues(issueId, isExpanded, isEpic);
+  const {
+    children: subIssues,
+    isExpanded,
+    toggleExpanded,
+    filteredChildCount,
+    isFilterContext,
+  } = useIssueTreeRow(issueId, isEpic);
 
   const isSubIssue = nestingLevel !== 0;
 
@@ -133,7 +133,6 @@ export const IssueBlockRoot = observer(function IssueBlockRootRenderer(props: Pr
 
   if (!issueId || !issuesMap[issueId]?.created_at) return null;
 
-  const subIssues = subIssuesStore.subIssuesByIssueId(issueId);
   return (
     <div className="relative" ref={issueBlockRef} id={getIssueBlockId(issueId, groupId)}>
       <DropIndicator classNames={"absolute top-0 z-[2]"} isVisible={instruction === "DRAG_OVER"} />
@@ -155,7 +154,9 @@ export const IssueBlockRoot = observer(function IssueBlockRootRenderer(props: Pr
           canEditProperties={canEditProperties}
           displayProperties={displayProperties}
           isExpanded={isExpanded}
-          setExpanded={setExpanded}
+          toggleExpanded={toggleExpanded}
+          filteredChildCount={filteredChildCount}
+          isFilterContext={isFilterContext}
           nestingLevel={nestingLevel}
           spacingLeft={spacingLeft}
           selectionHelpers={selectionHelpers}

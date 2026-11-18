@@ -5,16 +5,18 @@
  */
 
 import { isCustomFieldOrderBy } from "@/helpers/custom-field-views";
-import { action, makeObservable, runInAction } from "mobx";
+import { action, makeObservable, observable, runInAction } from "mobx";
 // types
 import type {
   TIssue,
+  TIssueParams,
   TLoader,
   ViewFlags,
   IssuePaginationOptions,
   TIssuesResponse,
   TBulkOperationsPayload,
 } from "@plane/types";
+import { EIssueLayoutTypes } from "@plane/types";
 // helpers
 // base class
 import type { IBaseIssuesStore } from "../helpers/base-issues.store";
@@ -23,8 +25,25 @@ import { BaseIssuesStore } from "../helpers/base-issues.store";
 import type { IIssueRootStore } from "../root.store";
 import type { IProjectIssuesFilter } from "./filter.store";
 
+type FilteredTree = {
+  projectId: string;
+  matchCount: number;
+  childrenByParent: Record<string, string[]>;
+  contextIds: ReadonlySet<string>;
+  version: number;
+};
+
+const withFilteredTree = (params: Partial<Record<TIssueParams, string | boolean>>) =>
+  (params.layout === EIssueLayoutTypes.LIST || params.layout === EIssueLayoutTypes.SPREADSHEET) &&
+  params.sub_issue === false &&
+  params.filters &&
+  params.filters !== "{}"
+    ? { ...params, filter_tree: true }
+    : params;
+
 export interface IProjectIssues extends IBaseIssuesStore {
   viewFlags: ViewFlags;
+  filteredTree: FilteredTree | undefined;
   // action
   fetchIssues: (
     workspaceSlug: string,
@@ -60,6 +79,8 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
     enableInlineEditing: true,
   };
   router;
+  filteredTree: FilteredTree | undefined = undefined;
+  private requestVersion = 0;
 
   // filter store
   issueFilterStore: IProjectIssuesFilter;
@@ -67,6 +88,7 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
   constructor(_rootStore: IIssueRootStore, issueFilterStore: IProjectIssuesFilter) {
     super(_rootStore, issueFilterStore);
     makeObservable(this, {
+      filteredTree: observable.ref,
       fetchIssues: action,
       fetchNextIssues: action,
       fetchIssuesWithExistingPagination: action,
@@ -84,11 +106,37 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
    * @param projectId
    */
   fetchParentStats = async (workspaceSlug: string, projectId?: string) => {
-    projectId && this.rootIssueStore.rootStore.projectRoot.project.fetchProjectDetails(workspaceSlug, projectId);
+    if (projectId) this.rootIssueStore.rootStore.projectRoot.project.fetchProjectDetails(workspaceSlug, projectId);
   };
 
   /** */
   updateParentStats = () => {};
+
+  override clear(shouldClearPaginationOptions = true) {
+    ++this.requestVersion;
+    super.clear(shouldClearPaginationOptions);
+    this.filteredTree = undefined;
+  }
+
+  private storeFilteredTree(projectId: string, response: TIssuesResponse, append = false) {
+    const tree = response.filtered_tree;
+    if (!tree) return;
+
+    const previous = append && this.filteredTree?.projectId === projectId ? this.filteredTree : undefined;
+    const pageChildren: Record<string, string[]> = {};
+    for (const child of tree.children) {
+      if (!child.parent_id) continue;
+      (pageChildren[child.parent_id] ??= []).push(child.id);
+    }
+    this.rootIssueStore.issues.addIssue(tree.children);
+    this.filteredTree = {
+      projectId,
+      matchCount: tree.match_count,
+      childrenByParent: { ...previous?.childrenByParent, ...pageChildren },
+      contextIds: new Set([...(previous?.contextIds ?? []), ...tree.context_ids]),
+      version: previous?.version ?? this.requestVersion,
+    };
+  }
 
   /**
    * This method is called to fetch the first issues of pagination
@@ -105,6 +153,7 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
     options: IssuePaginationOptions,
     isExistingPaginationOptions: boolean = false
   ) => {
+    let requestVersion = ++this.requestVersion;
     try {
       // set loader and clear store
       runInAction(() => {
@@ -118,18 +167,26 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
           this.controller = new AbortController();
         }
       });
+      requestVersion = this.requestVersion;
 
       // get params from pagination options
-      const params = this.issueFilterStore?.getFilterParams(options, projectId, undefined, undefined, undefined);
+      const params = withFilteredTree(
+        this.issueFilterStore.getFilterParams(options, projectId, undefined, undefined, undefined)
+      );
       // call the fetch issues API with the params
       const response = await this.issueService.getIssues(workspaceSlug, projectId, params, {
         signal: this.controller.signal,
       });
 
       // after fetching issues, call the base method to process the response further
-      this.onfetchIssues(response, options, workspaceSlug, projectId, undefined, !isExistingPaginationOptions);
+      if (requestVersion !== this.requestVersion) return;
+      runInAction(() => {
+        this.onfetchIssues(response, options, workspaceSlug, projectId, undefined, !isExistingPaginationOptions);
+        this.storeFilteredTree(projectId, response);
+      });
       return response;
     } catch (error) {
+      if (requestVersion !== this.requestVersion) return;
       // set loader to undefined if errored out
       this.setLoader(undefined);
       throw error;
@@ -150,25 +207,39 @@ export class ProjectIssues extends BaseIssuesStore implements IProjectIssues {
     const cursorObject = this.getPaginationData(groupId, subGroupId);
     // if there are no pagination options and the next page results do not exist the return
     if (!this.paginationOptions || (cursorObject && !cursorObject?.nextPageResults)) return;
+    const requestVersion = this.requestVersion;
     try {
       // set Loader
       this.setLoader("pagination", groupId, subGroupId);
 
       // get params from stored pagination options
-      const params = this.issueFilterStore?.getFilterParams(
-        this.paginationOptions,
-        projectId,
-        this.getNextCursor(groupId, subGroupId),
-        groupId,
-        subGroupId
+      const filterByRootGroup = this.filteredTree?.projectId === projectId && !!groupId;
+      let params = withFilteredTree(
+        this.issueFilterStore.getFilterParams(
+          this.paginationOptions,
+          projectId,
+          this.getNextCursor(groupId, subGroupId),
+          filterByRootGroup ? undefined : groupId,
+          filterByRootGroup ? undefined : subGroupId
+        )
       );
+      if (filterByRootGroup && typeof params.group_by === "string" && groupId) {
+        // Paginate the displayed root group without adding its criteria to the descendant filter.
+        const { group_by, sub_group_by: _subGroup, ...ungrouped } = params;
+        params = { ...ungrouped, tree_group_by: group_by, tree_group_id: groupId };
+      }
       // call the fetch issues API with the params for next page in issues
       const response = await this.issueService.getIssues(workspaceSlug, projectId, params);
 
       // after the next page of issues are fetched, call the base method to process the response
-      this.onfetchNexIssues(response, groupId, subGroupId);
+      if (requestVersion !== this.requestVersion) return;
+      runInAction(() => {
+        this.onfetchNexIssues(response, groupId, subGroupId);
+        this.storeFilteredTree(projectId, response, true);
+      });
       return response;
     } catch (error) {
+      if (requestVersion !== this.requestVersion) return;
       // set Loader as undefined if errored out
       this.setLoader(undefined, groupId, subGroupId);
       throw error;

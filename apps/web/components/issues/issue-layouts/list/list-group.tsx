@@ -33,6 +33,7 @@ import { useProjectState } from "@/hooks/store/use-project-state";
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer";
 import { useIssuesStore } from "@/hooks/use-issue-layout-store";
 import type { TSelectionHelper } from "@/hooks/use-multiple-select";
+import { useFilteredTreeCollapse, useProjectFilteredTree } from "@/hooks/use-project-filtered-tree";
 // local imports
 import { GroupDragOverlay } from "../group-drag-overlay";
 import { ListQuickAddIssueButton, QuickAddIssueRoot } from "../quick-add";
@@ -102,7 +103,10 @@ export const ListGroup = observer(function ListGroup(props: Props) {
 
   const [isDraggingOverColumn, setIsDraggingOverColumn] = useState(false);
   const [dragColumnOrientation, setDragColumnOrientation] = useState<"justify-start" | "justify-end">("justify-start");
-  const isExpanded = !collapsedGroups?.group_by.includes(group.id);
+  const filteredTree = useProjectFilteredTree();
+  const filteredGroup = useFilteredTreeCollapse(filteredTree?.version);
+  const isExpanded = filteredTree ? !filteredGroup.isCollapsed : !collapsedGroups?.group_by.includes(group.id);
+  const toggleGroup = filteredTree ? filteredGroup.toggle : handleCollapsedGroups;
   const groupRef = useRef<HTMLDivElement | null>(null);
   const { t } = useTranslation();
   const projectState = useProjectState();
@@ -232,7 +236,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
           highlightIssueOnDrop(getIssueBlockId(source.id, destination?.groupId), orderBy !== "sort_order");
 
           if (!isExpanded) {
-            handleCollapsedGroups(group.id);
+            toggleGroup(group.id);
           }
         },
       })
@@ -281,7 +285,7 @@ export const ListGroup = observer(function ListGroup(props: Props) {
           }
           addIssuesToView={addIssuesToView}
           selectionHelpers={selectionHelpers}
-          handleCollapsedGroups={handleCollapsedGroups}
+          handleCollapsedGroups={toggleGroup}
           isExpanded={shouldExpand}
           isEpic={isEpic}
         />

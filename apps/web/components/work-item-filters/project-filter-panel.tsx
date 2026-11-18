@@ -745,7 +745,7 @@ export const ProjectFilterPopover = observer(function ProjectFilterPopover(props
             </p>
           )}
           <p className="mt-3 text-caption-sm-regular text-tertiary">
-            应用后更新个人筛选。子工作项沿用当前树形展开规则。
+            应用后更新个人筛选。树形列表和表格会筛选各级工作项，并自动展开命中的路径。
           </p>
           {!!applyError && (
             <p role="alert" className="mt-2 text-body-xs-regular text-danger-primary">

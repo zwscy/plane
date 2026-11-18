@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import type { Dispatch, MouseEvent, SetStateAction } from "react";
+import type { MouseEvent } from "react";
 import { useEffect, useRef } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
@@ -46,7 +46,9 @@ interface IssueBlockProps {
   nestingLevel: number;
   spacingLeft?: number;
   isExpanded: boolean;
-  setExpanded: Dispatch<SetStateAction<boolean>>;
+  toggleExpanded: () => void;
+  filteredChildCount?: number;
+  isFilterContext?: boolean;
   selectionHelpers: TSelectionHelper;
   isCurrentBlockDragging: boolean;
   setIsCurrentBlockDragging: React.Dispatch<React.SetStateAction<boolean>>;
@@ -67,7 +69,9 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
     nestingLevel,
     spacingLeft = 14,
     isExpanded,
-    setExpanded,
+    toggleExpanded,
+    filteredChildCount,
+    isFilterContext,
     selectionHelpers,
     isCurrentBlockDragging,
     setIsCurrentBlockDragging,
@@ -103,7 +107,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
 
   // derived values
   const issue = issuesMap[issueId];
-  const subIssuesCount = issue?.sub_issues_count ?? 0;
+  const subIssuesCount = filteredChildCount ?? issue?.sub_issues_count ?? 0;
   const canEditIssueProperties = canEditProperties(issue?.project_id ?? undefined);
   const isDraggingAllowed = canDrag && canEditIssueProperties;
 
@@ -147,10 +151,10 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
   const handleToggleExpand = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault();
-    if (nestingLevel >= 3) {
+    if (nestingLevel >= 3 && filteredChildCount === undefined) {
       handleIssuePeekOverview(issue);
     } else {
-      setExpanded((prevState) => !prevState);
+      toggleExpanded();
     }
   };
 
@@ -252,6 +256,8 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
                 {subIssuesCount > 0 && !isEpic && (
                   <button
                     type="button"
+                    aria-label={t("issue.display.extra.show_sub_issues")}
+                    aria-expanded={nestingLevel < 3 || filteredChildCount !== undefined ? isExpanded : undefined}
                     className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
                     onClick={handleToggleExpand}
                   >
@@ -272,6 +278,7 @@ export const IssueBlock = observer(function IssueBlock(props: IssueBlockProps) {
             <Tooltip label={issue.name} layout="stacked" align="start" disabled={isCurrentBlockDragging || isMobile}>
               <p className="cursor-pointer truncate text-body-xs-medium text-primary">{issue.name}</p>
             </Tooltip>
+            {isFilterContext && <span className="shrink-0 text-caption-md-regular text-tertiary">父级路径</span>}
           </div>
           {!issue?.tempId && (
             <div

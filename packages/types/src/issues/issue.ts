@@ -137,6 +137,11 @@ export type TIssuesResponse = {
   extra_stats: null;
   results: TIssueResponseResults;
   total_results: number;
+  filtered_tree?: {
+    match_count: number;
+    children: TIssue[];
+    context_ids: string[];
+  };
 };
 
 export type TBulkIssueProperties = Pick<

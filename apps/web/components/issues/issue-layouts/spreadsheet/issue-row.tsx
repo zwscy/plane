@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import type { Dispatch, MouseEvent, MutableRefObject, SetStateAction } from "react";
+import type { MouseEvent, MutableRefObject } from "react";
 import { useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
@@ -24,7 +24,7 @@ import { MultipleSelectEntityAction } from "@/components/core/multiple-select";
 import RenderIfVisible from "@/components/core/render-if-visible-HOC";
 import { IssueIdentifier } from "@/components/issues/issue-detail/issue-identifier";
 // hooks
-import { useOrderedSubIssues } from "@/hooks/use-ordered-sub-issues";
+import { useIssueTreeRow } from "@/hooks/use-project-filtered-tree";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProject } from "@/hooks/store/use-project";
@@ -78,16 +78,18 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRowRenderer
     shouldRenderByDefault,
     isEpic = false,
   } = props;
-  // states
-  const [isExpanded, setExpanded] = useState<boolean>(false);
   // store hooks
-  const { subIssues: subIssuesStore } = useIssueDetail(isEpic ? EIssueServiceType.EPICS : EIssueServiceType.ISSUES);
   const { issueMap } = useIssues();
-  useOrderedSubIssues(issueId, isExpanded, isEpic);
+  const {
+    children: subIssues,
+    isExpanded,
+    toggleExpanded,
+    filteredChildCount,
+    isFilterContext,
+  } = useIssueTreeRow(issueId, isEpic);
 
   // derived values
   const issue = issueMap[issueId];
-  const subIssues = subIssuesStore.subIssuesByIssueId(issueId);
   const isIssueSelected = selectionHelpers.getIsEntitySelected(issueId);
   const isIssueActive = selectionHelpers.getIsEntityActive(issueId);
 
@@ -126,7 +128,9 @@ export const SpreadsheetIssueRow = observer(function SpreadsheetIssueRowRenderer
           portalElement={portalElement}
           isScrolled={isScrolled}
           isExpanded={isExpanded}
-          setExpanded={setExpanded}
+          toggleExpanded={toggleExpanded}
+          filteredChildCount={filteredChildCount}
+          isFilterContext={isFilterContext}
           spreadsheetColumnsList={spreadsheetColumnsList}
           selectionHelpers={selectionHelpers}
           isEpic={isEpic}
@@ -169,7 +173,9 @@ interface IssueRowDetailsProps {
   issueId: string;
   isScrolled: MutableRefObject<boolean>;
   isExpanded: boolean;
-  setExpanded: Dispatch<SetStateAction<boolean>>;
+  toggleExpanded: () => void;
+  filteredChildCount?: number;
+  isFilterContext?: boolean;
   spreadsheetColumnsList: (keyof IIssueDisplayProperties)[];
   spacingLeft?: number;
   selectionHelpers: TSelectionHelper;
@@ -189,7 +195,9 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
     canEditProperties,
     isScrolled,
     isExpanded,
-    setExpanded,
+    toggleExpanded,
+    filteredChildCount,
+    isFilterContext,
     spreadsheetColumnsList,
     spacingLeft = 6,
     selectionHelpers,
@@ -246,15 +254,15 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
   const handleToggleExpand = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault();
-    if (nestingLevel >= 3) {
+    if (nestingLevel >= 3 && filteredChildCount === undefined) {
       handleIssuePeekOverview(issueDetail);
     } else {
-      setExpanded((prevState) => !prevState);
+      toggleExpanded();
     }
   };
 
   const disableUserActions = !canEditProperties(issueDetail.project_id ?? undefined);
-  const subIssuesCount = issueDetail?.sub_issues_count ?? 0;
+  const subIssuesCount = filteredChildCount ?? issueDetail?.sub_issues_count ?? 0;
   const isIssueSelected = selectionHelpers.getIsEntitySelected(issueDetail.id);
   const projectIdentifier = getProjectIdentifierById(issueDetail.project_id);
 
@@ -351,6 +359,8 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
                 {subIssuesCount > 0 && !isEpic && (
                   <button
                     type="button"
+                    aria-label={t("issue.display.extra.show_sub_issues")}
+                    aria-expanded={nestingLevel < 3 || filteredChildCount !== undefined ? isExpanded : undefined}
                     className="grid size-4 place-items-center rounded-xs text-placeholder hover:text-tertiary"
                     onClick={handleToggleExpand}
                   >
@@ -376,6 +386,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
                     </Tooltip>
                   </div>
                 </div>
+                {isFilterContext && <span className="shrink-0 text-caption-md-regular text-tertiary">父级路径</span>}
               </div>
             </div>
           </Row>
@@ -408,6 +419,7 @@ const IssueRowDetails = observer(function IssueRowDetails(props: IssueRowDetails
       <td className="right-0 z-10 w-12 min-w-12 border-b-[0.5px] border-l-[0.5px] border-subtle bg-surface-1 shadow-direction-left md:sticky">
         <div className="flex items-center justify-center">
           {/* Revealed on row hover, while focused from the keyboard, and while its menu is open. */}
+          {/* oxlint-disable-next-line jsx_a11y/click-events-have-key-events oxlint-disable-next-line jsx_a11y/no-static-element-interactions -- The buttons own interaction; the wrapper only stops bubbling. */}
           <div
             className={cn(
               "opacity-0 transition-opacity group-hover/spreadsheet-row:opacity-100 focus-within:opacity-100 has-[[aria-expanded=true]]:opacity-100",

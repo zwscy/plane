@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 from rest_framework.test import APIClient
 
-from plane.db.models import Issue, Label, Project, ProjectCustomField, ProjectMember, State
+from plane.db.models import Issue, Label, Project, ProjectCustomField, ProjectMember, State, User, WorkspaceMember
 
 pytestmark = [pytest.mark.contract, pytest.mark.django_db]
 
@@ -45,6 +45,118 @@ def fetch(filter_project, expression, **params):
 def names(response):
     assert response.status_code == 200, response.data
     return {item["name"] for item in response.data["results"]}
+
+
+@pytest.mark.parametrize("layout", ["list", "spreadsheet"])
+def test_tree_filter_keeps_the_path_to_a_match_and_hides_other_branches(filter_project, layout):
+    _, project = filter_project
+    definition = field(project, "integer")
+    parent = issue(project, "Root", definition, 1)
+    child = issue(project, "Intermediate", definition, 2, parent=parent)
+    leaf = issue(project, "Matching leaf", definition, 10, parent=child)
+    issue(project, "Unrelated sibling", definition, 3, parent=child)
+    issue(project, "Unrelated branch", definition, 4)
+    expression = {"and": [{"name__icontains": "Matching"}, {f"custom_fields__{definition.id}__gt": 5}]}
+    tree = fetch(filter_project, expression, sub_issue="false", layout=layout, filter_tree="true")
+    assert names(tree) == {parent.name}
+    assert tree.data["results"][0]["sub_issues_count"] == 1
+    assert tree.data["filtered_tree"]["match_count"] == 1
+    assert {row["id"] for row in tree.data["filtered_tree"]["children"]} == {child.id, leaf.id}
+    assert set(tree.data["filtered_tree"]["context_ids"]) == {str(parent.id), str(child.id)}
+    # The cached issue details keep their actual counts. A filtered layout uses
+    # only its own child list for chevrons and inline expansion.
+    assert next(row for row in tree.data["filtered_tree"]["children"] if row["id"] == child.id)["sub_issues_count"] == 2
+
+    flat = fetch(filter_project, expression, sub_issue="true", layout=layout, filter_tree="true")
+    assert names(flat) == {leaf.name}
+    assert "filtered_tree" not in flat.data
+    cleared = fetch(filter_project, {}, sub_issue="false", layout=layout, filter_tree="true")
+    assert names(cleared) == {parent.name, "Unrelated branch"}
+    assert "filtered_tree" not in cleared.data
+
+
+def test_tree_filter_requires_project_page_opt_in(filter_project):
+    _, project = filter_project
+    parent = issue(project, "Parent")
+    issue(project, "Matching child", parent=parent)
+    legacy = fetch(filter_project, {"name__icontains": "Matching"}, sub_issue="false", layout="list")
+    assert names(legacy) == set()
+    assert "filtered_tree" not in legacy.data
+
+
+def test_tree_filter_paginates_whole_branches_and_orders_siblings(filter_project):
+    _, project = filter_project
+    definition = field(project, "integer")
+    left = issue(project, "Match left", definition, 1)
+    right = issue(project, "Right root", definition, 2)
+    different_state = State.objects.create(project=project, name="Started", group="started", color="#123456")
+    issue(project, "Hidden under matching parent", definition, 0, parent=left)
+    issue(project, "Match ten", definition, 10, parent=right, state=different_state)
+    issue(project, "Match two", definition, 2, parent=right, state=different_state)
+    expression = {"name__icontains": "Match "}
+    params = {
+        "sub_issue": "false",
+        "layout": "list",
+        "filter_tree": "true",
+        "per_page": 1,
+        "order_by": f"custom_fields__{definition.id}",
+    }
+    first = fetch(filter_project, expression, **params)
+    assert names(first) == {left.name}
+    assert first.data["total_results"] == 2
+    assert first.data["next_page_results"] is True
+    assert first.data["filtered_tree"] == {"match_count": 3, "children": [], "context_ids": []}
+
+    second = fetch(filter_project, expression, cursor=first.data["next_cursor"], **params)
+    assert names(second) == {right.name}
+    assert second.data["next_page_results"] is False
+    assert second.data["filtered_tree"]["match_count"] == 3
+    assert [row["name"] for row in second.data["filtered_tree"]["children"]] == ["Match two", "Match ten"]
+    assert second.data["filtered_tree"]["context_ids"] == [str(right.id)]
+
+    grouped = fetch(filter_project, expression, group_by="state_id", **params)
+    assert grouped.status_code == 200, grouped.data
+    assert [row["name"] for group in grouped.data["results"].values() for row in group["results"]] == [left.name]
+    assert grouped.data["filtered_tree"]["match_count"] == 3
+
+    continued_group = fetch(
+        filter_project,
+        expression,
+        tree_group_by="state_id",
+        tree_group_id=str(right.state_id),
+        cursor=grouped.data["next_cursor"],
+        **params,
+    )
+    assert names(continued_group) == {right.name}
+    assert [row["name"] for row in continued_group.data["filtered_tree"]["children"]] == ["Match two", "Match ten"]
+    assert continued_group.data["filtered_tree"]["match_count"] == 3
+    invalid = fetch(filter_project, expression, tree_group_by="state_id", tree_group_id="invalid", **params)
+    assert invalid.status_code == 400
+
+
+def test_tree_filter_does_not_expose_inaccessible_ancestors_or_descendants(filter_project, create_user):
+    client, project = filter_project
+    guest = User.objects.create(email="tree-guest@example.com", username="tree-guest")
+    WorkspaceMember.objects.create(workspace=project.workspace, member=guest, role=5)
+    ProjectMember.objects.create(workspace=project.workspace, project=project, member=guest, role=5)
+    project.guest_view_all_features = False
+    project.save(update_fields=["guest_view_all_features"])
+    hidden_root = issue(project, "Hidden root")
+    visible_root = issue(project, "Visible owner", parent=hidden_root)
+    visible_leaf = issue(project, "Match visible", parent=visible_root)
+    hidden_leaf = issue(project, "Match hidden", parent=visible_root)
+    # BaseModel stamps created_by from the request audit context during save.
+    Issue.objects.filter(id__in=[hidden_root.id, hidden_leaf.id]).update(created_by=create_user)
+    Issue.objects.filter(id__in=[visible_root.id, visible_leaf.id]).update(created_by=guest)
+    client.force_authenticate(guest)
+
+    tree = fetch(
+        filter_project, {"name__icontains": "Match"}, sub_issue="false", layout="spreadsheet", filter_tree="true"
+    )
+    assert names(tree) == {visible_root.name}
+    assert tree.data["filtered_tree"]["match_count"] == 1
+    assert [row["id"] for row in tree.data["filtered_tree"]["children"]] == [visible_leaf.id]
+    assert tree.data["filtered_tree"]["context_ids"] == [str(visible_root.id)]
 
 
 @pytest.mark.parametrize("kind", ["integer", "decimal"])

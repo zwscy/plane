@@ -62,6 +62,7 @@ from plane.db.models import (
     ProjectMember,
     UserRecentVisit,
 )
+from plane.utils.filtered_issue_tree import FilteredIssueTree, result_issue_ids, tree_group_filters
 from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 from plane.utils.global_paginator import paginate
 from plane.utils.grouper import (
@@ -276,16 +277,43 @@ class IssueViewSet(BaseViewSet):
         project = Project.objects.get(pk=project_id, workspace__slug=slug)
         query_params = request.query_params.copy()
 
-        filters = issue_filters(query_params, "GET")
-        order_by_param = request.GET.get("order_by", "-created_at")
-
-        issue_queryset = self.get_queryset()
+        order_by_requested = request.GET.get("order_by", "-created_at")
+        accessible_issues = self.get_queryset()
+        if (
+            not project.guest_view_all_features
+            and ProjectMember.objects.filter(
+                workspace__slug=slug,
+                project_id=project_id,
+                member=request.user,
+                role=ROLE.GUEST.value,
+                is_active=True,
+            ).exists()
+        ):
+            accessible_issues = accessible_issues.filter(created_by=request.user)
 
         # Apply rich filters
-        issue_queryset = self.filter_queryset(issue_queryset)
+        issue_queryset = self.filter_queryset(accessible_issues)
+        raw_rich_filters = query_params.get(ComplexFilterBackend.filter_param)
+        # The backend above validates the JSON before testing whether it is empty.
+        # Saved views and other callers share this endpoint and opt out by default.
+        use_filtered_tree = (
+            query_params.get("filter_tree") == "true"
+            and query_params.get("layout") in {"list", "spreadsheet"}
+            and query_params.get("sub_issue") == "false"
+            and raw_rich_filters
+            and bool(json.loads(raw_rich_filters))
+        )
+        if use_filtered_tree:
+            query_params.pop("sub_issue")
 
         # Apply legacy filters
+        filters = issue_filters(query_params, "GET")
         issue_queryset = issue_queryset.filter(**filters, **extra_filters)
+        filtered_tree = None
+        if use_filtered_tree:
+            root_group = tree_group_filters(query_params)
+            filtered_tree = FilteredIssueTree.build(accessible_issues, issue_queryset)
+            issue_queryset = accessible_issues.filter(pk__in=filtered_tree.roots, **root_group)
 
         # Keeping a copy of the queryset before applying annotations
         filtered_issue_queryset = copy.deepcopy(issue_queryset)
@@ -295,7 +323,7 @@ class IssueViewSet(BaseViewSet):
 
         # Issue queryset
         issue_queryset, order_by_param = order_issue_queryset(
-            issue_queryset=issue_queryset, order_by_param=order_by_param, project_id=project_id
+            issue_queryset=issue_queryset, order_by_param=order_by_requested, project_id=project_id
         )
 
         # Group by
@@ -312,18 +340,32 @@ class IssueViewSet(BaseViewSet):
             entity_identifier=project_id,
             user_id=request.user.id,
         )
-        if (
-            ProjectMember.objects.filter(
-                workspace__slug=slug,
-                project_id=project_id,
-                member=request.user,
-                role=5,
-                is_active=True,
-            ).exists()
-            and not project.guest_view_all_features
-        ):
-            issue_queryset = issue_queryset.filter(created_by=request.user)
-            filtered_issue_queryset = filtered_issue_queryset.filter(created_by=request.user)
+
+        def paginate_issues(**kwargs):
+            response = self.paginate(
+                request=request,
+                order_by=order_by_param,
+                queryset=issue_queryset,
+                total_count_queryset=filtered_issue_queryset,
+                on_results=lambda issues: issue_on_results(issues, group_by, sub_group_by),
+                **kwargs,
+            )
+            if filtered_tree is not None:
+                roots = result_issue_ids(response.data["results"])
+                ids = filtered_tree.descendant_ids(roots)
+                children = []
+                if ids:
+                    queryset = self.apply_annotations(accessible_issues.filter(pk__in=ids))
+                    queryset, _ = order_issue_queryset(queryset, order_by_requested, project_id=project_id)
+                    queryset = issue_queryset_grouper(queryset, group_by=None, sub_group_by=None)
+                    children = issue_on_results(queryset, group_by=None, sub_group_by=None)
+                context = roots.union(item["id"] for item in children) - filtered_tree.matches
+                response.data["filtered_tree"] = {
+                    "match_count": len(filtered_tree.matches),
+                    "children": children,
+                    "context_ids": sorted(str(issue_id) for issue_id in context),
+                }
+            return response
 
         if group_by:
             if sub_group_by:
@@ -335,14 +377,7 @@ class IssueViewSet(BaseViewSet):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
                 else:
-                    return self.paginate(
-                        request=request,
-                        order_by=order_by_param,
-                        queryset=issue_queryset,
-                        total_count_queryset=filtered_issue_queryset,
-                        on_results=lambda issues: issue_on_results(
-                            group_by=group_by, issues=issues, sub_group_by=sub_group_by
-                        ),
+                    return paginate_issues(
                         paginator_cls=SubGroupedOffsetPaginator,
                         group_by_fields=issue_group_values(
                             field=group_by,
@@ -371,14 +406,7 @@ class IssueViewSet(BaseViewSet):
                     )
             else:
                 # Group paginate
-                return self.paginate(
-                    request=request,
-                    order_by=order_by_param,
-                    queryset=issue_queryset,
-                    total_count_queryset=filtered_issue_queryset,
-                    on_results=lambda issues: issue_on_results(
-                        group_by=group_by, issues=issues, sub_group_by=sub_group_by
-                    ),
+                return paginate_issues(
                     paginator_cls=GroupedOffsetPaginator,
                     group_by_fields=issue_group_values(
                         field=group_by,
@@ -398,13 +426,7 @@ class IssueViewSet(BaseViewSet):
                     ),
                 )
         else:
-            return self.paginate(
-                order_by=order_by_param,
-                request=request,
-                queryset=issue_queryset,
-                total_count_queryset=filtered_issue_queryset,
-                on_results=lambda issues: issue_on_results(group_by=group_by, issues=issues, sub_group_by=sub_group_by),
-            )
+            return paginate_issues()
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def create(self, request, slug, project_id):

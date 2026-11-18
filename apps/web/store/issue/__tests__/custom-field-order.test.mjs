@@ -101,6 +101,118 @@ function fixture(selectedOrder = orderBy) {
   return { store, root, items };
 }
 
+test("a filtered tree keeps its children and context separate from ordinary work item details", async () => {
+  const { store, root, items } = fixture();
+  const originalChild = issue("other-child", 15, "ten");
+  root.issueDetail.subIssues.issueService.subIssues = async () => ({ sub_issues: [originalChild] });
+  await root.issueDetail.subIssues.fetchSubIssues("workspace", "project", "ten", orderBy);
+  const intermediary = issue("intermediary", 11, "ten");
+  const match = issue("match", 12, "intermediary");
+  store.issueService.getIssues = async () => ({
+    ...response([items[0]]),
+    filtered_tree: { match_count: 1, children: [intermediary, match], context_ids: ["ten", "intermediary"] },
+  });
+
+  await store.fetchIssuesWithExistingPagination("workspace", "project");
+
+  assert.deepEqual(store.getIssueIds(), ["ten"]);
+  assert.equal(store.filteredTree.matchCount, 1);
+  assert.deepEqual(store.filteredTree.childrenByParent.ten, ["intermediary"]);
+  assert.deepEqual(store.filteredTree.childrenByParent.intermediary, ["match"]);
+  assert.equal(store.filteredTree.contextIds.has("ten"), true);
+  assert.equal(store.filteredTree.contextIds.has("match"), false);
+  assert.equal(root.issues.getIssueById("match")?.name, "match");
+  assert.deepEqual(root.issueDetail.subIssues.subIssuesByIssueId("ten"), ["other-child"]);
+
+  store.issueService.getIssues = async () => response(items);
+  await store.fetchIssuesWithExistingPagination("workspace", "project");
+
+  assert.equal(store.filteredTree, undefined);
+  assert.deepEqual(store.getIssueIds(), ["ten", "twenty"]);
+  assert.deepEqual(root.issueDetail.subIssues.subIssuesByIssueId("ten"), ["other-child"]);
+});
+
+test("a late filtered tree page cannot repopulate the tree after clearing the filter", async () => {
+  const { store, items } = fixture();
+  const page = deferred();
+  const requested = deferred();
+  const child = issue("child-ten", 11, "ten");
+  store.issueService.getIssues = async () => ({
+    ...response([items[0]]),
+    next_page_results: true,
+    next_cursor: "1:1:0",
+    filtered_tree: { match_count: 2, children: [child], context_ids: ["ten"] },
+  });
+  await store.fetchIssuesWithExistingPagination("workspace", "project");
+
+  store.issueService.getIssues = () => {
+    requested.resolve();
+    return page.promise;
+  };
+  const next = store.fetchNextIssues("workspace", "project");
+  await requested.promise;
+  store.issueService.getIssues = async () => response([items[0]]);
+  await store.fetchIssuesWithExistingPagination("workspace", "project");
+
+  page.resolve({
+    ...response([items[1]]),
+    filtered_tree: { match_count: 2, children: [issue("child-twenty", 21, "twenty")], context_ids: ["twenty"] },
+  });
+  await next;
+
+  assert.equal(store.filteredTree, undefined);
+  assert.deepEqual(store.getIssueIds(), ["ten"]);
+});
+
+test("filtered tree group pagination retains earlier branches and sends the group as root scope", async () => {
+  const { store, items } = fixture();
+  const firstChild = issue("first-child", 11, "ten");
+  const secondChild = issue("second-child", 21, "twenty");
+  store.issueFilterStore.issueFilters.displayFilters.group_by = "state";
+  const filters = JSON.stringify({ name__icontains: "child" });
+  store.issueFilterStore.getFilterParams = (_options, _project, cursor, groupId) => ({
+    filters,
+    layout: "list",
+    sub_issue: false,
+    group_by: "state_id",
+    ...(groupId ? { state: groupId } : {}),
+    cursor,
+  });
+  store.issueService.getIssues = async () => ({
+    ...response(items),
+    results: { "root-state": { results: [items[0]], total_results: 2 } },
+    filtered_tree: { match_count: 2, children: [firstChild], context_ids: ["ten"] },
+  });
+  await store.fetchIssues("workspace", "project", "init-loader", { canGroup: true, perPageCount: 1 });
+  const version = store.filteredTree.version;
+
+  let continuation;
+  store.issueService.getIssues = async (_workspace, _project, params) => {
+    continuation = params;
+    return {
+      ...response([items[1]]),
+      total_count: 2,
+      filtered_tree: { match_count: 2, children: [secondChild], context_ids: ["twenty"] },
+    };
+  };
+  await store.fetchNextIssues("workspace", "project", "root-state");
+
+  assert.deepEqual(continuation, {
+    filters,
+    layout: "list",
+    sub_issue: false,
+    filter_tree: true,
+    cursor: "1:1:0",
+    tree_group_by: "state_id",
+    tree_group_id: "root-state",
+  });
+  assert.deepEqual(store.getIssueIds("root-state"), ["ten", "twenty"]);
+  assert.deepEqual(store.filteredTree.childrenByParent, { ten: ["first-child"], twenty: ["second-child"] });
+  assert.deepEqual(store.filteredTree.contextIds, new Set(["ten", "twenty"]));
+  assert.equal(store.filteredTree.matchCount, 2);
+  assert.equal(store.filteredTree.version, version);
+});
+
 test("editing a custom-sorted root retains visible IDs/count throughout the asynchronous refresh", async () => {
   const { store, items } = fixture();
   const network = deferred();
@@ -441,7 +553,9 @@ for (const layout of ["spreadsheet", "list"]) {
       },
       "@/components/issues/issue-detail/issue-identifier": { IssueIdentifier: Null },
       "@/hooks/store/use-issue-detail": { useIssueDetail: () => detail },
-      "@/hooks/store/use-issues": { useIssues: () => ({ issueMap: storeRoot.issues.issuesMap }) },
+      "@/hooks/store/use-issues": {
+        useIssues: () => ({ issueMap: storeRoot.issues.issuesMap, issues: storeRoot.projectIssues }),
+      },
       "@/hooks/store/use-project": { useProject: () => ({ getProjectIdentifierById: () => "TEST" }) },
       "@/hooks/use-issue-peek-overview-redirection": {
         __esModule: true,
@@ -450,6 +564,7 @@ for (const layout of ["spreadsheet", "list"]) {
       "@/hooks/use-platform-os": { usePlatformOS: () => ({ isMobile: false }) },
       "@/hooks/use-project-custom-fields": { useProjectCustomFields: () => ({ fields, isLoading: false }) },
       "@/hooks/use-issue-layout-store": {
+        useIssueStoreType: () => require("@plane/types").EIssuesStoreType.PROJECT,
         useIssuesStore: () => ({ issueMap: storeRoot.issues.issuesMap, issuesFilter: storeRoot.projectIssuesFilter }),
       },
       "../utils": { isIssueNew: () => true, HIGHLIGHT_CLASS: "highlight", getIssueBlockId: (id) => id },
@@ -462,11 +577,11 @@ for (const layout of ["spreadsheet", "list"]) {
       "@plane/blocks/common": { DropIndicator: Null },
       "@/components/ui/loader/layouts/list-layout-loader": { ListLoaderItemRow: Null },
       "./block": {
-        IssueBlock: ({ issueId, setExpanded }) =>
+        IssueBlock: ({ issueId, toggleExpanded }) =>
           React.createElement(
             "div",
             { "data-issue-row": issueId },
-            React.createElement("button", { onClick: () => setExpanded((expanded) => !expanded) }, issueId)
+            React.createElement("button", { onClick: toggleExpanded }, issueId)
           ),
       },
       "./custom-field-columns": {
@@ -482,6 +597,8 @@ for (const layout of ["spreadsheet", "list"]) {
     for (const [key, value] of Object.entries(mocks)) renderMocks.set(key, value);
     modules.delete(resolve(webRoot, "hooks/use-ordered-sub-issues.ts"));
     renderMocks.set("@/hooks/use-ordered-sub-issues", loadStore("hooks/use-ordered-sub-issues.ts"));
+    modules.delete(resolve(webRoot, "hooks/use-project-filtered-tree.ts"));
+    renderMocks.set("@/hooks/use-project-filtered-tree", loadStore("hooks/use-project-filtered-tree.ts"));
     const Component =
       layout === "spreadsheet"
         ? loadStore("components/issues/issue-layouts/spreadsheet/issue-row.tsx").SpreadsheetIssueRow

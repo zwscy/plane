@@ -38,7 +38,7 @@ export const IssuesHeader = observer(function IssuesHeader() {
   const projectCrumb = useProjectCrumbProps(workspaceSlug?.toString(), projectId?.toString());
   // store hooks
   const {
-    issues: { getGroupIssueCount },
+    issues: { getGroupIssueCount, filteredTree },
   } = useIssues(EIssuesStoreType.PROJECT);
   // i18n
   const { t } = useTranslation();
@@ -54,7 +54,8 @@ export const IssuesHeader = observer(function IssuesHeader() {
     SPACE_BASE_PATH;
   const publishedURL = `${SPACE_APP_URL}/issues/${currentProjectDetails?.anchor}`;
 
-  const issuesCount = getGroupIssueCount(undefined, undefined, false);
+  const matchCount = filteredTree?.projectId === projectId?.toString() ? filteredTree?.matchCount : undefined;
+  const issuesCount = matchCount ?? getGroupIssueCount(undefined, undefined, false);
   const canUserCreateIssue = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
     EUserPermissionsLevel.PROJECT
@@ -82,7 +83,7 @@ export const IssuesHeader = observer(function IssuesHeader() {
               isLast
             />
           </Breadcrumbs>
-          {issuesCount && issuesCount > 0 ? (
+          {issuesCount !== undefined && (matchCount !== undefined || issuesCount > 0) ? (
             <Tooltip
               label={t("common.ui.project_issue_count", { count: issuesCount })}
               layout="stacked"
