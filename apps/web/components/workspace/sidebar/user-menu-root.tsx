@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { observer } from "mobx-react";
-import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { LogOutOutline, PreferencesOutline, SettingsOutline } from "@makeplane/propel/icons";
 // plane imports
 import { Avatar } from "@makeplane/propel/components/avatar";
@@ -24,19 +24,24 @@ import { CoverImage } from "@/components/common/cover-image";
 import { useAppTheme } from "@/hooks/store/use-app-theme";
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
 import { useUser } from "@/hooks/store/user";
+import { UserService } from "@/services/user.service";
+
+const userService = new UserService();
 
 export const UserMenuRoot = observer(function UserMenuRoot() {
   // states
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  // router
-  const router = useRouter();
   // store hooks
   const { toggleAnySidebarDropdown } = useAppTheme();
   const { data: currentUser } = useUser();
   const { signOut } = useUser();
   const { toggleProfileSettingsModal } = useCommandPalette();
-  // derived values
-  const isUserInstanceAdmin = false;
+  const { data: instanceAdminStatus, error: instanceAdminError } = useSWR(
+    currentUser?.id ? ["USER_INSTANCE_ADMIN_STATUS", currentUser.id] : null,
+    () => userService.currentUserInstanceAdminStatus(),
+    { shouldRetryOnError: false }
+  );
+  const isUserInstanceAdmin = instanceAdminStatus?.is_instance_admin === true && !instanceAdminError;
   // translation
   const { t } = useTranslation();
 
@@ -123,7 +128,12 @@ export const UserMenuRoot = observer(function UserMenuRoot() {
                 }
               />
               {isUserInstanceAdmin && (
-                <MenuItem variant="accent" label={t("enter_god_mode")} onClick={() => router.push(GOD_MODE_URL)} />
+                <MenuItem
+                  variant="accent"
+                  icon={<Icon icon={SettingsOutline} />}
+                  label={t("enter_god_mode")}
+                  render={<a href={`${GOD_MODE_URL.replace(/\/$/, "")}/general/`} aria-label={t("enter_god_mode")} />}
+                />
               )}
             </div>
             <MenuSeparator />
